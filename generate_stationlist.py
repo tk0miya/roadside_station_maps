@@ -54,7 +54,7 @@ def get_all_stations():
 
 def main():
     last_pref = None
-    with io.open('stations.csv', 'w', encoding='utf-8') as f:
+    with io.open('data/stations.csv', 'w', encoding='utf-8') as f:
         for station in get_all_stations():
             if last_pref != station['pref_id']:
                 print 'Processing %s...' % station['pref_id']
