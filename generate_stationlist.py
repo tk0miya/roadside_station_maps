@@ -5,10 +5,12 @@ from __future__ import print_function
 
 import io
 import os
+import re
 import sys
 import lxml.html
 import geocoder
 from time import sleep
+from mojimoji import zen_to_han
 
 BASEURI = 'http://www.michi-no-eki.jp/'
 FETCH_INTERVAL = 1
@@ -16,6 +18,17 @@ FETCH_INTERVAL = 1
 
 def get_url(path):
     return os.path.join(BASEURI, path[1:])
+
+
+def normalize_text(text):
+    try:
+        text = zen_to_han(text, kana=False)
+    except TypeError:
+        pass  # non-unicode object
+
+    text = re.sub(u'\r?\n', '', text, re.M)
+    text = re.sub(u'－', '-', text, re.M)
+    return text
 
 
 def get_prefectures():
@@ -36,7 +49,7 @@ def get_stations(pref):
         else:
             station_id = os.path.basename(url)
 
-        address = station.findtext('div[@class="address"]').replace('\n', '')
+        address = normalize_text(station.findtext('div[@class="address"]'))
         try:
             lat, lng = geocoder.google(address).latlng
         except:
@@ -45,10 +58,10 @@ def get_stations(pref):
         yield dict(pref_id=pref.get('pref_id'),
                    pref_name=pref.get('name'),
                    station_id=station_id,
-                   name=station.findtext('div[@class="name"]/a'),
-                   address=station.findtext('div[@class="address"]'),
-                   tel=station.findtext('div[@class="tel"]'),
-                   hours=station.findtext('div[@class="hours"]'),
+                   name=normalize_text(station.findtext('div[@class="name"]/a')),
+                   address=address,
+                   tel=normalize_text(station.findtext('div[@class="tel"]')),
+                   hours=normalize_text(station.findtext('div[@class="hours"]')),
                    lat=lat,
                    lng=lng)
 

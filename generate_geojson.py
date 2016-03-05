@@ -13,9 +13,6 @@ def get_stations():
 
 
 def convert_feature(station):
-    if len(station) != 6:
-        return None
-
     pref_id, station_id, name, address, lat, lng = station
     if lat == 'None' or lng == 'None':
         return None
