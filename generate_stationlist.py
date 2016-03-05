@@ -4,8 +4,10 @@
 import io
 import os
 import lxml.html
+from time import sleep
 
 BASEURI = 'http://www.michi-no-eki.jp/'
+FETCH_INTERVAL = 1
 
 
 def get_url(path):
@@ -48,6 +50,7 @@ def get_stations(pref):
 
 def get_all_stations():
     for pref in get_prefectures():
+        sleep(FETCH_INTERVAL)
         for station in get_stations(pref):
             yield station
 
@@ -55,6 +58,7 @@ def get_all_stations():
 def main():
     last_pref = None
     with io.open('data/stations.csv', 'w', encoding='utf-8') as f:
+        print 'Fetch list of prefectures...'
         for station in get_all_stations():
             if last_pref != station['pref_id']:
                 print 'Processing %s...' % station['pref_id']
