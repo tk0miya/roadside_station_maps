@@ -31,6 +31,21 @@ def normalize_text(text):
     return text
 
 
+def get_geometry(name, address):
+    address = address.replace(u'土佐町田井字桜ヶ内', u'土佐町田井字')  # 土佐さめうら 対応
+
+    addresses = [address,
+                 re.sub('([0-9\-]+)', ' \\1', address),
+                 u'道の駅 ' + name]
+    for addr in addresses:
+        geometry = geocoder.google(addr).latlng
+        if geometry:
+            return geometry
+
+    _print('WARNING: Could not obtain geometry for %s (%s)' % (name, address))
+    return None, None
+
+
 def get_prefectures():
     root = lxml.html.parse(get_url('/')).getroot()
     for pref in root.xpath('//div[@id="prefecture"]/div/div/a'):
@@ -49,16 +64,14 @@ def get_stations(pref):
         else:
             station_id = os.path.basename(url)
 
+        name = normalize_text(station.findtext('div[@class="name"]/a'))
         address = normalize_text(station.findtext('div[@class="address"]'))
-        try:
-            lat, lng = geocoder.google(address).latlng
-        except:
-            lat, lng = None, None
+        lat, lng = get_geometry(name, address)
 
         yield dict(pref_id=pref.get('pref_id'),
                    pref_name=pref.get('name'),
                    station_id=station_id,
-                   name=normalize_text(station.findtext('div[@class="name"]/a')),
+                   name=name,
                    address=address,
                    tel=normalize_text(station.findtext('div[@class="tel"]')),
                    hours=normalize_text(station.findtext('div[@class="hours"]')),
