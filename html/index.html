@@ -38,7 +38,7 @@ google.maps.event.addDomListener(window, 'load', function() {
 
     var isVisited = function(feature) {
         var key = feature.getProperty("pref_id") + "/" + feature.getProperty("station_id");
-        if (sessionStorage.getItem(key)) {
+        if (localStorage.getItem(key)) {
             return true;
         } else {
             return false;
@@ -55,10 +55,10 @@ google.maps.event.addDomListener(window, 'load', function() {
 
     var invertStyle = function(feature) {
         var key = feature.getProperty("pref_id") + "/" + feature.getProperty("station_id");
-        if (sessionStorage.getItem(key)) {
-            sessionStorage.removeItem(key)
+        if (localStorage.getItem(key)) {
+            localStorage.removeItem(key)
         } else {
-            sessionStorage.setItem(key, true)
+            localStorage.setItem(key, true)
         }
         map.data.overrideStyle(feature, getStyle(feature));
     }
