@@ -15,6 +15,50 @@ padding: 0px
 <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
 <script>
+var RoadStation = (function() {
+    var STYLES = {
+        true: {icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'},
+        false: {icon: null},
+    };
+
+    var station = function(feature) {
+        this.feature = feature;
+        this.pref_id = feature.getProperty("pref_id");
+        this.station_id = feature.getProperty("station_id");
+        this.name = feature.getProperty("name");
+        this.address = feature.getProperty("address");
+    };
+
+    var proto = station.prototype;
+
+    proto.isVisited = function() {
+        var key = this.pref_id + "/" + this.station_id;
+        if (localStorage.getItem(key)) {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    proto.getStyle = function() {
+        var style_id = this.isVisited();
+        return STYLES[style_id];
+    };
+
+    proto.invertStyle = function() {
+        var key = this.pref_id + "/" + this.station_id;
+        if (localStorage.getItem(key)) {
+            localStorage.removeItem(key);
+        } else {
+            localStorage.setItem(key, true);
+        }
+        return this.getStyle();
+    }
+
+    return station;
+})();
+</script>
+<script>
 google.maps.event.addDomListener(window, 'load', function() {
     var map = new google.maps.Map(document.getElementById('map-canvas'), {
         center: { lat: 35.6896342, lng: 139.6921007 }, // Shinjuku, Tokyo
@@ -30,65 +74,33 @@ google.maps.event.addDomListener(window, 'load', function() {
     d3.json('../data/stations.geojson', function(data) {
         map.data.addGeoJson(data);
         map.data.setStyle(function(feature) {
-            return getStyle(feature);
+            return new RoadStation(feature).getStyle();
         });
         map.data.addListener('click', onClickMarker);
         map.data.addListener('dblclick', onDoubleClickMarker);
     });
 
-    var isVisited = function(feature) {
-        var key = feature.getProperty("pref_id") + "/" + feature.getProperty("station_id");
-        if (localStorage.getItem(key)) {
-            return true;
-        } else {
-            return false;
-        }
-    };
-
-    var getStyle = function(feature) {
-        if (isVisited(feature)) {
-            return {icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'};
-        } else {
-            return {icon: null};
-        }
-    };
-
-    var invertStyle = function(feature) {
-        var key = feature.getProperty("pref_id") + "/" + feature.getProperty("station_id");
-        if (localStorage.getItem(key)) {
-            localStorage.removeItem(key)
-        } else {
-            localStorage.setItem(key, true)
-        }
-        map.data.overrideStyle(feature, getStyle(feature));
-    }
-
-    var invertHistory = function() {
-        if (infowindow.getMap()) {
-            invertStyle(infowindow.feature);
-            infowindow.close();
-        }
-    }
-
     var onClickMarker = function(event) {
-        if (infowindow.getMap() && infowindow.feature == event.feature) {
-            invertStyle(event.feature);
+        var station = new RoadStation(event.feature);
+        if (infowindow.getMap() && infowindow.feature == station.feature) {
+            map.data.overrideStyle(event.feature, station.invertStyle());
         } else {
-            infowindow.content.children[0].innerText = event.feature.getProperty("name");
-            infowindow.content.children[1].innerText = "(" + event.feature.getProperty("address") + ")";
-            if (isVisited(event.feature)) {
+            infowindow.content.children[0].innerText = station.name;
+            infowindow.content.children[1].innerText = "(" + event.address + ")";
+            if (station.isVisited()) {
                 infowindow.content.children[2].children[0].innerText = "未訪問に戻す";
             } else {
                 infowindow.content.children[2].children[0].innerText = "訪問済みにする";
             }
-            infowindow.setPosition(event.feature.getGeometry().get());
-            infowindow.feature = event.feature;
+            infowindow.setPosition(station.feature.getGeometry().get());
+            infowindow.feature = station.feature;
             infowindow.open(map);
         }
     }
 
     var onDoubleClickMarker = function(event) {
-        invertStyle(event.feature);
+        var station = new RoadStation(event.feature);
+        map.data.overrideStyle(event.feature, station.invertStyle());
         infowindow.close();
     }
 
@@ -97,7 +109,8 @@ google.maps.event.addDomListener(window, 'load', function() {
         // pre setup DOM and event listener
         var switcher = $('<a />').attr('href', '#')
         switcher.on('click', function() {
-            invertStyle(infowindow.feature);
+            var station = new RoadStation(event.feature);
+            map.data.overrideStyle(event.feature, station.invertStyle());
             infowindow.close();
         });
 
