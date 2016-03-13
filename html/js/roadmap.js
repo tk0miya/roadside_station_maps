@@ -81,11 +81,11 @@ google.maps.event.addDomListener(window, 'load', function() {
         map.data.setStyle(function(feature) {
             return new RoadStation(feature).getStyle();
         });
-        map.data.addListener('click', onClickMarker);
-        map.data.addListener('dblclick', onDoubleClickMarker);
+        map.data.addListener('click', onMarkerClicked);
+        map.data.addListener('dblclick', onMarkerDoubleClicked);
     });
 
-    var onClickMarker = function(event) {
+    var onMarkerClicked = function(event) {
         var station = new RoadStation(event.feature);
         if (infowindow.getMap() && infowindow.feature == station.feature) {
             map.data.overrideStyle(event.feature, station.changeStyle());
@@ -98,7 +98,7 @@ google.maps.event.addDomListener(window, 'load', function() {
         }
     }
 
-    var onDoubleClickMarker = function(event) {
+    var onMarkerDoubleClicked = function(event) {
         var station = new RoadStation(event.feature);
         map.data.overrideStyle(event.feature, station.changeStyle());
         infowindow.close();
