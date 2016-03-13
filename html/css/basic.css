@@ -1,7 +1,13 @@
-html, body, #map-canvas {
+.clearfix:after {
+    content: "";
+    clear: both;
+    display: block;
+}
+
+html, body, #map-container, #map-wrapper {
     height: 100%;
     margin: 0px;
-    padding: 0px
+    padding: 0px;
 }
 
 .map-canvas {
@@ -10,3 +16,49 @@ html, body, #map-canvas {
     padding: 0px
 }
 
+div#sidebar {
+    position: absolute;
+    height: 100%;
+    left: -400px;
+    z-index: 1;
+}
+
+div#sidebar > #stations {
+    float: left;
+    width: 400px;
+    height: 100%;
+    overflow: auto;
+    background-color: white;
+}
+
+div.station {
+    padding: 10px 5px;
+    background-image: url('../images/line_dot.gif');
+    background-repeat: repeat-x;
+    background-position: left bottom;
+}
+
+div.station > .icon {
+    float: left;
+    height: 48px;
+    clear: left;
+}
+
+div#tab-openr {
+    margin-top: 52px;
+    float: left;
+}
+
+div#tab-openr > button {
+    width: 23px;
+    height: 48px;
+    cursor: pointer;
+    border: 0px;
+    background: rgba(255,255,255,0.9) url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAUCAQAAAAXDMSnAAAAi0lEQVR4AX3JQcqBURQG4O/+9WNG30D3vOfSDTuQsgcZyBakZANSzMVMBme3zsBI5/VMn4ZKLP5ki1E4tYejWpilxVUtzOEUD68odYmXR5BJNp/4zllXD2phllYvamHmirsayUkfJ5ruHzueTldC08kcT5YOY9xYujqQM03XKXuaLmEtNF1e1Nz89gbL+0do6OEwRwAAAABJRU5ErkJggg==) 7px center/7px 10px no-repeat;
+    box-shadow: 0px 1px rgba(0,0,0,0.3)
+}
+
+div#tab-openr > button.closed {
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+}

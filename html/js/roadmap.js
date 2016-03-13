@@ -69,8 +69,8 @@ var InfoWindowFactory = function(map, onClick) {
 };
 
 var RoadStationMap = React.createClass({
-    getInitialState: function() {
-        return { data: null };
+    propTypes: {
+        onMapIdled: React.PropTypes.func
     },
     componentDidMount: function() {
         this.map = new google.maps.Map(ReactDOM.findDOMNode(this), {
@@ -85,10 +85,16 @@ var RoadStationMap = React.createClass({
         return React.createElement('div', { className: 'map-canvas' });
     },
     onGeoJSONLoaded: function(data) {
+        var self = this;
         this.map.addListener("click", this.onMapClicked);
+        this.map.addListener("idle", this.props.onMapIdled);
         this.map.data.addGeoJson(data);
-        this.map.data.addListener('click', this.onMarkerClicked);
-        this.map.data.addListener('dblclick', this.onMarkerDoubleClicked);
+        this.map.data.addListener('click', function(event) {
+            self.onMarkerClicked(event.feature);
+        });
+        this.map.data.addListener('dblclick', function(event) {
+            self.onMarkerDoubleClicked(event.feature);
+        });
         this.map.data.setStyle(function(feature) {
             return new RoadStation(feature).getStyle();
         });
@@ -101,17 +107,17 @@ var RoadStationMap = React.createClass({
         this.map.data.overrideStyle(feature, station.changeStyle());
         this.infowindow.close();
     },
-    onMarkerClicked: function(event) {
-        if (this.infowindow.isOpenedFor(event.feature)) {
-            var station = new RoadStation(event.feature);
-            this.map.data.overrideStyle(event.feature, station.changeStyle());
+    onMarkerClicked: function(feature) {
+        if (this.infowindow.isOpenedFor(feature)) {
+            var station = new RoadStation(feature);
+            this.map.data.overrideStyle(feature, station.changeStyle());
         } else {
-            this.infowindow.open(event.feature)
+            this.infowindow.open(feature)
         }
     },
-    onMarkerDoubleClicked: function(event) {
-        var station = new RoadStation(event.feature);
-        this.map.data.overrideStyle(event.feature, station.changeStyle());
+    onMarkerDoubleClicked: function(feature) {
+        var station = new RoadStation(feature);
+        this.map.data.overrideStyle(feature, station.changeStyle());
         this.infowindow.close();
     }
 });
