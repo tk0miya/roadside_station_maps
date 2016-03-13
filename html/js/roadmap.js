@@ -91,7 +91,7 @@ google.maps.event.addDomListener(window, 'load', function() {
             map.data.overrideStyle(event.feature, station.changeStyle());
         } else {
             infowindow.content.children[0].innerText = station.name;
-            infowindow.content.children[1].innerText = "(" + event.address + ")";
+            infowindow.content.children[1].innerText = "(" + station.address + ")";
             infowindow.setPosition(station.feature.getGeometry().get());
             infowindow.feature = station.feature;
             infowindow.open(map);
