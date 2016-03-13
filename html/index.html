@@ -109,8 +109,8 @@ google.maps.event.addDomListener(window, 'load', function() {
         // pre setup DOM and event listener
         var switcher = $('<a />').attr('href', '#')
         switcher.on('click', function() {
-            var station = new RoadStation(event.feature);
-            map.data.overrideStyle(event.feature, station.invertStyle());
+            var station = new RoadStation(infowindow.feature);
+            map.data.overrideStyle(infowindow.feature, station.invertStyle());
             infowindow.close();
         });
 
