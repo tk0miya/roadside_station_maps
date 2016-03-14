@@ -3,6 +3,6 @@ var ReactDOM = require('react-dom');
 var RoadStationMap = require('./roadmap');
 
 ReactDOM.render(
-    React.createElement(RoadStationMap),
+    <RoadStationMap />,
     document.getElementById('map-canvas')
 );
