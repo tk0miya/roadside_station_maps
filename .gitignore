@@ -2,6 +2,8 @@
 
 bin/
 data/
+html/js/bundle.js
 include/
 lib/
+node_modules
 pip-selfcheck.json

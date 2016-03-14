@@ -1,0 +1,18 @@
+{
+    "name": "roadside_station_maps",
+    "version": "0.1.0",
+    "files": ["data", "html"],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tk0miya/roadside_station_maps"
+    },
+    "main": "html/js/roadmap.js",
+    "scripts": {
+        "start": "watchify -o html/js/bundle.js -v -d html/js/roadmap.js",
+        "build": "browserify . > html/js/bundle.js"
+    },
+    "dependencies": [
+        "browserify",
+        "watchify"
+    ]
+}
