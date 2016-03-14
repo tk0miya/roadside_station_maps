@@ -11,8 +11,8 @@
         "presets": ["es2015"]
     },
     "scripts": {
-        "start": "watchify -t babelify -o html/js/bundle.js -v -d html/js/roadmap.js",
-        "build": "browserify -t babelify . > html/js/bundle.js"
+        "start": "watchify -t babelify -o html/js/bundle.js -v -d html/js/app.js",
+        "build": "browserify -t babelify . > html/js/app.js"
     },
     "dependencies": [
         "babelify",
@@ -21,6 +21,9 @@
         "gulp",
         "gulp-sourcemaps",
         "gulp-webserver",
+        "jquery",
+        "react",
+        "react-dom",
         "vinyl-source-stream",
         "vinyl-buffer",
         "watchify"

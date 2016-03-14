@@ -8,7 +8,7 @@ var babelify = require('babelify');
 var webserver = require('gulp-webserver');
 
 function compile(watch) {
-  var bundler = watchify(browserify('./html/js/roadmap.js', { debug: true }).transform(babelify, {presets: ["es2015"]}));
+  var bundler = watchify(browserify('./html/js/app.js', { debug: true }).transform(babelify, {presets: ["es2015"]}));
 
   function rebundle() {
     bundler.bundle()
