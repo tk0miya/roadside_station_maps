@@ -1,4 +1,5 @@
 *.swp
+*.js.map
 
 bin/
 data/

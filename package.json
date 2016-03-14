@@ -18,6 +18,11 @@
         "babelify",
         "babel-preset-es2015",
         "browserify",
+        "gulp",
+        "gulp-sourcemaps",
+        "gulp-webserver",
+        "vinyl-source-stream",
+        "vinyl-buffer",
         "watchify"
     ]
 }
