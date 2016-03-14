@@ -7,11 +7,16 @@
         "url": "https://github.com/tk0miya/roadside_station_maps"
     },
     "main": "html/js/roadmap.js",
+    "babel": {
+        "presets": ["es2015"]
+    },
     "scripts": {
-        "start": "watchify -o html/js/bundle.js -v -d html/js/roadmap.js",
-        "build": "browserify . > html/js/bundle.js"
+        "start": "watchify -t babelify -o html/js/bundle.js -v -d html/js/roadmap.js",
+        "build": "browserify -t babelify . > html/js/bundle.js"
     },
     "dependencies": [
+        "babelify",
+        "babel-preset-es2015",
         "browserify",
         "watchify"
     ]
