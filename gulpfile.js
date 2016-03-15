@@ -36,7 +36,7 @@ function watch() {
 
 function serve() {
     gulp.src('.')
-        .pipe(webserver({ livereload: true, port: 8081 }));
+        .pipe(webserver({ port: 8081 }));
 }
 
 gulp.task('build', function() { return compile(); });
