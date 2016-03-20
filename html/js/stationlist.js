@@ -30,10 +30,14 @@ var StationList = React.createClass({
         onStationSelected: React.PropTypes.func
     },
     render: function() {
-        var stations = this.props.stations.map((feature) => {
-            return <Station key={feature.getProperty("station_id")} feature={feature}
-                            onStationSelected={this.props.onStationSelected} />
-        });
+        if (this.props.stations.length == 0) {
+            var stations = "表示している範囲に道の駅はありません。";
+        } else {
+            var stations = this.props.stations.map((feature) => {
+                return <Station key={feature.getProperty("station_id")} feature={feature}
+                                onStationSelected={this.props.onStationSelected} />
+            });
+        }
         return <div id="stations">{stations}</div>;
     }
 });
