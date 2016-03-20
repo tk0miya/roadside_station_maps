@@ -6,7 +6,7 @@
         "type": "git",
         "url": "https://github.com/tk0miya/roadside_station_maps"
     },
-    "main": "html/js/roadmap.js",
+    "main": "html/js/app.js",
     "babel": {
         "presets": ["es2015", "react"]
     },
