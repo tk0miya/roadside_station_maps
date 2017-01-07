@@ -13,7 +13,7 @@ def convert_feature(station):
 
     geometry = Point((float(station.lng), float(station.lat)))
     properties = dict(pref_id=station.pref_id, station_id=station.station_id,
-                      name=station.name, address=station.address)
+                      name=station.name, address=station.address, uri=station.uri)
     return Feature(geometry=geometry, properties=properties)
 
 

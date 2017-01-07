@@ -1,7 +1,6 @@
 var jQuery = require('jquery');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var request = require('request');
 
 var RoadStation = require('./roadstation');
 
@@ -51,7 +50,7 @@ var InfoWindow = React.createClass({
             var station = new RoadStation(this.state.feature);
             return (
                 <div>
-                    <div>{station.name}</div>
+                    <div><a href={station.uri} target="_blank">{station.name}</a></div>
                     <div>({station.address})</div>
                     <a href="#" onClick={this.onClick}>マーカーの色を変える</a>
                 </div>

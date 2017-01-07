@@ -13,6 +13,7 @@ class RoadStation {
         this.station_id = feature.getProperty("station_id");
         this.name = feature.getProperty("name");
         this.address = feature.getProperty("address");
+        this.uri = feature.getProperty("uri");
         this.style_id = this.getStyleId();
     }
 
