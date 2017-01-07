@@ -11,9 +11,14 @@ import lxml.html
 import geocoder
 from time import sleep
 from mojimoji import zen_to_han
+from collections import namedtuple
 
 BASEURI = 'http://www.michi-no-eki.jp/'
 FETCH_INTERVAL = 1
+
+
+Prefecture = namedtuple('Prefecture', ['id', 'name', 'uri'])
+Station = namedtuple('Station', ['pref_id', 'station_id', 'name', 'address', 'uri', 'tel', 'hours', 'lat', 'lng'])
 
 
 def get_url(path):
@@ -49,34 +54,26 @@ def get_geometry(name, address):
 def get_prefectures():
     root = lxml.html.parse(get_url('/')).getroot()
     for pref in root.xpath('//div[@id="prefecture"]/div/div/a'):
-        yield dict(pref_id=pref.get('id'),
-                   name=pref.text,
-                   uri=pref.get('href'))
+        yield Prefecture(pref.get('id'), pref.text, pref.get('href'))
 
 
 def get_stations(pref):
-    root = lxml.html.parse(get_url(pref.get('uri'))).getroot()
+    root = lxml.html.parse(get_url(pref.uri)).getroot()
 
     for station in root.xpath('//ul[@id="searchList"]/li'):
-        url = station.xpath('div[@class="name"]/a')[0].get('href')
-        if url.endswith('/'):
-            station_id = os.path.basename(url[:-1])
+        uri = station.xpath('div[@class="name"]/a')[0].get('href')
+        if uri.endswith('/'):
+            station_id = os.path.basename(uri[:-1])
         else:
-            station_id = os.path.basename(url)
+            station_id = os.path.basename(uri)
 
         name = normalize_text(station.findtext('div[@class="name"]/a'))
         address = normalize_text(station.findtext('div[@class="address"]'))
+        tel = normalize_text(station.findtext('div[@class="tel"]'))
+        hours = normalize_text(station.findtext('div[@class="hours"]'))
         lat, lng = get_geometry(name, address)
 
-        yield dict(pref_id=pref.get('pref_id'),
-                   pref_name=pref.get('name'),
-                   station_id=station_id,
-                   name=name,
-                   address=address,
-                   tel=normalize_text(station.findtext('div[@class="tel"]')),
-                   hours=normalize_text(station.findtext('div[@class="hours"]')),
-                   lat=lat,
-                   lng=lng)
+        yield Station(pref.id, station_id, name, address, uri, tel, hours, lat, lng)
 
 
 def _print(text, flush=False, **kwargs):
@@ -92,11 +89,11 @@ def main():
         _print(' done')
 
         for pref in prefs:
-            _print('Processing %s ...' % pref['pref_id'], end='', flush=True)
+            _print('Processing %s ...' % pref.id, end='', flush=True)
             for station in get_stations(pref):
-                row = [station['pref_id'], station['station_id'],
-                       station['name'], station['address'],
-                       str(station['lat']), str(station['lng'])]
+                row = [station.pref_id, station.station_id,
+                       station.name, station.address,
+                       str(station.lat), str(station.lng)]
                 f.write('\t'.join(row) + '\n')
                 _print('.', end='', flush=True)
 
