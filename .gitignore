@@ -1,5 +1,6 @@
 *.swp
 *.js.map
+*.pyc
 
 bin/
 data/

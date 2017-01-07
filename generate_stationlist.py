@@ -112,7 +112,7 @@ def load_station_list(filename):
         for line in f:
             data = line.strip().split('\t')
             stations.append(Station(data[0], data[1], data[2], data[3],
-                                    '<uri>', '<tel>', '<hours>', data[4], data[5]))
+                                    data[4], '<tel>', '<hours>', data[5], data[6]))
 
     return stations
 
@@ -128,7 +128,7 @@ def main():
             _print('Processing %s ...' % pref.id, end='', flush=True)
             for station in get_stations(pref, old_stations_list):
                 row = [station.pref_id, station.station_id,
-                       station.name, station.address,
+                       station.name, station.address, station.uri,
                        str(station.lat), str(station.lng)]
                 f.write('\t'.join(row) + '\n')
                 _print('.', end='', flush=True)
@@ -137,4 +137,5 @@ def main():
             sleep(FETCH_INTERVAL)
 
 
-main()
+if __name__ == '__main__':
+    main()
