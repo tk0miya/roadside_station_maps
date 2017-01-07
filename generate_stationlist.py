@@ -15,10 +15,20 @@ from collections import namedtuple
 
 BASEURI = 'http://www.michi-no-eki.jp/'
 FETCH_INTERVAL = 1
+STATION_FILENAME = 'data/stations.csv'
 
 
 Prefecture = namedtuple('Prefecture', ['id', 'name', 'uri'])
 Station = namedtuple('Station', ['pref_id', 'station_id', 'name', 'address', 'uri', 'tel', 'hours', 'lat', 'lng'])
+
+
+class StationList(list):
+    def find_by_id(self, pref_id, station_id):
+        for station in self:
+            if station.pref_id == pref_id and station.station_id == station_id:
+                return station
+        else:
+            return None
 
 
 def get_url(path):
@@ -47,8 +57,7 @@ def get_geometry(name, address):
         if geometry:
             return geometry
 
-    _print('WARNING: Could not obtain geometry for %s (%s)' % (name, address))
-    return None, None
+    raise ValueError
 
 
 def get_prefectures():
@@ -57,7 +66,7 @@ def get_prefectures():
         yield Prefecture(pref.get('id'), pref.text, pref.get('href'))
 
 
-def get_stations(pref):
+def get_stations(pref, old_station_list):
     root = lxml.html.parse(get_url(pref.uri)).getroot()
 
     for station in root.xpath('//ul[@id="searchList"]/li'):
@@ -71,7 +80,17 @@ def get_stations(pref):
         address = normalize_text(station.findtext('div[@class="address"]'))
         tel = normalize_text(station.findtext('div[@class="tel"]'))
         hours = normalize_text(station.findtext('div[@class="hours"]'))
-        lat, lng = get_geometry(name, address)
+        try:
+            lat, lng = get_geometry(name, address)
+        except ValueError:
+            old_station = old_station_list.find_by_id(pref.id, station_id)
+            if old_station:
+                lat = old_station.lat
+                lng = old_station.lng
+                _print('WARNING: Could not obtain geometry for %s, but filled by old data' % (name,))
+            else:
+                _print('WARNING: Could not obtain geometry for %s (%s)' % (name, address))
+                lat, lng = None, None
 
         yield Station(pref.id, station_id, name, address, uri, tel, hours, lat, lng)
 
@@ -82,15 +101,27 @@ def _print(text, flush=False, **kwargs):
         sys.stdout.flush()
 
 
+def load_station_list(filename):
+    stations = StationList()
+    with io.open(filename, 'r', encoding='utf-8') as f:
+        for line in f:
+            data = line.strip().split('\t')
+            stations.append(Station(data[0], data[1], data[2], data[3],
+                                    '<uri>', '<tel>', '<hours>', data[4], data[5]))
+
+    return stations
+
+
 def main():
-    with io.open('data/stations.csv', 'w', encoding='utf-8') as f:
+    old_stations_list = load_station_list(STATION_FILENAME)
+    with io.open(STATION_FILENAME, 'w', encoding='utf-8') as f:
         _print('Fetch list of prefectures ...', end='', flush=True)
         prefs = list(get_prefectures())
         _print(' done')
 
         for pref in prefs:
             _print('Processing %s ...' % pref.id, end='', flush=True)
-            for station in get_stations(pref):
+            for station in get_stations(pref, old_stations_list):
                 row = [station.pref_id, station.station_id,
                        station.name, station.address,
                        str(station.lat), str(station.lng)]
