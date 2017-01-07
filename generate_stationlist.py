@@ -86,7 +86,6 @@ def _print(text, flush=False, **kwargs):
 
 
 def main():
-    last_pref = None
     with io.open('data/stations.csv', 'w', encoding='utf-8') as f:
         _print('Fetch list of prefectures ...', end='', flush=True)
         prefs = list(get_prefectures())
@@ -95,9 +94,6 @@ def main():
         for pref in prefs:
             _print('Processing %s ...' % pref['pref_id'], end='', flush=True)
             for station in get_stations(pref):
-                if last_pref != station['pref_id']:
-                    last_pref = station['pref_id']
-
                 row = [station['pref_id'], station['station_id'],
                        station['name'], station['address'],
                        str(station['lat']), str(station['lng'])]
