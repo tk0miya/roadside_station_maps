@@ -48,6 +48,7 @@ def normalize_text(text):
 
 def get_geometry(name, address):
     address = address.replace(u'土佐町田井字桜ヶ内', u'土佐町田井字')  # 土佐さめうら 対応
+    address = re.sub('、?(ほか|他)$', '', address)
 
     addresses = [address,
                  re.sub('([0-9\-]+)', ' \\1', address),
