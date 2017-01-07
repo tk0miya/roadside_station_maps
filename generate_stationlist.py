@@ -76,14 +76,19 @@ def get_stations(pref, old_station_list):
         else:
             station_id = os.path.basename(uri)
 
+        old_station = old_station_list.find_by_id(pref.id, station_id)
+
         name = normalize_text(station.findtext('div[@class="name"]/a'))
         address = normalize_text(station.findtext('div[@class="address"]'))
         tel = normalize_text(station.findtext('div[@class="tel"]'))
         hours = normalize_text(station.findtext('div[@class="hours"]'))
         try:
             lat, lng = get_geometry(name, address)
+            if old_station:
+                if old_station.lat != str(lat) or old_station.lng != str(lng):
+                    _print('WARNING: Geometry for %s has been changed: (%s, %s) -> (%s, %s)' %
+                           (name, old_station.lat, old_station.lng, lat, lng))
         except ValueError:
-            old_station = old_station_list.find_by_id(pref.id, station_id)
             if old_station:
                 lat = old_station.lat
                 lng = old_station.lng
