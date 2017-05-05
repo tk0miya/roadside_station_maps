@@ -11,6 +11,7 @@ class RoadStation {
         this.feature = feature;
         this.pref_id = feature.getProperty("pref_id");
         this.station_id = feature.getProperty("station_id");
+        this.old_station_id = feature.getProperty("old_station_id");
         this.name = feature.getProperty("name");
         this.address = feature.getProperty("address");
         this.uri = feature.getProperty("uri");
@@ -24,15 +25,22 @@ class RoadStation {
         }
 
         // fallback from oldkey
-        var key = this.pref_id + "/" + this.station_id;
-        style_id = localStorage.getItem(key);
-        if (style_id) {
-            localStorage.removeItem(key);
-            localStorage.setItem(key, 1);
-            return parseInt(style_id);
-        } else {
-            return 0;
+        if (this.old_station_id) {
+            // key format: station_id
+            style_id = localStorage.getItem(this.old_station_id.split("/")[1]);
+            if (!style_id) {
+                // key format: pref_id/station_id
+                style_id = localStorage.getItem(this.old_station_id);
+            }
+            if (style_id) {
+                localStorage.removeItem(this.old_station_id);
+                localStorage.removeItem(this.old_station_id.split("/")[1]);
+                localStorage.setItem(this.station_id, style_id);
+                return parseInt(style_id);
+            }
         }
+
+        return 0;
     }
 
     isVisited() {
