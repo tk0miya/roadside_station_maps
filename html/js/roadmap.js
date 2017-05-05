@@ -94,7 +94,7 @@ var RoadStationMap = React.createClass({
         });
     },
     onCurrentPositionGot: function(pos) {
-        latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+        var latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
         this.map.setCenter(latlng);
     },
     onMapClicked: function() {
