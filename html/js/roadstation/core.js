@@ -6,9 +6,11 @@ var STYLES = {
     4: {icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'},
 };
 
-class RoadStation {
-    constructor(feature) {
+
+class RoadStationCore {
+    constructor(feature, storage) {
         this.feature = feature;
+        this.storage = storage;
         this.pref_id = feature.getProperty("pref_id");
         this.station_id = feature.getProperty("station_id");
         this.old_station_id = feature.getProperty("old_station_id");
@@ -19,7 +21,7 @@ class RoadStation {
     }
 
     getStyleId() {
-        var style_id = localStorage.getItem(this.station_id);
+        var style_id = this.storage.getItem(this.station_id);
         if (style_id) {
             return parseInt(style_id);
         }
@@ -27,15 +29,15 @@ class RoadStation {
         // fallback from oldkey
         if (this.old_station_id) {
             // key format: station_id
-            style_id = localStorage.getItem(this.old_station_id.split("/")[1]);
+            style_id = this.storage.getItem(this.old_station_id.split("/")[1]);
             if (!style_id) {
                 // key format: pref_id/station_id
-                style_id = localStorage.getItem(this.old_station_id);
+                style_id = this.storage.getItem(this.old_station_id);
             }
             if (style_id) {
-                localStorage.removeItem(this.old_station_id);
-                localStorage.removeItem(this.old_station_id.split("/")[1]);
-                localStorage.setItem(this.station_id, style_id);
+                this.storage.removeItem(this.old_station_id);
+                this.storage.removeItem(this.old_station_id.split("/")[1]);
+                this.storage.setItem(this.station_id, style_id);
                 return parseInt(style_id);
             }
         }
@@ -56,16 +58,16 @@ class RoadStation {
             this.resetStyle();
         } else {
             this.style_id += 1;
-            localStorage.setItem(this.station_id, this.style_id);
+            this.storage.setItem(this.station_id, this.style_id);
         }
         return this.getStyle();
     }
 
     resetStyle() {
         this.style_id = 0;
-        localStorage.removeItem(this.station_id);
+        this.storage.removeItem(this.station_id);
         return this.getStyle();
     }
 }
 
-module.exports = RoadStation;
+module.exports = RoadStationCore;
