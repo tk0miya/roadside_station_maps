@@ -7,16 +7,19 @@ import io
 import os
 import re
 import sys
+import requests
 import lxml.html
-import geocoder
 from time import sleep
 from mojimoji import zen_to_han
 from collections import namedtuple
+from requests.packages import urllib3
 
-BASEURI = 'http://www.michi-no-eki.jp/'
+BASEURI = 'https://www.michi-no-eki.jp/'
 FETCH_INTERVAL = 1
 STATION_FILENAME = 'data/stations.csv'
 
+# disable SSL warnings
+urllib3.disable_warnings()
 
 Prefecture = namedtuple('Prefecture', ['id', 'name', 'uri'])
 Station = namedtuple('Station', ['pref_id', 'station_id', 'name', 'address', 'uri', 'tel', 'hours', 'lat', 'lng'])
@@ -35,68 +38,68 @@ def get_url(path):
     return os.path.join(BASEURI, path[1:])
 
 
+def fetch_page(path):
+    res = requests.get(get_url(path), verify=False)
+    return res.content
+
+
+def parse_html(content):
+    return lxml.html.fromstring(content)
+
+
 def normalize_text(text):
+    if text is None:
+        return text
+
     try:
         text = zen_to_han(text, kana=False)
     except TypeError:
-        pass  # non-unicode object
+        pass
 
     text = re.sub(u'\r?\n', '', text, re.M)
     text = re.sub(u'－', '-', text, re.M)
     return text
 
 
-def get_geometry(name, address):
-    address = address.replace(u'土佐町田井字桜ヶ内', u'土佐町田井字')  # 土佐さめうら 対応
-    address = re.sub('、?(ほか|他)$', '', address)
-
-    addresses = [address,
-                 re.sub('([0-9\-]+)', ' \\1', address),
-                 u'道の駅 ' + name]
-    for addr in addresses:
-        geometry = geocoder.google(addr).latlng
-        if geometry:
-            return geometry
-
-    raise ValueError
-
-
 def get_prefectures():
-    root = lxml.html.parse(get_url('/')).getroot()
-    for pref in root.xpath('//div[@id="prefecture"]/div/div/a'):
-        yield Prefecture(pref.get('id'), pref.text, pref.get('href'))
+    root = parse_html(fetch_page('/stations/search'))
+    for pref in root.xpath('//div[@class="clearfix"]/ul/li/a'):
+        uri = pref.get('href')
+        pref_id = uri.split('=')[-1]
+        yield Prefecture(pref_id, pref.text, uri)
 
 
 def get_stations(pref, old_station_list):
-    root = lxml.html.parse(get_url(pref.uri)).getroot()
+    root = parse_html(fetch_page(pref.uri))
 
-    for station in root.xpath('//ul[@id="searchList"]/li'):
-        uri = station.xpath('div[@class="name"]/a')[0].get('href')
-        if uri.endswith('/'):
-            station_id = os.path.basename(uri[:-1])
-        else:
-            station_id = os.path.basename(uri)
+    for entry in root.xpath('//div[@class="resultStation"]/div/h4/a'):
+        uri = get_url(entry.get('href'))
+        station_id = uri.split('/')[-1]
+        name = None
+        address = None
+        tel = None
+        hours = None
+        lat = None
+        lng = None
 
-        old_station = old_station_list.find_by_id(pref.id, station_id)
+        content = fetch_page(uri)
+        root = parse_html(content)
+        for station in root.xpath('//div[@id="stationFeature"]/table/tr'):
+            key = normalize_text(station[0].text)
+            value = normalize_text(station[1].text)
+            if key == u'道の駅名':
+                name = value
+            elif key == u'所在地':
+                address = value
+            elif key == u'TEL':
+                tel = value
+            elif key == u'営業時間':
+                hours = value
 
-        name = normalize_text(station.findtext('div[@class="name"]/a'))
-        address = normalize_text(station.findtext('div[@class="address"]'))
-        tel = normalize_text(station.findtext('div[@class="tel"]'))
-        hours = normalize_text(station.findtext('div[@class="hours"]'))
-        try:
-            lat, lng = get_geometry(name, address)
-            if old_station:
-                if old_station.lat != str(lat) or old_station.lng != str(lng):
-                    _print('WARNING: Geometry for %s has been changed: (%s, %s) -> (%s, %s)' %
-                           (name, old_station.lat, old_station.lng, lat, lng))
-        except ValueError:
-            if old_station:
-                lat = old_station.lat
-                lng = old_station.lng
-                _print('WARNING: Could not obtain geometry for %s, but filled by old data' % (name,))
-            else:
-                _print('WARNING: Could not obtain geometry for %s (%s)' % (name, address))
-                lat, lng = None, None
+        matched = re.search('google.maps.LatLng\((.*),(.*)\);', content)
+        if matched:
+            lat = float(matched.group(1))
+            lng = float(matched.group(2))
 
         yield Station(pref.id, station_id, name, address, uri, tel, hours, lat, lng)
 
@@ -126,16 +129,16 @@ def main():
         _print(' done')
 
         for pref in prefs:
-            _print('Processing %s ...' % pref.id, end='', flush=True)
+            _print('Processing %s(%s) ...' % (pref.name, pref.id), end='', flush=True)
             for station in get_stations(pref, old_stations_list):
                 row = [station.pref_id, station.station_id,
                        station.name, station.address, station.uri,
                        str(station.lat), str(station.lng)]
                 f.write('\t'.join(row) + '\n')
                 _print('.', end='', flush=True)
+                sleep(FETCH_INTERVAL)
 
             _print(' done')
-            sleep(FETCH_INTERVAL)
 
 
 if __name__ == '__main__':
