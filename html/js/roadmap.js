@@ -79,6 +79,7 @@ var RoadStationMap = React.createClass({
         this.infowindow = InfoWindowFactory(this.map, this.onMarkerStyleModifierClicked);
 
         jQuery.getJSON('../data/stations.geojson', this.onGeoJSONLoaded);
+        navigator.geolocation.getCurrentPosition(this.onCurrentPositionGot)
     },
     render: function() {
         return React.createElement('div', { className: 'map-canvas' });
@@ -91,6 +92,10 @@ var RoadStationMap = React.createClass({
         this.map.data.setStyle(function(feature) {
             return new RoadStation(feature).getStyle();
         });
+    },
+    onCurrentPositionGot: function(pos) {
+        latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+        this.map.setCenter(latlng);
     },
     onMapClicked: function() {
         this.infowindow.close();
