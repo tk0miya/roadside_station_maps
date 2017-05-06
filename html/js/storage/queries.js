@@ -33,7 +33,6 @@ class QueryStorage {
         var styles = {"1": [], "2": [], "3": [], "4": []};
         Object.keys(localStorage).forEach(function(station_id){
             var style_id = localStorage.getItem(station_id);
-            console.log([station_id, style_id]);
             styles[style_id].push(parseInt(station_id));
         });
 
@@ -50,8 +49,6 @@ class QueryStorage {
                     var shift = station_id % 8;
                     buf[idx] |= 1 << shift;
                 });
-                console.log(style_id);
-                console.log(buf);
                 self["c" + style_id] = encode(buf);
             }
         });
@@ -62,8 +59,6 @@ class QueryStorage {
         this.c2 = decode(queries.c2);
         this.c3 = decode(queries.c3);
         this.c4 = decode(queries.c4);
-        console.log(this.c1);
-        console.log(this.c4);
     }
 
     getItem(key) {
