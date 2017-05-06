@@ -112,7 +112,6 @@ var RoadStationMap = React.createClass({
         return React.createElement('div', { className: 'map-canvas' });
     },
     createClipboardButton: function() {
-        var map = this.map;
         var div = document.createElement('div');
         div.className = 'clipboard'
         div.innerText = 'シェア';
@@ -122,7 +121,22 @@ var RoadStationMap = React.createClass({
                 return getURL();
             }
         });
+        clipboard.on('success', this.onClipboardCopied);
         return div
+    },
+    onClipboardCopied: function(event) {
+        var top_controls = this.map.controls[google.maps.ControlPosition.TOP];
+        var div = document.createElement('div');
+        div.className = 'clipboard-message';
+        div.innerText = 'クリップボードにコピーしました。';
+        top_controls.push(div);
+
+        setTimeout(function() {
+            jQuery(div).fadeOut("normal", function() {
+                top_controls.pop();
+            });
+        },
+        3000);
     },
     onGeoJSONLoaded: function(data) {
         this.map.addListener("click", this.onMapClicked);

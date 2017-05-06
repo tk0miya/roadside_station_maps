@@ -21,3 +21,10 @@ div.clipboard {
 div.clipboard:hover {
     background-color: rgb(235, 235, 235);
 }
+
+div.clipboard-message {
+    margin-top: 10px;
+    padding: 8px;
+    background-color: white;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;
+}
