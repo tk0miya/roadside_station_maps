@@ -1,9 +1,9 @@
 var STYLES = {
-    0: {icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'},
-    1: {icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'},
-    2: {icon: 'http://maps.google.com/mapfiles/ms/icons/purple-dot.png'},
-    3: {icon: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'},
-    4: {icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'},
+    0: {icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'},
+    1: {icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'},
+    2: {icon: 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png'},
+    3: {icon: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png'},
+    4: {icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'},
 };
 
 
