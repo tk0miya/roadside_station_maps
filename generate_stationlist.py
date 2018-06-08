@@ -58,6 +58,7 @@ def normalize_text(text):
 
     text = re.sub(u'\r?\n', '', text, re.M)
     text = re.sub(u'－', '-', text, re.M)
+    text = re.sub('~', u'〜', text, re.M)  # keep wave dash as zenkaku
     return text
 
 
