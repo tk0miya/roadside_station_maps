@@ -97,7 +97,7 @@ def get_stations(pref, old_station_list):
             elif key == u'営業時間':
                 hours = value
 
-        matched = re.search('google.maps.LatLng\((.*),(.*)\);', content)
+        matched = re.search('www.google.com/maps/.+\?q=(.*),(.*)&', content)
         if matched:
             lat = float(matched.group(1))
             lng = float(matched.group(2))
