@@ -77,6 +77,7 @@ var InfoWindow = React.createClass({
             return (
                 <div>
                     <div><a href={station.uri} target="_blank">{station.name}</a></div>
+                    <div>営業時間：{station.hours}</div>
                     <div>({station.address})</div>
                     <a href="#" onClick={this.onClick}>マーカーの色を変える</a>
                 </div>

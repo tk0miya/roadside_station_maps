@@ -93,6 +93,12 @@ var InfoWindow = React.createClass({
                 React.createElement(
                     'div',
                     null,
+                    '\u55B6\u696D\u6642\u9593\uFF1A',
+                    station.hours
+                ),
+                React.createElement(
+                    'div',
+                    null,
                     '(',
                     station.address,
                     ')'
@@ -222,6 +228,7 @@ var RoadStationCore = function () {
         this.old_station_id = feature.getProperty("old_station_id");
         this.name = feature.getProperty("name");
         this.address = feature.getProperty("address");
+        this.hours = feature.getProperty("hours");
         this.uri = feature.getProperty("uri");
         this.style_id = this.getStyleId();
     }

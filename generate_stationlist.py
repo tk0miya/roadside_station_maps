@@ -22,7 +22,7 @@ STATION_FILENAME = 'data/stations.csv'
 urllib3.disable_warnings()
 
 Prefecture = namedtuple('Prefecture', ['id', 'name', 'uri'])
-Station = namedtuple('Station', ['pref_id', 'station_id', 'name', 'address', 'uri', 'tel', 'hours', 'lat', 'lng'])
+Station = namedtuple('Station', ['pref_id', 'station_id', 'name', 'address', 'tel', 'hours', 'uri', 'lat', 'lng'])
 
 
 class StationList(list):
@@ -79,7 +79,7 @@ def get_stations(pref, old_station_list):
         name = None
         address = None
         tel = None
-        hours = None
+        hours = ''
         lat = None
         lng = None
 
@@ -95,7 +95,7 @@ def get_stations(pref, old_station_list):
             elif key == u'TEL':
                 tel = value
             elif key == u'営業時間':
-                hours = value
+                hours = value or ''
 
         matched = re.search('www.google.com/maps/.+\?q=(.*),(.*)&', content)
         if matched:
@@ -117,7 +117,7 @@ def load_station_list(filename):
         for line in f:
             data = line.strip().split('\t')
             stations.append(Station(data[0], data[1], data[2], data[3],
-                                    data[4], '<tel>', '<hours>', data[5], data[6]))
+                                    '<tel>', data[4], data[5], data[6], data[7]))
 
     return stations
 
@@ -133,8 +133,8 @@ def main():
             _print('Processing %s(%s) ...' % (pref.name, pref.id), end='', flush=True)
             for station in get_stations(pref, old_stations_list):
                 row = [station.pref_id, station.station_id,
-                       station.name, station.address, station.uri,
-                       str(station.lat), str(station.lng)]
+                       station.name, station.address, station.hours,
+                       station.uri, str(station.lat), str(station.lng)]
                 f.write('\t'.join(row) + '\n')
                 _print('.', end='', flush=True)
                 sleep(FETCH_INTERVAL)

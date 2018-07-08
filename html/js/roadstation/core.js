@@ -16,6 +16,7 @@ class RoadStationCore {
         this.old_station_id = feature.getProperty("old_station_id");
         this.name = feature.getProperty("name");
         this.address = feature.getProperty("address");
+        this.hours = feature.getProperty("hours");
         this.uri = feature.getProperty("uri");
         this.style_id = this.getStyleId();
     }

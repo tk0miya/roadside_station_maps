@@ -26,7 +26,8 @@ def convert_feature(station, old_station_ids):
 
     geometry = Point((float(station.lng), float(station.lat)))
     properties = dict(pref_id=station.pref_id, station_id=station.station_id,
-                      name=station.name, address=station.address, uri=station.uri,
+                      name=station.name, address=station.address,
+                      hours=station.hours, uri=station.uri,
                       old_station_id=old_station_ids.get(station.name, None))
     return Feature(geometry=geometry, properties=properties)
 
