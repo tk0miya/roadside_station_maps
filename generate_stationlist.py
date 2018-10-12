@@ -102,7 +102,7 @@ def get_stations(pref, old_station_list):
             lat = float(matched.group(1))
             lng = float(matched.group(2))
 
-        yield Station(pref.id, station_id, name, address, uri, tel, hours, lat, lng)
+        yield Station(pref.id, station_id, name, address, tel, hours, uri, lat, lng)
 
 
 def _print(text, flush=False, **kwargs):
