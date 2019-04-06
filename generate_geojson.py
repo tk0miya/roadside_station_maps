@@ -37,7 +37,7 @@ def main():
     old_statioN_ids = load_station_id_mapping(STATION_ID_MAPPING_FILENAME)
     features = (convert_feature(s, old_statioN_ids) for s in stations)
     with io.open('data/stations.geojson', 'w', encoding='utf-8') as f:
-        json = geojson.dumps(FeatureCollection(filter(bool, features)),
+        json = geojson.dumps(FeatureCollection(list(filter(bool, features))),
                              ensure_ascii=False)
         f.write(json)
 

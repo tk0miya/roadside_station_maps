@@ -40,7 +40,7 @@ def get_url(path):
 
 def fetch_page(path):
     res = requests.get(get_url(path), verify=False)
-    return res.content
+    return res.text
 
 
 def parse_html(content):
