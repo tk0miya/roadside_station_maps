@@ -4,7 +4,7 @@ clean:
 	rm -rf bin/ include/ lib/
 
 bin/python:
-	virtualenv -p python2.7 .
+	virtualenv -p python3.8 .
 	bin/pip install -r requirements.txt
 
 .PHONY: data/stations.csv
