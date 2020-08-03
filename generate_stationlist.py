@@ -72,6 +72,7 @@ def get_prefectures():
 
 def get_stations(pref, old_station_list):
     root = parse_html(fetch_page(pref.uri))
+    nextpage = root.xpath('//div[@class="paging"]/span[@class="next"]/a')
 
     for entry in root.xpath('//div[@class="resultStation"]/div/h4/a'):
         uri = get_url(entry.get('href'))
@@ -103,6 +104,10 @@ def get_stations(pref, old_station_list):
             lng = float(matched.group(2))
 
         yield Station(pref.id, station_id, name, address, tel, hours, uri, lat, lng)
+
+    if nextpage:
+        pref = Prefecture(pref.id, pref.name, nextpage[0].attrib["href"])
+        yield from get_stations(pref, old_station_list)
 
 
 def _print(text, flush=False, **kwargs):
