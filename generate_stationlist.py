@@ -66,8 +66,9 @@ def get_prefectures():
     root = parse_html(fetch_page('/stations/search'))
     for pref in root.xpath('//div[@class="clearfix"]/ul/li/a'):
         uri = pref.get('href')
-        pref_id = uri.split('=')[-1]
-        yield Prefecture(pref_id, pref.text, uri)
+        if '=' in uri:
+            pref_id = uri.split('=')[-1]
+            yield Prefecture(pref_id, pref.text, uri)
 
 
 def get_stations(pref, old_station_list):
