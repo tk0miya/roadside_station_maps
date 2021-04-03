@@ -35,7 +35,10 @@ class StationList(list):
 
 
 def get_url(path):
-    return os.path.join(BASEURI, path[1:])
+    if path.startswith(BASEURI):
+        return path
+    else:
+        return os.path.join(BASEURI, path[1:])
 
 
 def fetch_page(path):
