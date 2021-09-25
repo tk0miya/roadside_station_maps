@@ -73,7 +73,7 @@ def get_prefectures():
         yield Prefecture(pref_id, pref.text, uri)
 
 
-def get_stations(pref, old_station_list):
+def get_stations(pref):
     root = parse_html(fetch_page(pref.uri))
     nextpage = root.xpath('//div[@class="paging"]/span[@class="next "]/a')
 
@@ -110,7 +110,7 @@ def get_stations(pref, old_station_list):
 
     if nextpage:
         pref = Prefecture(pref.id, pref.name, nextpage[0].attrib["href"])
-        yield from get_stations(pref, old_station_list)
+        yield from get_stations(pref)
 
 
 def _print(text, flush=False, **kwargs):
@@ -139,7 +139,7 @@ def main():
 
         for pref in prefs:
             _print('Processing %s(%s) ...' % (pref.name, pref.id), end='', flush=True)
-            for station in get_stations(pref, old_stations_list):
+            for station in get_stations(pref):
                 row = [station.pref_id, station.station_id,
                        station.name, station.address, station.hours,
                        station.uri, str(station.lat), str(station.lng)]
