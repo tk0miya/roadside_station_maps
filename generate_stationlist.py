@@ -66,19 +66,18 @@ def normalize_text(text):
 
 
 def get_prefectures():
-    root = parse_html(fetch_page('/stations/search'))
-    for pref in root.xpath('//div[@class="clearfix"]/ul/li/a'):
+    root = parse_html(fetch_page('/'))
+    for pref in root.xpath('//div[@class="station__list"]/dl/dd/ul/li/a'):
         uri = pref.get('href')
-        if '=' in uri:
-            pref_id = uri.split('=')[-1]
-            yield Prefecture(pref_id, pref.text, uri)
+        pref_id = uri.split('/')[3]
+        yield Prefecture(pref_id, pref.text, uri)
 
 
 def get_stations(pref, old_station_list):
     root = parse_html(fetch_page(pref.uri))
-    nextpage = root.xpath('//div[@class="paging"]/span[@class="next"]/a')
+    nextpage = root.xpath('//div[@class="paging"]/span[@class="next "]/a')
 
-    for entry in root.xpath('//div[@class="resultStation"]/div/h4/a'):
+    for entry in root.xpath('//div[@class="searchList"]/ul/li/a'):
         uri = get_url(entry.get('href'))
         station_id = uri.split('/')[-1]
         name = None
@@ -90,7 +89,7 @@ def get_stations(pref, old_station_list):
 
         content = fetch_page(uri)
         root = parse_html(content)
-        for station in root.xpath('//div[@id="stationFeature"]/table/tr'):
+        for station in root.xpath('//div[@class="info"]/dl'):
             key = normalize_text(station[0].text)
             value = normalize_text(station[1].text)
             if key == u'道の駅名':
@@ -145,6 +144,7 @@ def main():
                        station.name, station.address, station.hours,
                        station.uri, str(station.lat), str(station.lng)]
                 f.write('\t'.join(row) + '\n')
+                f.flush()
                 _print('.', end='', flush=True)
                 sleep(FETCH_INTERVAL)
 
