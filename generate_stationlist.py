@@ -131,7 +131,6 @@ def load_station_list(filename):
 
 
 def main():
-    old_stations_list = load_station_list(STATION_FILENAME)
     with io.open(STATION_FILENAME, 'w', encoding='utf-8') as f:
         _print('Fetch list of prefectures ...', end='', flush=True)
         prefs = list(get_prefectures())
