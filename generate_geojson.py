@@ -12,10 +12,8 @@ STATION_ID_MAPPING_FILENAME = 'data/stations_id_mapping.csv'
 
 def load_station_id_mapping(filename):
     mapping = {}
-    with io.open(filename, 'r', encoding='utf-8') as f:
-        for line in f:
-            pref_id, station_id, name = line.strip().split('\t')
-            mapping[name] = "/".join([pref_id, station_id])
+    for station in load_station_list(filename):
+        mapping[station.name] = station.station_id
 
     return mapping
 
@@ -34,8 +32,8 @@ def convert_feature(station, old_station_ids):
 
 def main():
     stations = load_station_list(STATION_FILENAME)
-    old_statioN_ids = load_station_id_mapping(STATION_ID_MAPPING_FILENAME)
-    features = (convert_feature(s, old_statioN_ids) for s in stations)
+    old_station_ids = load_station_id_mapping(STATION_ID_MAPPING_FILENAME)
+    features = (convert_feature(s, old_station_ids) for s in stations)
     with io.open('data/stations.geojson', 'w', encoding='utf-8') as f:
         json = geojson.dumps(FeatureCollection(list(filter(bool, features))),
                              ensure_ascii=False)
