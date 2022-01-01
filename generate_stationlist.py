@@ -97,7 +97,7 @@ def get_stations(pref):
             elif key == u'所在地':
                 address = value
             elif key == u'TEL':
-                tel = value
+                tel = station[1][0].text or ''
             elif key == u'営業時間':
                 hours = value or ''
 
@@ -125,7 +125,7 @@ def load_station_list(filename):
         for line in f:
             data = line.strip().split('\t')
             stations.append(Station(data[0], data[1], data[2], data[3],
-                                    '<tel>', data[4], data[5], data[6], data[7]))
+                                    data[4], data[5], data[6], data[7], data[8]))
 
     return stations
 
@@ -140,7 +140,7 @@ def main():
             _print('Processing %s(%s) ...' % (pref.name, pref.id), end='', flush=True)
             for station in get_stations(pref):
                 row = [station.pref_id, station.station_id,
-                       station.name, station.address, station.hours,
+                       station.name, station.address, station.tel, station.hours,
                        station.uri, str(station.lat), str(station.lng)]
                 f.write('\t'.join(row) + '\n')
                 f.flush()
