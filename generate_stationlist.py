@@ -103,8 +103,12 @@ def get_stations(pref):
 
         matched = re.search('www.google.com/maps/.+\?q=(.*),(.*)&', content)
         if matched:
-            lat = float(matched.group(1))
-            lng = float(matched.group(2))
+            try:
+                lat = float(matched.group(1))
+                lng = float(matched.group(2))
+            except:
+                lat = 0
+                lng = 0
 
         yield Station(pref.id, station_id, name, address, tel, hours, uri, lat, lng)
 
