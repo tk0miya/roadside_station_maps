@@ -11,24 +11,39 @@
         "presets": ["es2015", "react"]
     },
     "scripts": {
-        "start": "watchify -t babelify -o html/js/bundle.js -v -d html/js/app.js",
-        "build": "browserify -t babelify . > html/js/bundle.js"
+        "start": "gulp watch",
+        "build": "gulp build",
+        "lint": "biome check .",
+        "lint:fix": "biome check --write .",
+        "format": "biome format --write .",
+        "typecheck": "tsc --noEmit",
+        "serve": "gulp serve",
+        "dev": "gulp"
     },
-    "dependencies": [
-        "babelify",
-        "babel-preset-es2015",
-        "babel-preset-react",
-        "browserify",
-        "clipboard",
-        "gulp",
-        "gulp-sourcemaps",
-        "gulp-webserver",
-        "jquery",
-        "query-string",
-        "react",
-        "react-dom",
-        "vinyl-source-stream",
-        "vinyl-buffer",
-        "watchify"
-    ]
+    "dependencies": {
+        "babelify": "^10.0.0",
+        "babel-preset-es2015": "^6.24.1",
+        "babel-preset-react": "^6.24.1",
+        "browserify": "^17.0.0",
+        "clipboard": "^2.0.11",
+        "gulp": "^4.0.2",
+        "gulp-sourcemaps": "^3.0.0",
+        "gulp-webserver": "^0.9.1",
+        "jquery": "^3.7.1",
+        "query-string": "^7.1.3",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "vinyl-source-stream": "^2.0.0",
+        "vinyl-buffer": "^1.0.1",
+        "watchify": "^4.0.0"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.0.0",
+        "@types/jquery": "^3.5.31",
+        "@types/node": "^22.10.2",
+        "@types/react": "^18.3.18",
+        "@types/react-dom": "^18.3.5",
+        "tsify": "^5.0.4",
+        "typescript": "^5.7.2"
+    }
 }
