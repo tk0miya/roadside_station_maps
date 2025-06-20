@@ -13,4 +13,4 @@ data/stations.csv: bin/python
 
 .PHONY: data/stations.geojson
 data/stations.geojson: data/stations.csv
-	bin/python generate_geojson.py
+	npm run generate:geojson

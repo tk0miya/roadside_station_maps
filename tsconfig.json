@@ -24,7 +24,8 @@
   },
   "include": [
     "html/js/**/*",
-    "*.js"
+    "*.js",
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
