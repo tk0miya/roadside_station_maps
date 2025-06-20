@@ -9,3 +9,6 @@ include/
 lib/
 node_modules
 pip-selfcheck.json
+
+# Claude Code settings
+.claude/
