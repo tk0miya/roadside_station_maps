@@ -5,7 +5,6 @@
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"dockerFile": "Dockerfile",
 	"features": {
-		"ghcr.io/devcontainers/features/python:1": {},
 		"ghcr.io/anthropics/devcontainer-features/claude-code:latest": {}
 	},
 	"postCreateCommand": "sudo chown -R node:node /home/node/.claude ${containerWorkspaceFolder}/node_modules /shell_history",
