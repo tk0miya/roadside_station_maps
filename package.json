@@ -29,7 +29,7 @@
         "clipboard": "^2.0.11",
         "jaconv": "^1.0.4",
         "jquery": "^3.7.1",
-        "query-string": "^7.1.3",
+        "query-string": "^9.2.1",
         "react": "^18.2.0",
         "react-dom": "^18.2.0"
     },
