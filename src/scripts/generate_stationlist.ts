@@ -192,11 +192,7 @@ async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
 
 async function main(): Promise<void> {
   process.stdout.write('Fetch list of prefectures ...');
-  const prefs: Prefecture[] = [];
-
-  for await (const pref of getPrefectures()) {
-    prefs.push(pref);
-  }
+  const prefs = await Array.fromAsync(getPrefectures());
 
   process.stdout.write(' done\n');
 
