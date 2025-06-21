@@ -213,17 +213,6 @@ async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
   }
 }
 
-function print(text: string, options: { end?: string; flush?: boolean } = {}): void {
-  if (options.end !== undefined) {
-    process.stdout.write(text + options.end);
-  } else {
-    console.log(text);
-  }
-
-  if (options.flush) {
-    // Node.js automatically flushes stdout, but we can ensure it
-  }
-}
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -270,17 +259,17 @@ async function main(): Promise<void> {
   const writeStream = fs.createWriteStream(STATION_FILENAME, { encoding: 'utf-8' });
 
   try {
-    print('Fetch list of prefectures ...', { end: '', flush: true });
+    process.stdout.write('Fetch list of prefectures ...');
     const prefs: Prefecture[] = [];
 
     for await (const pref of getPrefectures()) {
       prefs.push(pref);
     }
 
-    print(' done');
+    process.stdout.write(' done\n');
 
     for (const pref of prefs) {
-      print(`Processing ${pref.name}(${pref.id}) ...`, { end: '', flush: true });
+      process.stdout.write(`Processing ${pref.name}(${pref.id}) ...`);
 
       for await (const station of getStations(pref)) {
         const row = [
@@ -296,12 +285,12 @@ async function main(): Promise<void> {
         ];
 
         writeStream.write(row.join('\t') + '\n');
-        print('.', { end: '', flush: true });
+        process.stdout.write('.');
 
         await sleep(FETCH_INTERVAL);
       }
 
-      print(' done');
+      process.stdout.write(' done\n');
     }
 
   } finally {
