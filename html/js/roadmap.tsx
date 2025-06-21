@@ -1,7 +1,7 @@
 import React from 'react';
 const { useEffect, useRef, useState } = React;
 import queryString from 'query-string';
-import { InfoWindow } from './infowindow';
+import { InfoWindow } from './components/InfoWindow';
 import { ClipboardButton } from './components/ClipboardButton';
 
 import { createRoadStation as createQueriesRoadStation } from './roadstation/queries';

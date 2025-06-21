@@ -2,8 +2,8 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 const { useEffect, useRef } = React;
 
-import { createRoadStation as createQueriesRoadStation } from './roadstation/queries';
-import { createRoadStation as createLocalStorageRoadStation } from './roadstation/localstorage';
+import { createRoadStation as createQueriesRoadStation } from '../roadstation/queries';
+import { createRoadStation as createLocalStorageRoadStation } from '../roadstation/localstorage';
 import queryString from 'query-string';
 
 var queries = queryString.parse(location.search);
