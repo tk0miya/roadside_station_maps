@@ -87,6 +87,79 @@ export async function* getPrefectures(): AsyncGenerator<Prefecture> {
   }
 }
 
+export async function getStationDetails(stationUri: string, prefId: string): Promise<Station> {
+  const uri = getUrl(stationUri);
+  const station_id = uri.split('/').pop() || '';
+  
+  let name = '';
+  let address = '';
+  let tel = '';
+  let hours = '';
+  let lat = 'None';
+  let lng = 'None';
+
+  const $station = await fetchPage(uri);
+
+  // Parse station details
+  for (const dlElement of $station('.info dl').toArray()) {
+    const $dl = $station(dlElement);
+    const children = $dl.children();
+
+    if (children.length >= 2) {
+      const key = normalizeText($station(children[0]).text());
+      const valueElement = $station(children[1]);
+      const value = normalizeText(valueElement.text());
+
+      switch (key) {
+        case '道の駅名':
+          name = value;
+          break;
+        case '所在地':
+          address = value;
+          break;
+        case 'TEL':
+          // Get the text of the first anchor element if it exists
+          const linkElement = valueElement.find('a').first();
+          tel = linkElement.length > 0 ? linkElement.text() || '' : '';
+          break;
+        case '営業時間':
+          hours = value || '';
+          break;
+      }
+    }
+  }
+
+  // Extract coordinates from Google Maps URL
+  const stationHtml = $station.html() || '';
+  const coordMatch = stationHtml.match(/www\.google\.com\/maps\/.+\?q=(.*?),(.*?)&/);
+  if (coordMatch) {
+    try {
+      const latValue = parseFloat(coordMatch[1]);
+      const lngValue = parseFloat(coordMatch[2]);
+
+      if (!isNaN(latValue) && !isNaN(lngValue)) {
+        lat = latValue.toString();
+        lng = lngValue.toString();
+      }
+    } catch (error) {
+      lat = '0';
+      lng = '0';
+    }
+  }
+
+  return {
+    pref_id: prefId,
+    station_id,
+    name,
+    address,
+    tel,
+    hours,
+    uri,
+    lat,
+    lng
+  };
+}
+
 export async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
   const $ = await fetchPage(pref.uri);
 
@@ -99,79 +172,11 @@ export async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
 
     if (!href) continue;
 
-    const uri = getUrl(href);
-    const station_id = uri.split('/').pop() || '';
-
-    let name = '';
-    let address = '';
-    let tel = '';
-    let hours = '';
-    let lat = 'None';
-    let lng = 'None';
-
     try {
-      const $station = await fetchPage(uri);
-
-      // Parse station details
-      for (const dlElement of $station('.info dl').toArray()) {
-        const $dl = $station(dlElement);
-        const children = $dl.children();
-
-        if (children.length >= 2) {
-          const key = normalizeText($station(children[0]).text());
-          const valueElement = $station(children[1]);
-          const value = normalizeText(valueElement.text());
-
-          switch (key) {
-            case '道の駅名':
-              name = value;
-              break;
-            case '所在地':
-              address = value;
-              break;
-            case 'TEL':
-              // Get the text of the first anchor element if it exists
-              const linkElement = valueElement.find('a').first();
-              tel = linkElement.length > 0 ? linkElement.text() || '' : '';
-              break;
-            case '営業時間':
-              hours = value || '';
-              break;
-          }
-        }
-      }
-
-      // Extract coordinates from Google Maps URL
-      const stationHtml = $station.html() || '';
-      const coordMatch = stationHtml.match(/www\.google\.com\/maps\/.+\?q=(.*?),(.*?)&/);
-      if (coordMatch) {
-        try {
-          const latValue = parseFloat(coordMatch[1]);
-          const lngValue = parseFloat(coordMatch[2]);
-
-          if (!isNaN(latValue) && !isNaN(lngValue)) {
-            lat = latValue.toString();
-            lng = lngValue.toString();
-          }
-        } catch (error) {
-          lat = '0';
-          lng = '0';
-        }
-      }
-
-      yield {
-        pref_id: pref.id,
-        station_id,
-        name,
-        address,
-        tel,
-        hours,
-        uri,
-        lat,
-        lng
-      };
-
+      const station = await getStationDetails(href, pref.id);
+      yield station;
     } catch (error) {
+      const uri = getUrl(href);
       console.error(`Error processing station ${uri}:`, error);
       // Continue with next station
     }

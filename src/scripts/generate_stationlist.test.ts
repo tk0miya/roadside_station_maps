@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPrefectures, getStations } from './generate_stationlist';
+import { getPrefectures, getStations, getStationDetails } from './generate_stationlist';
 
 describe('generate_stationlist', () => {
   describe('getPrefectures', () => {
@@ -47,6 +47,39 @@ describe('generate_stationlist', () => {
       expect(stationNames).toContain('山北');
       expect(stationNames).toContain('箱根峠');
       expect(stationNames).toContain('清川');
+    });
+  });
+
+  describe('getStationDetails', () => {
+    it('should fetch and parse station details from a specific station page', async () => {
+      // Test with station ID 19150
+      const stationUri = '/stations/views/19150';
+      const prefId = '23'; // Kanagawa
+      
+      const station = await getStationDetails(stationUri, prefId);
+      
+      // Verify station structure
+      expect(station).toHaveProperty('pref_id', '23');
+      expect(station).toHaveProperty('station_id', '19150');
+      expect(station).toHaveProperty('name');
+      expect(station).toHaveProperty('address');
+      expect(station).toHaveProperty('tel');
+      expect(station).toHaveProperty('hours');
+      expect(station).toHaveProperty('uri');
+      expect(station).toHaveProperty('lat');
+      expect(station).toHaveProperty('lng');
+      
+      // Verify specific station data
+      expect(station.name).toBe('箱根峠');
+      expect(station.address).toContain('神奈川県');
+      
+      // Verify coordinates are valid numbers (not 'None')
+      const lat = parseFloat(station.lat);
+      const lng = parseFloat(station.lng);
+      expect(isNaN(lat)).toBe(false);
+      expect(isNaN(lng)).toBe(false);
+      expect(lat).toBeGreaterThan(0);
+      expect(lng).toBeGreaterThan(0);
     });
   });
 });
