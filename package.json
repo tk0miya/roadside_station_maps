@@ -1,32 +1,61 @@
 {
     "name": "roadside_station_maps",
     "version": "0.1.0",
-    "files": ["data", "html"],
+    "files": [
+        "data",
+        "html"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/tk0miya/roadside_station_maps"
     },
     "main": "html/js/app.js",
     "babel": {
-        "presets": ["es2015", "react"]
+        "presets": [
+            "es2015",
+            "react"
+        ]
     },
     "scripts": {
-        "start": "watchify -t babelify -o html/js/bundle.js -v -d html/js/app.js",
-        "build": "browserify -t babelify . > html/js/bundle.js"
+        "start": "gulp watch",
+        "build": "gulp build",
+        "lint": "biome check .",
+        "lint:fix": "biome check --write .",
+        "format": "biome format --write .",
+        "typecheck": "tsc --noEmit",
+        "serve": "gulp serve",
+        "dev": "gulp",
+        "generate:geojson": "npx tsx src/scripts/generate_geojson.ts",
+        "generate:stations": "npx tsx src/scripts/generate_stationlist.ts",
+        "generate:all": "npm run generate:stations && npm run generate:geojson"
     },
-    "dependencies": [
-        "babelify",
-        "babel-preset-es2015",
-        "babel-preset-react",
-        "browserify",
-        "gulp",
-        "gulp-sourcemaps",
-        "gulp-webserver",
-        "jquery",
-        "react",
-        "react-dom",
-        "vinyl-source-stream",
-        "vinyl-buffer",
-        "watchify"
-    ]
+    "dependencies": {
+        "babel-preset-es2015": "^6.24.1",
+        "babel-preset-react": "^6.24.1",
+        "babelify": "^10.0.0",
+        "browserify": "^17.0.0",
+        "cheerio": "^1.1.0",
+        "clipboard": "^2.0.11",
+        "gulp": "^4.0.2",
+        "gulp-sourcemaps": "^3.0.0",
+        "gulp-webserver": "^0.9.1",
+        "jaconv": "^1.0.4",
+        "jquery": "^3.7.1",
+        "query-string": "^7.1.3",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "vinyl-buffer": "^1.0.1",
+        "vinyl-source-stream": "^2.0.0",
+        "watchify": "^4.0.0"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.0.0",
+        "@types/cheerio": "^0.22.35",
+        "@types/jquery": "^3.5.31",
+        "@types/node": "^22.10.2",
+        "@types/react": "^18.3.18",
+        "@types/react-dom": "^18.3.5",
+        "tsify": "^5.0.4",
+        "typescript": "^5.7.2"
+    }
 }

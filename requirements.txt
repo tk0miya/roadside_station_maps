@@ -1,4 +1,0 @@
-lxml
-geocoder
-geojson
-mojimoji

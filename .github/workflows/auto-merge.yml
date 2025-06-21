@@ -1,0 +1,50 @@
+name: Auto-merge
+
+on:
+  pull_request:
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]' && github.repository == 'tk0miya/roadside_station_maps'
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.STATION_UPDATE_APP_ID }}
+          private-key: ${{ secrets.STATION_UPDATE_APP_PRIVATE_KEY }}
+
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+
+      - name: Auto-approve and merge
+        if: steps.metadata.outputs.update-type == 'version-update:semver-minor' || steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        run: |
+          gh pr review --approve "$PR_URL"
+          gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+  station_data:
+    runs-on: ubuntu-latest
+    if: github.actor == 'roadside-station-updater[bot]' && github.repository == 'tk0miya/roadside_station_maps'
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.STATION_UPDATE_APP_ID }}
+          private-key: ${{ secrets.STATION_UPDATE_APP_PRIVATE_KEY }}
+
+      - name: Approve a PR
+        run: |
+          gh pr review --approve "$PR_URL"
+          gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
