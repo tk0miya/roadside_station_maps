@@ -7,17 +7,14 @@ import { createRoadStation as createLocalStorageRoadStation } from './roadstatio
 import queryString from 'query-string';
 
 var queries = queryString.parse(location.search);
-var createRoadStation = queries.mode == 'shared' 
+var createRoadStation = queries.mode == 'shared'
     ? createQueriesRoadStation(queries)
     : createLocalStorageRoadStation;
 
 export interface InfoWindowProps {
     feature: google.maps.Data.Feature | null;
     map: google.maps.Map;
-    onClick: (feature: google.maps.Data.Feature) => void;
 }
-
-
 
 export var InfoWindow = function(props: InfoWindowProps) {
     const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
@@ -26,7 +23,7 @@ export var InfoWindow = function(props: InfoWindowProps) {
 
     useEffect(() => {
         infoWindowRef.current = new google.maps.InfoWindow();
-        
+
         contentElementRef.current = document.createElement('div');
         contentRootRef.current = createRoot(contentElementRef.current);
     }, []);
@@ -44,10 +41,9 @@ export var InfoWindow = function(props: InfoWindowProps) {
                         <div>営業時間：{station.hours}</div>
                         <div>住所：{station.address}</div>
                         <div>マップコード：{station.mapcode}</div>
-                        <a href="#" onClick={() => props.onClick(props.feature!)}>マーカーの色を変える</a>
                     </div>
                 );
-                
+
                 const geometry = props.feature.getGeometry()! as google.maps.Data.Point;
                 infoWindowRef.current.setOptions({
                     position: geometry.get(),

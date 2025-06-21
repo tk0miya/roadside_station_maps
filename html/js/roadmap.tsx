@@ -9,7 +9,7 @@ import { createRoadStation as createQueriesRoadStation } from './roadstation/que
 import { createRoadStation as createLocalStorageRoadStation } from './roadstation/localstorage';
 
 var queries = queryString.parse(location.search);
-var createRoadStation = queries.mode == 'shared' 
+var createRoadStation = queries.mode == 'shared'
     ? createQueriesRoadStation(queries)
     : createLocalStorageRoadStation;
 
@@ -36,13 +36,13 @@ async function fadeOut(element: HTMLElement, delay: number): Promise<void> {
     // Set up transition
     element.style.transition = 'opacity 0.4s ease-out';
     element.style.opacity = '1';
-    
+
     // Wait for the delay
     await new Promise(resolve => setTimeout(resolve, delay));
-    
+
     // Start fade out
     element.style.opacity = '0';
-    
+
     // Wait for transition to complete
     await new Promise<void>(resolve => {
         element.addEventListener('transitionend', () => resolve(), { once: true });
@@ -53,6 +53,11 @@ export var RoadStationMap = function() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<google.maps.Map | null>(null);
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
+    const featureRef = useRef<google.maps.Data.Feature | null>(null);
+
+    useEffect(() => {
+        featureRef.current = feature;
+    }, [feature]);
 
     useEffect(() => {
         if (mapContainerRef.current) {
@@ -90,9 +95,9 @@ export var RoadStationMap = function() {
             const div = document.createElement('div');
             div.className = 'clipboard-message';
             div.innerText = 'クリップボードにコピーしました。';
-            
+
             topControls.push(div);
-            
+
             // Fade out after 3 seconds
             await fadeOut(div, 3000);
             topControls.pop();
@@ -119,17 +124,9 @@ export var RoadStationMap = function() {
     const onMapClicked = () => {
         setFeature(null);
     };
-    
-    const onMarkerStyleModifierClicked = (clickedFeature: google.maps.Data.Feature) => {
-        if (mapRef.current) {
-            var station = createRoadStation(clickedFeature);
-            mapRef.current.data.overrideStyle(clickedFeature, station.changeStyle());
-            setFeature(null);
-        }
-    };
-    
+
     const onMarkerClicked = (event: google.maps.Data.MouseEvent) => {
-        if (mapRef.current && feature === event.feature) {
+        if (mapRef.current && featureRef.current === event.feature) {
             var station = createRoadStation(event.feature);
             mapRef.current.data.overrideStyle(event.feature, station.changeStyle());
         } else {
@@ -152,7 +149,6 @@ export var RoadStationMap = function() {
                 <InfoWindow
                     feature={feature}
                     map={mapRef.current}
-                    onClick={onMarkerStyleModifierClicked}
                 />
             )}
         </>
