@@ -23,13 +23,12 @@ jobs:
 
       - name: Auto-approve and merge
         if: steps.metadata.outputs.update-type == 'version-update:semver-minor' || steps.metadata.outputs.update-type == 'version-update:semver-patch'
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           gh pr review --approve "$PR_URL"
           gh pr merge --auto --merge "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
   station_data:
     runs-on: ubuntu-latest

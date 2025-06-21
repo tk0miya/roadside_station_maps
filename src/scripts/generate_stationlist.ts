@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import * as cheerio from 'cheerio';
 import type { CheerioAPI } from 'cheerio';
 import { setTimeout } from 'timers/promises';
