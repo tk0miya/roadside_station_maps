@@ -125,14 +125,6 @@ export var RoadStationMap = function() {
         setFeature(null);
     };
 
-    const onMarkerStyleModifierClicked = (clickedFeature: google.maps.Data.Feature) => {
-        if (mapRef.current) {
-            var station = createRoadStation(clickedFeature);
-            mapRef.current.data.overrideStyle(clickedFeature, station.changeStyle());
-            setFeature(null);
-        }
-    };
-
     const onMarkerClicked = (event: google.maps.Data.MouseEvent) => {
         if (mapRef.current && featureRef.current === event.feature) {
             var station = createRoadStation(event.feature);
@@ -157,7 +149,6 @@ export var RoadStationMap = function() {
                 <InfoWindow
                     feature={feature}
                     map={mapRef.current}
-                    onClick={onMarkerStyleModifierClicked}
                 />
             )}
         </>
