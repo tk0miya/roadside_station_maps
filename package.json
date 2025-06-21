@@ -27,7 +27,8 @@
         "dev": "gulp",
         "generate:geojson": "npx tsx src/scripts/generate_geojson.ts",
         "generate:stations": "npx tsx src/scripts/generate_stationlist.ts",
-        "generate:all": "npm run generate:stations && npm run generate:geojson"
+        "generate:all": "npm run generate:stations && npm run generate:geojson",
+        "test": "vitest"
     },
     "dependencies": {
         "babel-preset-es2015": "^6.24.1",
@@ -56,6 +57,7 @@
         "@types/react": "^18.3.18",
         "@types/react-dom": "^18.3.5",
         "tsify": "^5.0.4",
-        "typescript": "^5.7.2"
+        "typescript": "^5.7.2",
+        "vitest": "^3.2.4"
     }
 }

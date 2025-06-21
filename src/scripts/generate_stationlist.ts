@@ -72,7 +72,7 @@ function normalizeText(text: string | null): string {
   return normalized.trim();
 }
 
-async function* getPrefectures(): AsyncGenerator<Prefecture> {
+export async function* getPrefectures(): AsyncGenerator<Prefecture> {
   const $ = await fetchPage('/');
 
   for (const element of $('.station__list dl dd ul li a').toArray()) {
