@@ -3,6 +3,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { CheerioAPI, load } from 'cheerio';
+import { setTimeout } from 'timers/promises';
 const jaconv = require('jaconv');
 
 const BASEURI = 'https://www.michi-no-eki.jp/';
@@ -214,9 +215,6 @@ async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
 }
 
 
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 // @ts-ignore - Keep for future use
 async function loadStationList(filename: string): Promise<StationList> {
@@ -287,7 +285,7 @@ async function main(): Promise<void> {
         writeStream.write(row.join('\t') + '\n');
         process.stdout.write('.');
 
-        await sleep(FETCH_INTERVAL);
+        await setTimeout(FETCH_INTERVAL);
       }
 
       process.stdout.write(' done\n');
