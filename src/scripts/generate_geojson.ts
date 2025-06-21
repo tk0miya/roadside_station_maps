@@ -19,6 +19,7 @@ interface GeoJSONFeature {
     tel: string;
     hours: string;
     uri: string;
+    mapcode: string;
   };
 }
 
@@ -53,7 +54,8 @@ function convertFeature(station: Station): GeoJSONFeature | null {
       address: station.address,
       tel: station.tel,
       hours: station.hours,
-      uri: station.uri
+      uri: station.uri,
+      mapcode: station.mapcode
     }
   };
 }

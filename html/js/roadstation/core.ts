@@ -26,6 +26,7 @@ export class RoadStationCore {
     address: string;
     hours: string;
     uri: string;
+    mapcode: string;
     style_id: number;
 
     constructor(feature: google.maps.Data.Feature, storage: Storage) {
@@ -37,6 +38,7 @@ export class RoadStationCore {
         this.address = feature.getProperty("address") as string;
         this.hours = feature.getProperty("hours") as string;
         this.uri = feature.getProperty("uri") as string;
+        this.mapcode = feature.getProperty("mapcode") as string;
         this.style_id = this.getStyleId();
     }
 
