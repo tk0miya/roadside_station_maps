@@ -12,7 +12,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v1
         with:
-          app-id: ${{ secrets.PR_AUTO_MERGER_APP_ID }}
+          app-id: ${{ vars.PR_AUTO_MERGER_APP_ID }}
           private-key: ${{ secrets.PR_AUTO_MERGER_APP_PRIVATE_KEY }}
 
       - name: Dependabot metadata
@@ -38,7 +38,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v1
         with:
-          app-id: ${{ secrets.PR_AUTO_MERGER_APP_ID }}
+          app-id: ${{ vars.PR_AUTO_MERGER_APP_ID }}
           private-key: ${{ secrets.PR_AUTO_MERGER_APP_PRIVATE_KEY }}
 
       - name: Approve a PR
