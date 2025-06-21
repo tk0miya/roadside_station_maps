@@ -23,30 +23,29 @@ describe('generate_stationlist', () => {
   });
 
   describe('getStations', () => {
-    it('should fetch and parse station list for Kanagawa prefecture', async () => {
-      // Prepare Kanagawa prefecture object
-      const kanagawa = {
-        id: '23',
-        name: '神奈川',
-        uri: '/stations/search/23/all/all'
+    it('should fetch and parse station list for Iwate with pagination', async () => {
+      // Use Iwate prefecture (ID: 13) to test pagination functionality
+      const iwate = {
+        id: '13',
+        name: '岩手',
+        uri: '/stations/search/13/all/all'
       };
 
       // Execute the function with real HTTP request
-      const stations = await Array.fromAsync(getStations(kanagawa));
+      const stations = await Array.fromAsync(getStations(iwate));
 
-      // Verify we got exactly 5 stations in Kanagawa
-      expect(stations).toHaveLength(5);
+      // Iwate has exactly 39 stations
+      expect(stations).toHaveLength(39);
 
       // Verify all stations have the correct prefecture ID
       stations.forEach(station => {
-        expect(station.pref_id).toBe('23');
+        expect(station.pref_id).toBe('13');
       });
 
-      // Check for some known stations in Kanagawa
+      // Check for known stations in Iwate
       const stationNames = stations.map(s => s.name);
-      expect(stationNames).toContain('山北');
-      expect(stationNames).toContain('箱根峠');
-      expect(stationNames).toContain('清川');
+      expect(stationNames).toContain('石鳥谷');
+      expect(stationNames).toContain('区界高原');
     });
   });
 
