@@ -1,7 +1,7 @@
-var RoadStationCore = require('./core.js')
+// @ts-ignore
+const RoadStationCore = require('./core.ts')
 
-
-function createRoadStation(feature) {
+function createRoadStation(feature: google.maps.Data.Feature) {
     return new RoadStationCore(feature, localStorage);
 }
 

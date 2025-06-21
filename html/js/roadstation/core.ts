@@ -93,3 +93,6 @@ class RoadStationCore {
 }
 
 module.exports = RoadStationCore;
+
+// Export to make this file a module and avoid global scope conflicts
+export {};
