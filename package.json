@@ -38,6 +38,7 @@
     "devDependencies": {
         "@biomejs/biome": "^2.0.0",
         "@types/cheerio": "^0.22.35",
+        "@types/clipboard": "^2.0.1",
         "@types/google.maps": "^3.58.1",
         "@types/jquery": "^3.5.31",
         "@types/node": "^22.10.2",

@@ -3,7 +3,8 @@
     "target": "ES2015",
     "module": "commonjs",
     "lib": ["ESNext", "DOM"],
-    "jsx": "react",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "outDir": "./dist",
     "rootDir": "./",
     "strict": true,
@@ -20,7 +21,7 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "types": ["node", "jquery", "@types/google.maps"]
+    "types": ["node", "jquery", "@types/google.maps", "react", "react-dom"]
   },
   "include": [
     "html/js/**/*",
