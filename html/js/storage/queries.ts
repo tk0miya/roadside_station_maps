@@ -25,7 +25,7 @@ interface Queries {
     c4?: string;
 }
 
-class QueryStorage {
+export class QueryStorage {
     mode: string;
     c1: Uint8Array;
     c2: Uint8Array;
@@ -103,4 +103,3 @@ class QueryStorage {
 }
 
 
-module.exports = QueryStorage;

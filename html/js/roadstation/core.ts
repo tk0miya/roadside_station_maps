@@ -17,7 +17,7 @@ interface Storage {
     removeItem(key: string): void;
 }
 
-class RoadStationCore {
+export class RoadStationCore {
     feature: google.maps.Data.Feature;
     storage: Storage;
     pref_id: string;
@@ -92,4 +92,3 @@ class RoadStationCore {
     }
 }
 
-module.exports = RoadStationCore;
