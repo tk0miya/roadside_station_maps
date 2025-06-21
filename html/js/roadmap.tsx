@@ -1,11 +1,14 @@
 var jQuery = require('jquery');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var createReactClass = require('create-react-class');
-var PropTypes = require('prop-types');
+var { useState, useEffect, useRef }: {
+    useState: <T>(initialState: T | (() => T)) => [T, (value: T | ((prev: T) => T)) => void];
+    useEffect: (effect: () => void | (() => void), deps?: any[]) => void;
+    useRef: <T>(initialValue: T) => { current: T };
+} = React;
 var queryString = require('query-string');
 var Clipboard = require('clipboard');
-var QueryStorage = require('./storage/queries.js');
+var QueryStorage = require('./storage/queries.ts');
 
 var queries = queryString.parse(location.search);
 if (queries.mode == 'shared') {
@@ -32,70 +35,95 @@ function getURL() {
     }
 }
 
-var InfoWindow = createReactClass({
-    propTypes: {
-        element: PropTypes.object,
-        map: PropTypes.object,
-        onClick: PropTypes.func
-    },
-    getInitialState: function() {
-        return { feature: null };
-    },
-    componentDidMount: function() {
-        this.infowindow = new google.maps.InfoWindow();
-        this.infowindow.addListener("closeclick", this.close);
-        this.infowindow.setOptions({pixelOffset: new google.maps.Size(0, -30)});
-    },
-    componentDidUpdate: function() {
-        this.infowindow.setContent(this.props.element);
-        if (this.state.feature) {
-            this.infowindow.open(this.props.map);
-        } else {
-            this.infowindow.close();
-        }
-    },
-    onClick: function() {
-        this.props.onClick(this.state.feature);
-    },
-    open: function(feature) {
-        this.setState({ feature: feature });
-    },
-    close: function() {
-        this.setState({ feature: null });
-    },
-    isOpenedFor: function(feature) {
-        if (this.infowindow.getMap() && this.state.feature == feature) {
-            return true;
-        } else {
-            return false;
-        }
-    },
-    render: function() {
-        if (this.state.feature == null) {
-            return <div />;
-        } else {
-            this.infowindow.setPosition(this.state.feature.getGeometry().get());
-            var station = createRoadStation(this.state.feature);
-            return (
-                <div>
-                    <div><a href={station.uri} target="_blank">{station.name}</a></div>
-                    <div>営業時間：{station.hours}</div>
-                    <div>({station.address})</div>
-                    <a href="#" onClick={this.onClick}>マーカーの色を変える</a>
-                </div>
-            );
-        }
-    }
-});
+interface InfoWindowProps {
+    element: HTMLElement;
+    map: google.maps.Map;
+    onClick: (feature: google.maps.Data.Feature) => void;
+    onRef?: (methods: InfoWindowMethods) => void;
+}
 
-var InfoWindowFactory = function(map, onClick) {
+interface InfoWindowMethods {
+    open: (feature: google.maps.Data.Feature) => void;
+    close: () => void;
+    isOpenedFor: (feature: google.maps.Data.Feature) => boolean;
+}
+
+var InfoWindow = function(props: InfoWindowProps) {
+    const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
+    const infowindowRef = useRef<google.maps.InfoWindow | null>(null);
+
+    useEffect(() => {
+        infowindowRef.current = new google.maps.InfoWindow();
+        infowindowRef.current.addListener("closeclick", () => setFeature(null));
+        infowindowRef.current.setOptions({pixelOffset: new google.maps.Size(0, -30)});
+    }, []);
+
+    useEffect(() => {
+        if (infowindowRef.current) {
+            infowindowRef.current.setContent(props.element);
+            if (feature) {
+                infowindowRef.current.open(props.map);
+            } else {
+                infowindowRef.current.close();
+            }
+        }
+    }, [feature, props.element, props.map]);
+
+    const handleClick = () => {
+        if (feature) {
+            props.onClick(feature);
+        }
+    };
+
+    const open = (newFeature: google.maps.Data.Feature) => {
+        setFeature(newFeature);
+    };
+
+    const close = () => {
+        setFeature(null);
+    };
+
+    const isOpenedFor = (checkFeature: google.maps.Data.Feature) => {
+        return !!(infowindowRef.current && (infowindowRef.current as any).getMap() && feature === checkFeature);
+    };
+
+    // Expose methods for external access
+    if (props.onRef) {
+        props.onRef({ open, close, isOpenedFor });
+    }
+
+    if (feature && infowindowRef.current) {
+        const geometry = feature.getGeometry();
+        if (geometry) {
+            infowindowRef.current.setPosition((geometry as any).get());
+        }
+        var station = createRoadStation(feature);
+        return (
+            <div>
+                <div><a href={station.uri} target="_blank">{station.name}</a></div>
+                <div>営業時間：{station.hours}</div>
+                <div>({station.address})</div>
+                <a href="#" onClick={handleClick}>マーカーの色を変える</a>
+            </div>
+        );
+    } else {
+        return <div />;
+    }
+};
+
+var InfoWindowFactory = function(map: google.maps.Map, onClick: (feature: google.maps.Data.Feature) => void): InfoWindowMethods {
     var element = document.createElement("div");
-    var infoWindowRef = React.createRef();
+    var infoWindowMethods = {} as InfoWindowMethods;
     ReactDOM.render(
-        <InfoWindow ref={infoWindowRef} map={map} onClick={onClick} element={element} />,
+        <InfoWindow 
+            map={map} 
+            onClick={onClick} 
+            element={element}
+            onRef={(methods) => Object.assign(infoWindowMethods, methods)}
+        />,
         element
     );
-    return infoWindowRef;
+    return infoWindowMethods;
 };
 
 var RoadStationMap = createReactClass({
