@@ -1,9 +1,8 @@
 import React from 'react';
 const { useEffect, useRef, useState } = React;
 import queryString from 'query-string';
-import Clipboard from 'clipboard';
-import { QueryStorage } from './storage/queries';
 import { InfoWindow } from './infowindow';
+import { ClipboardButton } from './components/ClipboardButton';
 
 import { createRoadStation as createQueriesRoadStation } from './roadstation/queries';
 import { createRoadStation as createLocalStorageRoadStation } from './roadstation/localstorage';
@@ -12,42 +11,6 @@ var queries = queryString.parse(location.search);
 var createRoadStation = queries.mode == 'shared'
     ? createQueriesRoadStation(queries)
     : createLocalStorageRoadStation;
-
-
-function getURL() {
-    var baseuri = window.location.href;
-    if (queries.mode == 'shared') {
-        return baseuri;
-    } else {
-        var storage = new QueryStorage();
-        storage.load_from_localStorage();
-
-        if (baseuri.indexOf("?") > 0) {
-            return window.location.href + "&" + queryString.stringify(storage);
-        } else {
-            return window.location.href + "?" + queryString.stringify(storage);
-        }
-    }
-}
-
-
-// Utility function to fade out an element
-async function fadeOut(element: HTMLElement, delay: number): Promise<void> {
-    // Set up transition
-    element.style.transition = 'opacity 0.4s ease-out';
-    element.style.opacity = '1';
-
-    // Wait for the delay
-    await new Promise(resolve => setTimeout(resolve, delay));
-
-    // Start fade out
-    element.style.opacity = '0';
-
-    // Wait for transition to complete
-    await new Promise<void>(resolve => {
-        element.addEventListener('transitionend', () => resolve(), { once: true });
-    });
-}
 
 export var RoadStationMap = function() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -65,7 +28,6 @@ export var RoadStationMap = function() {
                 center: { lat: 35.6896342, lng: 139.6921007 }, // Shinjuku, Tokyo
                 zoom: 9
             });
-            mapRef.current.controls[google.maps.ControlPosition.TOP_LEFT].push(createClipboardButton());
 
             fetch('../data/stations.geojson')
                 .then(response => response.json())
@@ -75,34 +37,6 @@ export var RoadStationMap = function() {
         }
     }, []);
 
-    const createClipboardButton = () => {
-        var div = document.createElement('div');
-        div.className = 'clipboard'
-        div.innerText = 'シェア';
-
-        var clipboard = new Clipboard('.clipboard', {
-            text: function (_trigger: Element) {
-                return getURL();
-            }
-        });
-        clipboard.on('success', onClipboardCopied);
-        return div;
-    };
-
-    const onClipboardCopied = async () => {
-        if (mapRef.current) {
-            const topControls = mapRef.current.controls[(google.maps.ControlPosition as any).TOP];
-            const div = document.createElement('div');
-            div.className = 'clipboard-message';
-            div.innerText = 'クリップボードにコピーしました。';
-
-            topControls.push(div);
-
-            // Fade out after 3 seconds
-            await fadeOut(div, 3000);
-            topControls.pop();
-        }
-    };
 
     const onGeoJSONLoaded = (data: object) => {
         if (mapRef.current) {
@@ -146,10 +80,13 @@ export var RoadStationMap = function() {
         <>
             <div ref={mapContainerRef} className="map-canvas" />
             {mapRef.current && (
-                <InfoWindow
-                    feature={feature}
-                    map={mapRef.current}
-                />
+                <>
+                    <InfoWindow
+                        feature={feature}
+                        map={mapRef.current}
+                    />
+                    <ClipboardButton map={mapRef.current} />
+                </>
             )}
         </>
     );
