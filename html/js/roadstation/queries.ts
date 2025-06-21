@@ -1,5 +1,5 @@
-import { RoadStationCore } from './core.ts';
-import { QueryStorage } from '../storage/queries.ts';
+import { RoadStationCore } from './core';
+import { QueryStorage } from '../storage/queries';
 
 interface Queries {
     c1?: string;

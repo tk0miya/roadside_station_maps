@@ -4,10 +4,10 @@ import ReactDOM from 'react-dom';
 const { useState, useEffect, useRef } = React;
 import queryString from 'query-string';
 import Clipboard from 'clipboard';
-import { QueryStorage } from './storage/queries.ts';
+import { QueryStorage } from './storage/queries';
 
-import { createRoadStation as createQueriesRoadStation } from './roadstation/queries.ts';
-import { createRoadStation as createLocalStorageRoadStation } from './roadstation/localstorage.ts';
+import { createRoadStation as createQueriesRoadStation } from './roadstation/queries';
+import { createRoadStation as createLocalStorageRoadStation } from './roadstation/localstorage';
 
 var queries = queryString.parse(location.search);
 var createRoadStation = queries.mode == 'shared' 
