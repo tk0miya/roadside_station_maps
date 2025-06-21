@@ -56,11 +56,6 @@ function parseHtml(content: string): CheerioAPI {
   return load(content);
 }
 
-function zenToHan(text: string): string {
-  // Use jaconv to convert zenkaku to hankaku (excluding kana)
-  return jaconv.normalize(text, { kana: false });
-}
-
 function normalizeText(text: string | null): string {
   if (text === null || text === undefined) {
     return '';
@@ -69,9 +64,10 @@ function normalizeText(text: string | null): string {
   let normalized = text;
 
   try {
-    normalized = zenToHan(normalized);
+    // Use jaconv to convert zenkaku to hankaku
+    normalized = jaconv.normalize(normalized, { kana: false });
   } catch (error) {
-    // If zen_to_han fails, continue with original text
+    // If normalization fails, continue with original text
   }
 
   // Remove line breaks
