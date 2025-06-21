@@ -64,11 +64,6 @@ export var InfoWindow = function(props: InfoWindowProps) {
         }
     }, [feature, props.element, props.map]);
 
-    const handleClick = () => {
-        if (feature) {
-            props.onClick(feature);
-        }
-    };
 
     const open = (newFeature: google.maps.Data.Feature) => {
         setFeature(newFeature);
@@ -97,7 +92,7 @@ export var InfoWindow = function(props: InfoWindowProps) {
             <div>
                 <div>営業時間：{station.hours}</div>
                 <div>マップコード：{station.mapcode}</div>
-                <a href="#" onClick={handleClick}>マーカーの色を変える</a>
+                <a href="#" onClick={() => props.onClick(feature)}>マーカーの色を変える</a>
             </div>
         );
     } else {
