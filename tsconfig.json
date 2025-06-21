@@ -20,7 +20,7 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "types": ["node", "jquery"]
+    "types": ["node", "jquery", "@types/google.maps"]
   },
   "include": [
     "html/js/**/*",
