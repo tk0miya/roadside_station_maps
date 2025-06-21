@@ -147,7 +147,7 @@ export var RoadStationMap = function() {
         div.innerText = 'シェア';
 
         var clipboard = new Clipboard('.clipboard', {
-            text: function (_trigger: any) {
+            text: function (_trigger: Element) {
                 return getURL();
             }
         });
@@ -155,7 +155,7 @@ export var RoadStationMap = function() {
         return div;
     };
 
-    const onClipboardCopied = (_event: any) => {
+    const onClipboardCopied = (_event: ClipboardJS.Event) => {
         if (mapRef.current) {
             var top_controls = mapRef.current.controls[(google.maps.ControlPosition as any).TOP];
             var div = document.createElement('div');
@@ -171,7 +171,7 @@ export var RoadStationMap = function() {
         }
     };
 
-    const onGeoJSONLoaded = (data: any) => {
+    const onGeoJSONLoaded = (data: object) => {
         if (mapRef.current) {
             mapRef.current.addListener("click", onMapClicked);
             mapRef.current.data.addGeoJson(data);
