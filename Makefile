@@ -8,8 +8,8 @@ bin/python:
 	bin/pip install -r requirements.txt
 
 .PHONY: data/stations.csv
-data/stations.csv: bin/python
-	bin/python generate_stationlist.py
+data/stations.csv:
+	npm run generate:stations
 
 .PHONY: data/stations.geojson
 data/stations.geojson: data/stations.csv
