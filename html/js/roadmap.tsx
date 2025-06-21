@@ -50,21 +50,21 @@ interface InfoWindowMethods {
 
 var InfoWindow = function(props: InfoWindowProps) {
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
-    const infowindowRef = useRef<google.maps.InfoWindow | null>(null);
+    const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
 
     useEffect(() => {
-        infowindowRef.current = new google.maps.InfoWindow();
-        infowindowRef.current.addListener("closeclick", () => setFeature(null));
-        infowindowRef.current.setOptions({pixelOffset: new google.maps.Size(0, -30)});
+        infoWindowRef.current = new google.maps.InfoWindow();
+        infoWindowRef.current.addListener("closeclick", () => setFeature(null));
+        infoWindowRef.current.setOptions({pixelOffset: new google.maps.Size(0, -30)});
     }, []);
 
     useEffect(() => {
-        if (infowindowRef.current) {
-            infowindowRef.current.setContent(props.element);
+        if (infoWindowRef.current) {
+            infoWindowRef.current.setContent(props.element);
             if (feature) {
-                infowindowRef.current.open(props.map);
+                infoWindowRef.current.open(props.map);
             } else {
-                infowindowRef.current.close();
+                infoWindowRef.current.close();
             }
         }
     }, [feature, props.element, props.map]);
@@ -84,7 +84,7 @@ var InfoWindow = function(props: InfoWindowProps) {
     };
 
     const isOpenedFor = (checkFeature: google.maps.Data.Feature) => {
-        return !!(infowindowRef.current && (infowindowRef.current as any).getMap() && feature === checkFeature);
+        return !!(infoWindowRef.current && (infoWindowRef.current as any).getMap() && feature === checkFeature);
     };
 
     // Expose methods for external access
@@ -92,10 +92,10 @@ var InfoWindow = function(props: InfoWindowProps) {
         props.onRef({ open, close, isOpenedFor });
     }
 
-    if (feature && infowindowRef.current) {
+    if (feature && infoWindowRef.current) {
         const geometry = feature.getGeometry();
         if (geometry) {
-            infowindowRef.current.setPosition((geometry as any).get());
+            infoWindowRef.current.setPosition((geometry as any).get());
         }
         var station = createRoadStation(feature);
         return (
@@ -126,85 +126,102 @@ var InfoWindowFactory = function(map: google.maps.Map, onClick: (feature: google
     return infoWindowMethods;
 };
 
-var RoadStationMap = createReactClass({
-    getInitialState: function() {
-        return { data: null };
-    },
-    componentDidMount: function() {
-        this.map = new google.maps.Map(ReactDOM.findDOMNode(this), {
-            center: { lat: 35.6896342, lng: 139.6921007 }, // Shinjuku, Tokyo
-            zoom: 9
-        });
-        this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(this.createClipboardButton());
-        this.infowindow = InfoWindowFactory(this.map, this.onMarkerStyleModifierClicked);
+var RoadStationMap = function() {
+    const mapContainerRef = useRef<HTMLDivElement | null>(null);
+    const mapRef = useRef<google.maps.Map | null>(null);
+    const infoWindowRef = useRef<InfoWindowMethods | null>(null);
 
-        jQuery.getJSON('../data/stations.geojson', this.onGeoJSONLoaded);
-        navigator.geolocation.getCurrentPosition(this.onCurrentPositionGot)
-    },
-    render: function() {
-        return React.createElement('div', { className: 'map-canvas' });
-    },
-    createClipboardButton: function() {
+    useEffect(() => {
+        if (mapContainerRef.current) {
+            mapRef.current = new google.maps.Map(mapContainerRef.current, {
+                center: { lat: 35.6896342, lng: 139.6921007 }, // Shinjuku, Tokyo
+                zoom: 9
+            });
+            mapRef.current.controls[google.maps.ControlPosition.TOP_LEFT].push(createClipboardButton());
+            infoWindowRef.current = InfoWindowFactory(mapRef.current, onMarkerStyleModifierClicked);
+
+            jQuery.getJSON('../data/stations.geojson', onGeoJSONLoaded);
+            navigator.geolocation.getCurrentPosition(onCurrentPositionGot);
+        }
+    }, []);
+
+    const createClipboardButton = () => {
         var div = document.createElement('div');
         div.className = 'clipboard'
         div.innerText = 'シェア';
 
         var clipboard = new Clipboard('.clipboard', {
-            text: function (trigger) {
+            text: function (_trigger: any) {
                 return getURL();
             }
         });
-        clipboard.on('success', this.onClipboardCopied);
-        return div
-    },
-    onClipboardCopied: function(event) {
-        var top_controls = this.map.controls[google.maps.ControlPosition.TOP];
-        var div = document.createElement('div');
-        div.className = 'clipboard-message';
-        div.innerText = 'クリップボードにコピーしました。';
-        top_controls.push(div);
+        clipboard.on('success', onClipboardCopied);
+        return div;
+    };
 
-        setTimeout(function() {
-            jQuery(div).fadeOut("normal", function() {
-                top_controls.pop();
-            });
-        },
-        3000);
-    },
-    onGeoJSONLoaded: function(data) {
-        this.map.addListener("click", this.onMapClicked);
-        this.map.data.addGeoJson(data);
-        this.map.data.addListener('click', this.onMarkerClicked);
-        this.map.data.addListener('dblclick', this.onMarkerDoubleClicked);
-        this.map.data.setStyle(function(feature) {
-            return createRoadStation(feature).getStyle();
-        });
-    },
-    onCurrentPositionGot: function(pos) {
-        var latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-        this.map.setCenter(latlng);
-    },
-    onMapClicked: function() {
-        this.infowindow.current.close();
-    },
-    onMarkerStyleModifierClicked: function(feature) {
-        var station = createRoadStation(feature);
-        this.map.data.overrideStyle(feature, station.changeStyle());
-        this.infowindow.current.close();
-    },
-    onMarkerClicked: function(event) {
-        if (this.infowindow.current && this.infowindow.current.isOpenedFor(event.feature)) {
-            var station = createRoadStation(event.feature);
-            this.map.data.overrideStyle(event.feature, station.changeStyle());
-        } else {
-            this.infowindow.current.open(event.feature)
+    const onClipboardCopied = (_event: any) => {
+        if (mapRef.current) {
+            var top_controls = mapRef.current.controls[(google.maps.ControlPosition as any).TOP];
+            var div = document.createElement('div');
+            div.className = 'clipboard-message';
+            div.innerText = 'クリップボードにコピーしました。';
+            top_controls.push(div);
+
+            setTimeout(function() {
+                jQuery(div).fadeOut("normal", function() {
+                    top_controls.pop();
+                });
+            }, 3000);
         }
-    },
-    onMarkerDoubleClicked: function(event) {
-        var station = createRoadStation(event.feature);
-        this.map.data.overrideStyle(event.feature, station.changeStyle());
-        this.infowindow.current.close();
-    }
-});
+    };
+
+    const onGeoJSONLoaded = (data: any) => {
+        if (mapRef.current) {
+            mapRef.current.addListener("click", onMapClicked);
+            mapRef.current.data.addGeoJson(data);
+            mapRef.current.data.addListener('click', onMarkerClicked);
+            mapRef.current.data.addListener('dblclick', onMarkerDoubleClicked);
+            mapRef.current.data.setStyle(function(feature: google.maps.Data.Feature) {
+                return createRoadStation(feature).getStyle();
+            });
+        }
+    };
+    const onCurrentPositionGot = (pos: GeolocationPosition) => {
+        if (mapRef.current) {
+            var latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+            mapRef.current.setCenter(latlng);
+        }
+    };
+    const onMapClicked = () => {
+        if (infoWindowRef.current) {
+            infoWindowRef.current.close();
+        }
+    };
+    const onMarkerStyleModifierClicked = (feature: google.maps.Data.Feature) => {
+        if (mapRef.current && infoWindowRef.current) {
+            var station = createRoadStation(feature);
+            mapRef.current.data.overrideStyle(feature, station.changeStyle());
+            infoWindowRef.current.close();
+        }
+    };
+    const onMarkerClicked = (event: google.maps.Data.MouseEvent) => {
+        if (mapRef.current && infoWindowRef.current && infoWindowRef.current.isOpenedFor(event.feature)) {
+            var station = createRoadStation(event.feature);
+            mapRef.current.data.overrideStyle(event.feature, station.changeStyle());
+        } else if (infoWindowRef.current) {
+            infoWindowRef.current.open(event.feature);
+        }
+    };
+
+    const onMarkerDoubleClicked = (event: google.maps.Data.MouseEvent) => {
+        if (mapRef.current && infoWindowRef.current) {
+            var station = createRoadStation(event.feature);
+            mapRef.current.data.overrideStyle(event.feature, station.changeStyle());
+            infoWindowRef.current.close();
+        }
+    };
+
+    return <div ref={mapContainerRef} className="map-canvas" />;
+};
 
 module.exports = RoadStationMap;
