@@ -1,6 +1,8 @@
 var jQuery = require('jquery');
 var React = require('react');
 var ReactDOM = require('react-dom');
+var createReactClass = require('create-react-class');
+var PropTypes = require('prop-types');
 var queryString = require('query-string');
 var Clipboard = require('clipboard');
 var QueryStorage = require('./storage/queries.js');
@@ -30,11 +32,11 @@ function getURL() {
     }
 }
 
-var InfoWindow = React.createClass({
+var InfoWindow = createReactClass({
     propTypes: {
-        element: React.PropTypes.object,
-        map: React.PropTypes.object,
-        onClick: React.PropTypes.func
+        element: PropTypes.object,
+        map: PropTypes.object,
+        onClick: PropTypes.func
     },
     getInitialState: function() {
         return { feature: null };
@@ -88,13 +90,15 @@ var InfoWindow = React.createClass({
 
 var InfoWindowFactory = function(map, onClick) {
     var element = document.createElement("div");
-    return ReactDOM.render(
-        <InfoWindow map={map} onClick={onClick} element={element} />,
+    var infoWindowRef = React.createRef();
+    ReactDOM.render(
+        <InfoWindow ref={infoWindowRef} map={map} onClick={onClick} element={element} />,
         element
     );
+    return infoWindowRef;
 };
 
-var RoadStationMap = React.createClass({
+var RoadStationMap = createReactClass({
     getInitialState: function() {
         return { data: null };
     },
@@ -153,25 +157,25 @@ var RoadStationMap = React.createClass({
         this.map.setCenter(latlng);
     },
     onMapClicked: function() {
-        this.infowindow.close();
+        this.infowindow.current.close();
     },
     onMarkerStyleModifierClicked: function(feature) {
         var station = createRoadStation(feature);
         this.map.data.overrideStyle(feature, station.changeStyle());
-        this.infowindow.close();
+        this.infowindow.current.close();
     },
     onMarkerClicked: function(event) {
-        if (this.infowindow.isOpenedFor(event.feature)) {
+        if (this.infowindow.current && this.infowindow.current.isOpenedFor(event.feature)) {
             var station = createRoadStation(event.feature);
             this.map.data.overrideStyle(event.feature, station.changeStyle());
         } else {
-            this.infowindow.open(event.feature)
+            this.infowindow.current.open(event.feature)
         }
     },
     onMarkerDoubleClicked: function(event) {
         var station = createRoadStation(event.feature);
         this.map.data.overrideStyle(event.feature, station.changeStyle());
-        this.infowindow.close();
+        this.infowindow.current.close();
     }
 });
 
