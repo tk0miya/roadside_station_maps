@@ -104,3 +104,6 @@ class QueryStorage {
 
 
 module.exports = QueryStorage;
+
+// Export to make this file a module and avoid global scope conflicts
+export {};
