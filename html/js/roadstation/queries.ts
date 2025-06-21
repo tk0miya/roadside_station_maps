@@ -1,10 +1,7 @@
-// @ts-ignore
-var RoadStationCore = require('./core.ts');
-// @ts-ignore
-var QueryStorage = require('../storage/queries.ts');
+import { RoadStationCore } from './core.ts';
+import { QueryStorage } from '../storage/queries.ts';
 
-
-function createRoadStation(queries: any) {
+export function createRoadStation(queries: any) {
     var storage = new QueryStorage();
     storage.load_from_queries(queries);
     return function (feature: google.maps.Data.Feature) {
@@ -12,7 +9,3 @@ function createRoadStation(queries: any) {
     }
 }
 
-module.exports = createRoadStation;
-
-// Export to make this file a module and avoid global scope conflicts
-export {};

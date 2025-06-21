@@ -1,22 +1,18 @@
-var jQuery = require('jquery');
-var React = require('react');
-var ReactDOM = require('react-dom');
-var { useState, useEffect, useRef }: {
-    useState: <T>(initialState: T | (() => T)) => [T, (value: T | ((prev: T) => T)) => void];
-    useEffect: (effect: () => void | (() => void), deps?: any[]) => void;
-    useRef: <T>(initialValue: T) => { current: T };
-} = React;
-var queryString = require('query-string');
-var Clipboard = require('clipboard');
-var QueryStorage = require('./storage/queries.ts');
+import jQuery from 'jquery';
+import React from 'react';
+import ReactDOM from 'react-dom';
+const { useState, useEffect, useRef } = React;
+import queryString from 'query-string';
+import Clipboard from 'clipboard';
+import { QueryStorage } from './storage/queries.ts';
+
+import { createRoadStation as createQueriesRoadStation } from './roadstation/queries.ts';
+import { createRoadStation as createLocalStorageRoadStation } from './roadstation/localstorage.ts';
 
 var queries = queryString.parse(location.search);
-if (queries.mode == 'shared') {
-    var createQueriesRoadStation = require('./roadstation/queries.js');
-    var createRoadStation = createQueriesRoadStation(queries);
-} else {
-    var createRoadStation = require('./roadstation/localstorage.js');
-}
+var createRoadStation = queries.mode == 'shared' 
+    ? createQueriesRoadStation(queries)
+    : createLocalStorageRoadStation;
 
 
 function getURL() {
@@ -48,7 +44,7 @@ interface InfoWindowMethods {
     isOpenedFor: (feature: google.maps.Data.Feature) => boolean;
 }
 
-var InfoWindow = function(props: InfoWindowProps) {
+export var InfoWindow = function(props: InfoWindowProps) {
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
     const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
 
@@ -111,7 +107,7 @@ var InfoWindow = function(props: InfoWindowProps) {
     }
 };
 
-var InfoWindowFactory = function(map: google.maps.Map, onClick: (feature: google.maps.Data.Feature) => void): InfoWindowMethods {
+export var InfoWindowFactory = function(map: google.maps.Map, onClick: (feature: google.maps.Data.Feature) => void): InfoWindowMethods {
     var element = document.createElement("div");
     var infoWindowMethods = {} as InfoWindowMethods;
     ReactDOM.render(
@@ -126,7 +122,7 @@ var InfoWindowFactory = function(map: google.maps.Map, onClick: (feature: google
     return infoWindowMethods;
 };
 
-var RoadStationMap = function() {
+export var RoadStationMap = function() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<google.maps.Map | null>(null);
     const infoWindowRef = useRef<InfoWindowMethods | null>(null);
@@ -224,4 +220,3 @@ var RoadStationMap = function() {
     return <div ref={mapContainerRef} className="map-canvas" />;
 };
 
-module.exports = RoadStationMap;
