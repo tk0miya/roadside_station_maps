@@ -2,7 +2,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { CheerioAPI, load } from 'cheerio';
+import * as cheerio from 'cheerio';
+import type { CheerioAPI } from 'cheerio';
 import { setTimeout } from 'timers/promises';
 const jaconv = require('jaconv');
 
@@ -37,7 +38,7 @@ function getUrl(path: string): string {
   }
 }
 
-async function fetchPage(path: string): Promise<string> {
+async function fetchPage(path: string): Promise<CheerioAPI> {
   const response = await fetch(getUrl(path), {
     // Disable SSL verification equivalent
     headers: {
@@ -49,11 +50,8 @@ async function fetchPage(path: string): Promise<string> {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  return await response.text();
-}
-
-function parseHtml(content: string): CheerioAPI {
-  return load(content);
+  const content = await response.text();
+  return cheerio.load(content);
 }
 
 function normalizeText(text: string | null): string {
@@ -83,8 +81,7 @@ function normalizeText(text: string | null): string {
 }
 
 async function* getPrefectures(): AsyncGenerator<Prefecture> {
-  const content = await fetchPage('/');
-  const $ = parseHtml(content);
+  const $ = await fetchPage('/');
 
   for (const element of $('.station__list dl dd ul li a').toArray()) {
     const $element = $(element);
@@ -99,8 +96,7 @@ async function* getPrefectures(): AsyncGenerator<Prefecture> {
 }
 
 async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
-  const content = await fetchPage(pref.uri);
-  const $ = parseHtml(content);
+  const $ = await fetchPage(pref.uri);
 
   // Check for next page
   const nextPageElement = $('.paging .next a');
@@ -122,17 +118,16 @@ async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
     let lng = 'None';
 
     try {
-      const stationContent = await fetchPage(uri);
-      const $ = parseHtml(stationContent);
+      const $station = await fetchPage(uri);
 
       // Parse station details
-      for (const dlElement of $('.info dl').toArray()) {
-        const $dl = $(dlElement);
+      for (const dlElement of $station('.info dl').toArray()) {
+        const $dl = $station(dlElement);
         const children = $dl.children();
 
         if (children.length >= 2) {
-          const key = normalizeText($(children[0]).text());
-          const valueElement = $(children[1]);
+          const key = normalizeText($station(children[0]).text());
+          const valueElement = $station(children[1]);
           const value = normalizeText(valueElement.text());
 
           switch (key) {
@@ -155,7 +150,8 @@ async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
       }
 
       // Extract coordinates from Google Maps URL
-      const coordMatch = stationContent.match(/www\.google\.com\/maps\/.+\?q=(.*?),(.*?)&/);
+      const stationHtml = $station.html() || '';
+      const coordMatch = stationHtml.match(/www\.google\.com\/maps\/.+\?q=(.*?),(.*?)&/);
       if (coordMatch) {
         try {
           const latValue = parseFloat(coordMatch[1]);
