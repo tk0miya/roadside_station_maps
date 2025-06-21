@@ -152,7 +152,6 @@ export var RoadStationMap = function() {
                 <InfoWindow
                     feature={feature}
                     map={mapRef.current}
-                    onClose={() => setFeature(null)}
                     onClick={onMarkerStyleModifierClicked}
                 />
             )}
