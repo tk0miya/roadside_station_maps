@@ -22,7 +22,6 @@ export class RoadStationCore {
     storage: Storage;
     pref_id: string;
     station_id: string;
-    old_station_id: string | null;
     name: string;
     address: string;
     hours: string;
@@ -34,7 +33,6 @@ export class RoadStationCore {
         this.storage = storage;
         this.pref_id = feature.getProperty("pref_id") as string;
         this.station_id = feature.getProperty("station_id") as string;
-        this.old_station_id = feature.getProperty("old_station_id") as string | null;
         this.name = feature.getProperty("name") as string;
         this.address = feature.getProperty("address") as string;
         this.hours = feature.getProperty("hours") as string;
@@ -47,23 +45,6 @@ export class RoadStationCore {
         if (style_id) {
             return parseInt(style_id);
         }
-
-        // fallback from oldkey
-        if (this.old_station_id) {
-            // key format: station_id
-            let fallback_style_id = this.storage.getItem(this.old_station_id.split("/")[1]);
-            if (!fallback_style_id) {
-                // key format: pref_id/station_id
-                fallback_style_id = this.storage.getItem(this.old_station_id);
-            }
-            if (fallback_style_id) {
-                this.storage.removeItem(this.old_station_id);
-                this.storage.removeItem(this.old_station_id.split("/")[1]);
-                this.storage.setItem(this.station_id, fallback_style_id);
-                return parseInt(fallback_style_id);
-            }
-        }
-
         return 0;
     }
 
