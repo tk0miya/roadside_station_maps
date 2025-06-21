@@ -1,4 +1,3 @@
-import jQuery from 'jquery';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 const { useState, useEffect, useRef } = React;
@@ -122,6 +121,24 @@ export var InfoWindowFactory = function(map: google.maps.Map, onClick: (feature:
     return infoWindowMethods;
 };
 
+// Utility function to fade out an element
+async function fadeOut(element: HTMLElement, delay: number): Promise<void> {
+    // Set up transition
+    element.style.transition = 'opacity 0.4s ease-out';
+    element.style.opacity = '1';
+    
+    // Wait for the delay
+    await new Promise(resolve => setTimeout(resolve, delay));
+    
+    // Start fade out
+    element.style.opacity = '0';
+    
+    // Wait for transition to complete
+    await new Promise<void>(resolve => {
+        element.addEventListener('transitionend', () => resolve(), { once: true });
+    });
+}
+
 export var RoadStationMap = function() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<google.maps.Map | null>(null);
@@ -136,7 +153,10 @@ export var RoadStationMap = function() {
             mapRef.current.controls[google.maps.ControlPosition.TOP_LEFT].push(createClipboardButton());
             infoWindowRef.current = InfoWindowFactory(mapRef.current, onMarkerStyleModifierClicked);
 
-            jQuery.getJSON('../data/stations.geojson', onGeoJSONLoaded);
+            fetch('../data/stations.geojson')
+                .then(response => response.json())
+                .then(onGeoJSONLoaded)
+                .catch(error => console.error('Error loading GeoJSON:', error));
             navigator.geolocation.getCurrentPosition(onCurrentPositionGot);
         }
     }, []);
@@ -155,19 +175,18 @@ export var RoadStationMap = function() {
         return div;
     };
 
-    const onClipboardCopied = (_event: ClipboardJS.Event) => {
+    const onClipboardCopied = async () => {
         if (mapRef.current) {
-            var top_controls = mapRef.current.controls[(google.maps.ControlPosition as any).TOP];
-            var div = document.createElement('div');
+            const topControls = mapRef.current.controls[(google.maps.ControlPosition as any).TOP];
+            const div = document.createElement('div');
             div.className = 'clipboard-message';
             div.innerText = 'クリップボードにコピーしました。';
-            top_controls.push(div);
-
-            setTimeout(function() {
-                jQuery(div).fadeOut("normal", function() {
-                    top_controls.pop();
-                });
-            }, 3000);
+            
+            topControls.push(div);
+            
+            // Fade out after 3 seconds
+            await fadeOut(div, 3000);
+            topControls.pop();
         }
     };
 
