@@ -87,7 +87,7 @@ export async function* getPrefectures(): AsyncGenerator<Prefecture> {
   }
 }
 
-async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
+export async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
   const $ = await fetchPage(pref.uri);
 
   // Check for next page
