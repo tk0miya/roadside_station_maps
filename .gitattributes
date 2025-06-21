@@ -1,0 +1,3 @@
+# Treat bundle.js as binary to avoid showing diff
+html/js/bundle.js binary
+html/js/bundle.js.map binary

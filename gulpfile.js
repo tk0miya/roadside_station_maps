@@ -18,7 +18,10 @@ function compile(watch) {
     })
         .plugin(tsify)
         .transform(babelify, {
-            presets: ['es2015', 'react'],
+            presets: [
+                ['@babel/preset-env', {targets: {browsers: ['last 2 versions']}}],
+                ['@babel/preset-react', {runtime: 'automatic'}]
+            ],
             extensions: ['.js', '.jsx', '.ts', '.tsx'],
         });
 
@@ -27,7 +30,7 @@ function compile(watch) {
     }
 
     function rebundle() {
-        bundler
+        return bundler
             .bundle()
             .on('error', function (err) {
                 console.error(err);
@@ -47,7 +50,7 @@ function compile(watch) {
         });
     }
 
-    rebundle();
+    return rebundle();
 }
 
 function watch() {
@@ -58,8 +61,14 @@ function serve() {
     gulp.src('.').pipe(webserver({ port: 8081 }));
 }
 
-gulp.task('build', () => compile());
-gulp.task('serve', () => serve());
-gulp.task('watch', () => watch());
+gulp.task('build', () => {
+    return compile();
+});
+gulp.task('serve', () => {
+    return serve();
+});
+gulp.task('watch', () => {
+    return watch();
+});
 
 gulp.task('default', gulp.series('serve', 'watch'));
