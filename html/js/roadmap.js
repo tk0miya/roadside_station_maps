@@ -90,10 +90,12 @@ var InfoWindow = createReactClass({
 
 var InfoWindowFactory = function(map, onClick) {
     var element = document.createElement("div");
-    return ReactDOM.render(
-        <InfoWindow map={map} onClick={onClick} element={element} />,
+    var infoWindowRef = React.createRef();
+    ReactDOM.render(
+        <InfoWindow ref={infoWindowRef} map={map} onClick={onClick} element={element} />,
         element
     );
+    return infoWindowRef;
 };
 
 var RoadStationMap = createReactClass({
@@ -155,25 +157,25 @@ var RoadStationMap = createReactClass({
         this.map.setCenter(latlng);
     },
     onMapClicked: function() {
-        this.infowindow.close();
+        this.infowindow.current.close();
     },
     onMarkerStyleModifierClicked: function(feature) {
         var station = createRoadStation(feature);
         this.map.data.overrideStyle(feature, station.changeStyle());
-        this.infowindow.close();
+        this.infowindow.current.close();
     },
     onMarkerClicked: function(event) {
-        if (this.infowindow.isOpenedFor(event.feature)) {
+        if (this.infowindow.current && this.infowindow.current.isOpenedFor(event.feature)) {
             var station = createRoadStation(event.feature);
             this.map.data.overrideStyle(event.feature, station.changeStyle());
         } else {
-            this.infowindow.open(event.feature)
+            this.infowindow.current.open(event.feature)
         }
     },
     onMarkerDoubleClicked: function(event) {
         var station = createRoadStation(event.feature);
         this.map.data.overrideStyle(event.feature, station.changeStyle());
-        this.infowindow.close();
+        this.infowindow.current.close();
     }
 });
 
