@@ -1,10 +1,9 @@
 *.swp
 *.js.map
-*.pyc
 
-bin/
+dist/
 data/
-include/
-lib/
 node_modules
-pip-selfcheck.json
+
+# Claude Code settings
+.claude/

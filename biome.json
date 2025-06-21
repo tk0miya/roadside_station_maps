@@ -1,0 +1,60 @@
+{
+    "$schema": "https://biomejs.dev/schemas/2.0.2/schema.json",
+    "assist": {
+        "actions": {
+            "source": {
+                "organizeImports": "on"
+            }
+        }
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": true,
+            "complexity": {
+                "noBannedTypes": "error",
+                "noUselessConstructor": "error",
+                "useArrowFunction": "error"
+            },
+            "correctness": {
+                "noUnusedVariables": "error",
+                "useExhaustiveDependencies": "warn"
+            },
+            "style": {
+                "noNonNullAssertion": "warn",
+                "useConst": "error",
+                "useTemplate": "error",
+                "noParameterAssign": "error",
+                "useAsConstAssertion": "error",
+                "useDefaultParameterLast": "error",
+                "useEnumInitializers": "error",
+                "useSelfClosingElements": "error",
+                "useSingleVarDeclarator": "error",
+                "noUnusedTemplateLiteral": "error",
+                "useNumberNamespace": "error",
+                "noInferrableTypes": "error",
+                "noUselessElse": "error"
+            },
+            "suspicious": {
+                "noExplicitAny": "warn"
+            }
+        }
+    },
+    "formatter": {
+        "enabled": true,
+        "formatWithErrors": false,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 120
+    },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "single",
+            "semicolons": "always",
+            "trailingCommas": "es5"
+        }
+    },
+    "files": {
+        "includes": ["**/*.js", "**/gulpfile.js", "!**/node_modules", "!**/dist", "!**/html/js/**/*", "!**/bin"]
+    }
+}

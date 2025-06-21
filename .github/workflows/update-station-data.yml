@@ -1,0 +1,47 @@
+name: Update Station Data
+
+on:
+  schedule:
+    # Run every Monday at 00:00 UTC (09:00 JST)
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+    # Allow manual trigger
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Generate GitHub App token
+      id: app-token
+      uses: actions/create-github-app-token@v1
+      with:
+        app-id: ${{ secrets.STATION_UPDATE_APP_ID }}
+        private-key: ${{ secrets.STATION_UPDATE_APP_PRIVATE_KEY }}
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ steps.app-token.outputs.token }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Generate station data
+      run: npm run generate:all
+
+    - name: Create pull request
+      uses: peter-evans/create-pull-request@v7
+      with:
+        add-paths: data/
+        commit-message: "Update station data"
+        branch: bot/update-station-data
+        title: "Update station data"
+        token: ${{ steps.app-token.outputs.token }}
+
