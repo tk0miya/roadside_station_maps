@@ -1,6 +1,6 @@
 import jQuery from 'jquery';
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 const { useState, useEffect, useRef } = React;
 import queryString from 'query-string';
 import Clipboard from 'clipboard';
@@ -110,14 +110,14 @@ export var InfoWindow = function(props: InfoWindowProps) {
 export var InfoWindowFactory = function(map: google.maps.Map, onClick: (feature: google.maps.Data.Feature) => void): InfoWindowMethods {
     var element = document.createElement("div");
     var infoWindowMethods = {} as InfoWindowMethods;
-    ReactDOM.render(
+    const root = createRoot(element);
+    root.render(
         <InfoWindow 
             map={map} 
             onClick={onClick} 
             element={element}
             onRef={(methods) => Object.assign(infoWindowMethods, methods)}
-        />,
-        element
+        />
     );
     return infoWindowMethods;
 };
