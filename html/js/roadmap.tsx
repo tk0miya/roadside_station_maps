@@ -1,9 +1,9 @@
 import React from 'react';
-const { useEffect, useRef } = React;
+const { useEffect, useRef, useState } = React;
 import queryString from 'query-string';
 import Clipboard from 'clipboard';
 import { QueryStorage } from './storage/queries';
-import { InfoWindowFactory, InfoWindowMethods } from './infowindow';
+import { InfoWindow } from './infowindow';
 
 import { createRoadStation as createQueriesRoadStation } from './roadstation/queries';
 import { createRoadStation as createLocalStorageRoadStation } from './roadstation/localstorage';
@@ -52,7 +52,7 @@ async function fadeOut(element: HTMLElement, delay: number): Promise<void> {
 export var RoadStationMap = function() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<google.maps.Map | null>(null);
-    const infoWindowRef = useRef<InfoWindowMethods | null>(null);
+    const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
 
     useEffect(() => {
         if (mapContainerRef.current) {
@@ -61,7 +61,6 @@ export var RoadStationMap = function() {
                 zoom: 9
             });
             mapRef.current.controls[google.maps.ControlPosition.TOP_LEFT].push(createClipboardButton());
-            infoWindowRef.current = InfoWindowFactory(mapRef.current, onMarkerStyleModifierClicked);
 
             fetch('../data/stations.geojson')
                 .then(response => response.json())
@@ -118,34 +117,46 @@ export var RoadStationMap = function() {
         }
     };
     const onMapClicked = () => {
-        if (infoWindowRef.current) {
-            infoWindowRef.current.close();
+        setFeature(null);
+    };
+    
+    const onMarkerStyleModifierClicked = (clickedFeature: google.maps.Data.Feature) => {
+        if (mapRef.current) {
+            var station = createRoadStation(clickedFeature);
+            mapRef.current.data.overrideStyle(clickedFeature, station.changeStyle());
+            setFeature(null);
         }
     };
-    const onMarkerStyleModifierClicked = (feature: google.maps.Data.Feature) => {
-        if (mapRef.current && infoWindowRef.current) {
-            var station = createRoadStation(feature);
-            mapRef.current.data.overrideStyle(feature, station.changeStyle());
-            infoWindowRef.current.close();
-        }
-    };
+    
     const onMarkerClicked = (event: google.maps.Data.MouseEvent) => {
-        if (mapRef.current && infoWindowRef.current && infoWindowRef.current.isOpenedFor(event.feature)) {
+        if (mapRef.current && feature === event.feature) {
             var station = createRoadStation(event.feature);
             mapRef.current.data.overrideStyle(event.feature, station.changeStyle());
-        } else if (infoWindowRef.current) {
-            infoWindowRef.current.open(event.feature);
+        } else {
+            setFeature(event.feature);
         }
     };
 
     const onMarkerDoubleClicked = (event: google.maps.Data.MouseEvent) => {
-        if (mapRef.current && infoWindowRef.current) {
+        if (mapRef.current) {
             var station = createRoadStation(event.feature);
             mapRef.current.data.overrideStyle(event.feature, station.changeStyle());
-            infoWindowRef.current.close();
+            setFeature(null);
         }
     };
 
-    return <div ref={mapContainerRef} className="map-canvas" />;
+    return (
+        <>
+            <div ref={mapContainerRef} className="map-canvas" />
+            {mapRef.current && (
+                <InfoWindow
+                    feature={feature}
+                    map={mapRef.current}
+                    onClose={() => setFeature(null)}
+                    onClick={onMarkerStyleModifierClicked}
+                />
+            )}
+        </>
+    );
 };
 
