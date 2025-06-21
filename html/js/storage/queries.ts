@@ -73,27 +73,27 @@ export class QueryStorage {
         this.c4 = decode(queries.c4);
     }
 
-    getItem(key: string): number {
+    getItem(key: string): string | null {
         const id = parseInt(key);
         const idx = Math.floor(id / 8);
         const shift = id % 8;
 
         if (this.c1[idx] & 1 << shift) {
-            return 1;
+            return "1";
         }
         if (this.c2[idx] & 1 << shift) {
-            return 2;
+            return "2";
         }
         if (this.c3[idx] & 1 << shift) {
-            return 3;
+            return "3";
         }
         if (this.c4[idx] & 1 << shift) {
-            return 4;
+            return "4";
         }
-        return 0;
+        return null;
     }
 
-    setItem(_key: string, _value: number): void {
+    setItem(_key: string, _value: string): void {
         // skip
     }
 

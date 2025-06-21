@@ -1,13 +1,12 @@
-import jQuery from 'jquery';
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 const { useState, useEffect, useRef } = React;
 import queryString from 'query-string';
 import Clipboard from 'clipboard';
-import { QueryStorage } from './storage/queries.ts';
+import { QueryStorage } from './storage/queries';
 
-import { createRoadStation as createQueriesRoadStation } from './roadstation/queries.ts';
-import { createRoadStation as createLocalStorageRoadStation } from './roadstation/localstorage.ts';
+import { createRoadStation as createQueriesRoadStation } from './roadstation/queries';
+import { createRoadStation as createLocalStorageRoadStation } from './roadstation/localstorage';
 
 var queries = queryString.parse(location.search);
 var createRoadStation = queries.mode == 'shared' 
@@ -44,6 +43,22 @@ interface InfoWindowMethods {
     isOpenedFor: (feature: google.maps.Data.Feature) => boolean;
 }
 
+function createHeaderContent(feature: google.maps.Data.Feature): HTMLElement {
+    const station = createRoadStation(feature);
+    const headerDiv = document.createElement('div');
+    const link = document.createElement('a');
+    link.href = station.uri;
+    link.target = '_blank';
+    link.textContent = station.name;
+    headerDiv.appendChild(link);
+    
+    const addressDiv = document.createElement('div');
+    addressDiv.textContent = `(${station.address})`;
+    headerDiv.appendChild(addressDiv);
+    
+    return headerDiv;
+}
+
 export var InfoWindow = function(props: InfoWindowProps) {
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
     const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
@@ -56,8 +71,11 @@ export var InfoWindow = function(props: InfoWindowProps) {
 
     useEffect(() => {
         if (infoWindowRef.current) {
-            infoWindowRef.current.setContent(props.element);
             if (feature) {
+                infoWindowRef.current.setOptions({
+                    headerContent: createHeaderContent(feature),
+                    content: props.element
+                });
                 infoWindowRef.current.open(props.map);
             } else {
                 infoWindowRef.current.close();
@@ -96,9 +114,7 @@ export var InfoWindow = function(props: InfoWindowProps) {
         var station = createRoadStation(feature);
         return (
             <div>
-                <div><a href={station.uri} target="_blank">{station.name}</a></div>
                 <div>営業時間：{station.hours}</div>
-                <div>({station.address})</div>
                 <a href="#" onClick={handleClick}>マーカーの色を変える</a>
             </div>
         );
@@ -110,17 +126,35 @@ export var InfoWindow = function(props: InfoWindowProps) {
 export var InfoWindowFactory = function(map: google.maps.Map, onClick: (feature: google.maps.Data.Feature) => void): InfoWindowMethods {
     var element = document.createElement("div");
     var infoWindowMethods = {} as InfoWindowMethods;
-    ReactDOM.render(
+    const root = createRoot(element);
+    root.render(
         <InfoWindow 
             map={map} 
             onClick={onClick} 
             element={element}
             onRef={(methods) => Object.assign(infoWindowMethods, methods)}
-        />,
-        element
+        />
     );
     return infoWindowMethods;
 };
+
+// Utility function to fade out an element
+async function fadeOut(element: HTMLElement, delay: number): Promise<void> {
+    // Set up transition
+    element.style.transition = 'opacity 0.4s ease-out';
+    element.style.opacity = '1';
+    
+    // Wait for the delay
+    await new Promise(resolve => setTimeout(resolve, delay));
+    
+    // Start fade out
+    element.style.opacity = '0';
+    
+    // Wait for transition to complete
+    await new Promise<void>(resolve => {
+        element.addEventListener('transitionend', () => resolve(), { once: true });
+    });
+}
 
 export var RoadStationMap = function() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -136,7 +170,10 @@ export var RoadStationMap = function() {
             mapRef.current.controls[google.maps.ControlPosition.TOP_LEFT].push(createClipboardButton());
             infoWindowRef.current = InfoWindowFactory(mapRef.current, onMarkerStyleModifierClicked);
 
-            jQuery.getJSON('../data/stations.geojson', onGeoJSONLoaded);
+            fetch('../data/stations.geojson')
+                .then(response => response.json())
+                .then(onGeoJSONLoaded)
+                .catch(error => console.error('Error loading GeoJSON:', error));
             navigator.geolocation.getCurrentPosition(onCurrentPositionGot);
         }
     }, []);
@@ -147,7 +184,7 @@ export var RoadStationMap = function() {
         div.innerText = 'シェア';
 
         var clipboard = new Clipboard('.clipboard', {
-            text: function (_trigger: any) {
+            text: function (_trigger: Element) {
                 return getURL();
             }
         });
@@ -155,23 +192,22 @@ export var RoadStationMap = function() {
         return div;
     };
 
-    const onClipboardCopied = (_event: any) => {
+    const onClipboardCopied = async () => {
         if (mapRef.current) {
-            var top_controls = mapRef.current.controls[(google.maps.ControlPosition as any).TOP];
-            var div = document.createElement('div');
+            const topControls = mapRef.current.controls[(google.maps.ControlPosition as any).TOP];
+            const div = document.createElement('div');
             div.className = 'clipboard-message';
             div.innerText = 'クリップボードにコピーしました。';
-            top_controls.push(div);
-
-            setTimeout(function() {
-                jQuery(div).fadeOut("normal", function() {
-                    top_controls.pop();
-                });
-            }, 3000);
+            
+            topControls.push(div);
+            
+            // Fade out after 3 seconds
+            await fadeOut(div, 3000);
+            topControls.pop();
         }
     };
 
-    const onGeoJSONLoaded = (data: any) => {
+    const onGeoJSONLoaded = (data: object) => {
         if (mapRef.current) {
             mapRef.current.addListener("click", onMapClicked);
             mapRef.current.data.addGeoJson(data);
