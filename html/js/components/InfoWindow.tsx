@@ -13,7 +13,7 @@ var createRoadStation = queries.mode == 'shared'
 
 export interface InfoWindowProps {
     feature: google.maps.Data.Feature | null;
-    map: google.maps.Map;
+    map: google.maps.Map | null;
 }
 
 export var InfoWindow = function(props: InfoWindowProps) {

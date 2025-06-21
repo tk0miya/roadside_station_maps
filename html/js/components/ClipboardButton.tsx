@@ -41,7 +41,7 @@ async function fadeOut(element: HTMLElement, delay: number): Promise<void> {
 }
 
 interface ClipboardButtonProps {
-    map: google.maps.Map;
+    map: google.maps.Map | null;
 }
 
 export var ClipboardButton = function(props: ClipboardButtonProps) {
@@ -76,6 +76,8 @@ export var ClipboardButton = function(props: ClipboardButtonProps) {
         if (!lastCopiedAt || !props.map) return;
 
         const showMessage = async () => {
+            if (!props.map) return;
+            
             const topControls = props.map.controls[google.maps.ControlPosition.TOP_CENTER];
             const messageDiv = document.createElement('div');
             messageDiv.className = 'clipboard-message';
