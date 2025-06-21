@@ -7,7 +7,7 @@ export function load(filename: string): Station[] {
   const lines = content.trim().split('\n');
 
   return lines.map((line: string) => {
-    const [pref_id, station_id, name, address, tel, hours, uri, lat, lng] = line.split('\t');
+    const [pref_id, station_id, name, address, tel, hours, uri, lat, lng, mapcode] = line.split('\t');
     return {
       pref_id,
       station_id,
@@ -17,7 +17,8 @@ export function load(filename: string): Station[] {
       hours,
       uri,
       lat,
-      lng
+      lng,
+      mapcode
     };
   });
 }
@@ -42,7 +43,8 @@ export function dump(stations: Station[], filename: string): void {
         station.hours,
         station.uri,
         station.lat,
-        station.lng
+        station.lng,
+        station.mapcode
       ];
       writeStream.write(row.join('\t') + '\n');
     }

@@ -96,6 +96,7 @@ export var InfoWindow = function(props: InfoWindowProps) {
         return (
             <div>
                 <div>営業時間：{station.hours}</div>
+                <div>マップコード：{station.mapcode}</div>
                 <a href="#" onClick={handleClick}>マーカーの色を変える</a>
             </div>
         );

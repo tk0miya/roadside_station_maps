@@ -97,6 +97,7 @@ export async function getStationDetails(stationUri: string, prefId: string): Pro
   let hours = '';
   let lat = 'None';
   let lng = 'None';
+  let mapcode = '';
 
   const $station = await fetchPage(uri);
 
@@ -125,6 +126,9 @@ export async function getStationDetails(stationUri: string, prefId: string): Pro
         case '営業時間':
           hours = value || '';
           break;
+        case 'マップコード':
+          mapcode = value;
+          break;
       }
     }
   }
@@ -147,6 +151,7 @@ export async function getStationDetails(stationUri: string, prefId: string): Pro
     }
   }
 
+
   return {
     pref_id: prefId,
     station_id,
@@ -156,7 +161,8 @@ export async function getStationDetails(stationUri: string, prefId: string): Pro
     hours,
     uri,
     lat,
-    lng
+    lng,
+    mapcode
   };
 }
 
