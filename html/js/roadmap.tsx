@@ -43,6 +43,22 @@ interface InfoWindowMethods {
     isOpenedFor: (feature: google.maps.Data.Feature) => boolean;
 }
 
+function createHeaderContent(feature: google.maps.Data.Feature): HTMLElement {
+    const station = createRoadStation(feature);
+    const headerDiv = document.createElement('div');
+    const link = document.createElement('a');
+    link.href = station.uri;
+    link.target = '_blank';
+    link.textContent = station.name;
+    headerDiv.appendChild(link);
+    
+    const addressDiv = document.createElement('div');
+    addressDiv.textContent = `(${station.address})`;
+    headerDiv.appendChild(addressDiv);
+    
+    return headerDiv;
+}
+
 export var InfoWindow = function(props: InfoWindowProps) {
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
     const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
@@ -55,8 +71,11 @@ export var InfoWindow = function(props: InfoWindowProps) {
 
     useEffect(() => {
         if (infoWindowRef.current) {
-            infoWindowRef.current.setContent(props.element);
             if (feature) {
+                infoWindowRef.current.setOptions({
+                    headerContent: createHeaderContent(feature),
+                    content: props.element
+                });
                 infoWindowRef.current.open(props.map);
             } else {
                 infoWindowRef.current.close();
@@ -95,9 +114,7 @@ export var InfoWindow = function(props: InfoWindowProps) {
         var station = createRoadStation(feature);
         return (
             <div>
-                <div><a href={station.uri} target="_blank">{station.name}</a></div>
                 <div>営業時間：{station.hours}</div>
-                <div>({station.address})</div>
                 <a href="#" onClick={handleClick}>マーカーの色を変える</a>
             </div>
         );
