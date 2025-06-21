@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import * as fs from 'fs';
-import * as path from 'path';
 import * as cheerio from 'cheerio';
 import type { CheerioAPI } from 'cheerio';
 import { setTimeout } from 'timers/promises';
+import * as StationCSV from '../lib/station-csv.js';
+import type { Station } from '../lib/types.js';
 const jaconv = require('jaconv');
 
 const BASEURI = 'https://www.michi-no-eki.jp/';
@@ -15,18 +15,6 @@ interface Prefecture {
   id: string;
   name: string;
   uri: string;
-}
-
-interface Station {
-  pref_id: string;
-  station_id: string;
-  name: string;
-  address: string;
-  tel: string;
-  hours: string;
-  uri: string;
-  lat: string;
-  lng: string;
 }
 
 
@@ -203,52 +191,32 @@ async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
 
 
 async function main(): Promise<void> {
-  // Ensure data directory exists
-  const dataDir = path.dirname(STATION_FILENAME);
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+  process.stdout.write('Fetch list of prefectures ...');
+  const prefs: Prefecture[] = [];
+
+  for await (const pref of getPrefectures()) {
+    prefs.push(pref);
   }
 
-  const writeStream = fs.createWriteStream(STATION_FILENAME, { encoding: 'utf-8' });
+  process.stdout.write(' done\n');
 
-  try {
-    process.stdout.write('Fetch list of prefectures ...');
-    const prefs: Prefecture[] = [];
+  const allStations: Station[] = [];
 
-    for await (const pref of getPrefectures()) {
-      prefs.push(pref);
+  for (const pref of prefs) {
+    process.stdout.write(`Processing ${pref.name}(${pref.id}) ...`);
+
+    for await (const station of getStations(pref)) {
+      allStations.push(station);
+      process.stdout.write('.');
+      await setTimeout(FETCH_INTERVAL);
     }
 
     process.stdout.write(' done\n');
-
-    for (const pref of prefs) {
-      process.stdout.write(`Processing ${pref.name}(${pref.id}) ...`);
-
-      for await (const station of getStations(pref)) {
-        const row = [
-          station.pref_id,
-          station.station_id,
-          station.name,
-          station.address,
-          station.tel,
-          station.hours,
-          station.uri,
-          station.lat,
-          station.lng
-        ];
-
-        writeStream.write(row.join('\t') + '\n');
-        process.stdout.write('.');
-
-        await setTimeout(FETCH_INTERVAL);
-      }
-
-      process.stdout.write(' done\n');
-    }
-
-  } finally {
-    writeStream.end();
   }
+
+  process.stdout.write('Writing CSV file ...');
+  StationCSV.dump(allStations, STATION_FILENAME);
+  process.stdout.write(' done\n');
 }
 
 if (require.main === module) {
