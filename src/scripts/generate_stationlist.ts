@@ -17,6 +17,12 @@ interface Prefecture {
   uri: string;
 }
 
+interface DebugOptions {
+  debug: boolean;
+  maxPrefectures?: number;
+  maxStationsPerPref?: number;
+}
+
 
 function getUrl(path: string): string {
   if (path.startsWith(BASEURI)) {
@@ -188,21 +194,62 @@ async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
 }
 
 
+function getArgValue(args: string[], flag: string): number | undefined {
+  // Handle --flag=value format
+  for (const arg of args) {
+    if (arg.startsWith(`${flag}=`)) {
+      const value = parseInt(arg.split('=')[1], 10);
+      return isNaN(value) ? undefined : value;
+    }
+  }
 
+  // Handle --flag value format
+  const index = args.indexOf(flag);
+  if (index !== -1 && index + 1 < args.length) {
+    const value = parseInt(args[index + 1], 10);
+    return isNaN(value) ? undefined : value;
+  }
+
+  return undefined;
+}
+
+function parseArgs(): DebugOptions {
+  const args = process.argv.slice(2);
+  return {
+    debug: args.includes('--debug'),
+    maxPrefectures: getArgValue(args, '--max-prefs'),
+    maxStationsPerPref: getArgValue(args, '--max-stations')
+  };
+}
 
 async function main(): Promise<void> {
+  const options = parseArgs();
+
   process.stdout.write('Fetch list of prefectures ...');
-  const prefs = await Array.fromAsync(getPrefectures());
+  let prefs = await Array.fromAsync(getPrefectures());
 
   process.stdout.write(' done\n');
+
+  if (options.debug && options.maxPrefectures) {
+    prefs = prefs.slice(0, options.maxPrefectures);
+    process.stdout.write(`Debug mode: Processing first ${options.maxPrefectures} prefectures\n`);
+  }
 
   const allStations: Station[] = [];
 
   for (const pref of prefs) {
     process.stdout.write(`Processing ${pref.name}(${pref.id}) ...`);
 
+    let stationCount = 0;
     for await (const station of getStations(pref)) {
+      if (options.debug && options.maxStationsPerPref &&
+        stationCount >= options.maxStationsPerPref) {
+        process.stdout.write(` [stopped at ${options.maxStationsPerPref} stations]`);
+        break;
+      }
+
       allStations.push(station);
+      stationCount++;
       process.stdout.write('.');
       await setTimeout(FETCH_INTERVAL);
     }

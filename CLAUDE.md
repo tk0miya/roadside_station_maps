@@ -32,6 +32,23 @@
 - `npm run generate:stations` - michi-no-eki.jpから駅データをスクレイピング
 - `npm run generate:geojson` - CSVをGeoJSON形式に変換
 
+### デバッグモード
+`generate:stations`は実行に10分程度かかるため、開発時はデバッグオプションを使用してください：
+
+- `npm run generate:stations -- --debug --max-prefs=2 --max-stations=3`
+  - `--debug`: デバッグモードを有効化（処理状況の詳細表示）
+  - `--max-prefs=N`: 処理する都道府県数を制限
+  - `--max-stations=N`: 各都道府県で処理する道の駅数を制限
+
+**使用例:**
+- 動作確認: `npm run generate:stations -- --debug --max-prefs=1 --max-stations=2`
+- 部分テスト: `npm run generate:stations -- --debug --max-prefs=5 --max-stations=10`
+
+**⚠️ 重要な注意事項:**
+- **デバッグ実行後は`data/`以下をコミットしないでください**
+- デバッグモードで生成されるデータは不完全なため、本番データを破損させる可能性があります
+- `git status`でdataディレクトリの変更を確認し、必要に応じて`git restore data/`で元に戻してください
+
 ### フロントエンド開発
 - `npm run build` - browserify + babelでプロダクションバンドルをビルド
 - `npm start` - 開発用ウォッチモード（変更時に自動リビルド）
