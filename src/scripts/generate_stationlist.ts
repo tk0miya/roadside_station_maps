@@ -28,13 +28,6 @@ interface Station {
   lng: string;
 }
 
-class StationList extends Array<Station> {
-  findById(pref_id: string, station_id: string): Station | undefined {
-    return this.find(station =>
-      station.pref_id === pref_id && station.station_id === station_id
-    );
-  }
-}
 
 function getUrl(path: string): string {
   if (path.startsWith(BASEURI)) {
@@ -216,36 +209,6 @@ async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
 
 
 
-// @ts-ignore - Keep for future use
-async function loadStationList(filename: string): Promise<StationList> {
-  const stations = new StationList();
-
-  try {
-    const content = fs.readFileSync(filename, 'utf-8');
-    const lines = content.trim().split('\n');
-
-    for (const line of lines) {
-      const data = line.split('\t');
-      if (data.length >= 9) {
-        stations.push({
-          pref_id: data[0],
-          station_id: data[1],
-          name: data[2],
-          address: data[3],
-          tel: data[4],
-          hours: data[5],
-          uri: data[6],
-          lat: data[7],
-          lng: data[8]
-        });
-      }
-    }
-  } catch (error) {
-    // File doesn't exist, return empty list
-  }
-
-  return stations;
-}
 
 async function main(): Promise<void> {
   // Ensure data directory exists
