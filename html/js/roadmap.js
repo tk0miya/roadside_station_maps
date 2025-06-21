@@ -1,6 +1,8 @@
 var jQuery = require('jquery');
 var React = require('react');
 var ReactDOM = require('react-dom');
+var createReactClass = require('create-react-class');
+var PropTypes = require('prop-types');
 var queryString = require('query-string');
 var Clipboard = require('clipboard');
 var QueryStorage = require('./storage/queries.js');
@@ -30,11 +32,11 @@ function getURL() {
     }
 }
 
-var InfoWindow = React.createClass({
+var InfoWindow = createReactClass({
     propTypes: {
-        element: React.PropTypes.object,
-        map: React.PropTypes.object,
-        onClick: React.PropTypes.func
+        element: PropTypes.object,
+        map: PropTypes.object,
+        onClick: PropTypes.func
     },
     getInitialState: function() {
         return { feature: null };
@@ -94,7 +96,7 @@ var InfoWindowFactory = function(map, onClick) {
     );
 };
 
-var RoadStationMap = React.createClass({
+var RoadStationMap = createReactClass({
     getInitialState: function() {
         return { data: null };
     },
