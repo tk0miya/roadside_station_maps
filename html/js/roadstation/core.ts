@@ -3,11 +3,11 @@ interface Style {
 }
 
 const STYLES: Record<number, Style> = {
-    0: {icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'},
-    1: {icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'},
-    2: {icon: 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png'},
-    3: {icon: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png'},
-    4: {icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'},
+    0: { icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' },
+    1: { icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' },
+    2: { icon: 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png' },
+    3: { icon: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' },
+    4: { icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' },
 };
 
 
@@ -48,27 +48,17 @@ export class RoadStationCore {
         return 0;
     }
 
-    isVisited(): boolean {
-        return !!this.style_id;
-    }
-
     getStyle(): Style {
         return STYLES[this.style_id];
     }
 
     changeStyle(): Style {
         if (this.style_id >= 4) {
-            this.resetStyle();
+            this.style_id = 0;
         } else {
             this.style_id += 1;
-            this.storage.setItem(this.station_id, this.style_id.toString());
         }
-        return this.getStyle();
-    }
-
-    resetStyle(): Style {
-        this.style_id = 0;
-        this.storage.removeItem(this.station_id);
+        this.storage.setItem(this.station_id, this.style_id.toString());
         return this.getStyle();
     }
 }
