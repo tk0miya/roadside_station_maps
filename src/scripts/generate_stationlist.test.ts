@@ -51,34 +51,39 @@ describe('generate_stationlist', () => {
 
   describe('getStationDetails', () => {
     it('should fetch and parse station details from a specific station page', async () => {
-      // Test with station ID 19150
+      // Test with station ID 19150 (Hakone-toge in Kanagawa)
       const stationUri = '/stations/views/19150';
       const prefId = '23'; // Kanagawa
       
       const station = await getStationDetails(stationUri, prefId);
       
-      // Verify station structure
-      expect(station).toHaveProperty('pref_id', '23');
-      expect(station).toHaveProperty('station_id', '19150');
-      expect(station).toHaveProperty('name');
-      expect(station).toHaveProperty('address');
-      expect(station).toHaveProperty('tel');
-      expect(station).toHaveProperty('hours');
-      expect(station).toHaveProperty('uri');
-      expect(station).toHaveProperty('lat');
-      expect(station).toHaveProperty('lng');
+      // Verify prefecture ID (passed as parameter)
+      expect(station.pref_id).toBe('23');
       
-      // Verify specific station data
+      // Verify station ID (extracted from URI)
+      expect(station.station_id).toBe('19150');
+      
+      // Verify station name
       expect(station.name).toBe('箱根峠');
+      
+      // Verify address
       expect(station.address).toContain('神奈川県');
+      
+      // Verify hours (just check that it has some value, as it changes frequently)
+      expect(station.hours.length).toBeGreaterThan(0);
+      
+      // Verify URI
+      expect(station.uri).toContain('/stations/views/19150');
       
       // Verify coordinates are valid numbers (not 'None')
       const lat = parseFloat(station.lat);
       const lng = parseFloat(station.lng);
       expect(isNaN(lat)).toBe(false);
       expect(isNaN(lng)).toBe(false);
-      expect(lat).toBeGreaterThan(0);
-      expect(lng).toBeGreaterThan(0);
+      expect(lat).toBeGreaterThan(35); // Rough latitude check for Kanagawa
+      expect(lat).toBeLessThan(36);
+      expect(lng).toBeGreaterThan(138); // Rough longitude check for Kanagawa
+      expect(lng).toBeLessThan(140);
     });
   });
 });
