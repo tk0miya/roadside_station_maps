@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import * as fs from 'fs';
 import * as StationCSV from '../lib/station-csv.js';
 import type { Station } from '../lib/types.js';
