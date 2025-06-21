@@ -4,6 +4,7 @@ const { useState, useEffect, useRef } = React;
 
 import { createRoadStation as createQueriesRoadStation } from './roadstation/queries';
 import { createRoadStation as createLocalStorageRoadStation } from './roadstation/localstorage';
+import { RoadStationCore } from './roadstation/core';
 import queryString from 'query-string';
 
 var queries = queryString.parse(location.search);
@@ -19,8 +20,7 @@ export interface InfoWindowProps {
 }
 
 
-function createHeaderContent(feature: google.maps.Data.Feature): HTMLElement {
-    const station = createRoadStation(feature);
+function createHeaderContent(station: RoadStationCore): HTMLElement {
     const headerDiv = document.createElement('div');
     const link = document.createElement('a');
     link.href = station.uri;
@@ -43,7 +43,6 @@ export var InfoWindow = function(props: InfoWindowProps) {
     useEffect(() => {
         infoWindowRef.current = new google.maps.InfoWindow();
         infoWindowRef.current.addListener("closeclick", props.onClose);
-        infoWindowRef.current.setOptions({pixelOffset: new google.maps.Size(0, -30)});
         
         contentElementRef.current = document.createElement('div');
         contentRootRef.current = createRoot(contentElementRef.current);
@@ -62,9 +61,12 @@ export var InfoWindow = function(props: InfoWindowProps) {
                     </div>
                 );
                 
+                const geometry = props.feature.getGeometry()! as google.maps.Data.Point;
                 infoWindowRef.current.setOptions({
-                    headerContent: createHeaderContent(props.feature),
-                    content: contentElementRef.current
+                    position: geometry.get(),
+                    headerContent: createHeaderContent(station),
+                    content: contentElementRef.current,
+                    pixelOffset: new google.maps.Size(0, -30)
                 });
                 infoWindowRef.current.open(props.map);
             } else {
@@ -72,16 +74,6 @@ export var InfoWindow = function(props: InfoWindowProps) {
             }
         }
     }, [props.feature, props.map]);
-
-    // Position the InfoWindow when feature changes
-    useEffect(() => {
-        if (props.feature && infoWindowRef.current) {
-            const geometry = props.feature.getGeometry();
-            if (geometry) {
-                infoWindowRef.current.setPosition((geometry as any).get());
-            }
-        }
-    }, [props.feature]);
 
     return null; // This component doesn't render anything directly
 };
