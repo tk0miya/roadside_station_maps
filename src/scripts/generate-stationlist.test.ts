@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPrefectures, getStations, getStationDetails } from './generate_stationlist';
+import { getPrefectures, getStations, getStationDetails } from './generate-stationlist';
 
 describe('generate_stationlist', () => {
   describe('getPrefectures', () => {

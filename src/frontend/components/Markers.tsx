@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { createRoadStation } from '../roadstation';
+import { createRoadStation } from '../road-station';
 import { getStyleManagerInstance } from '../style-manager';
 
 const styleManager = getStyleManagerInstance();
@@ -29,9 +29,10 @@ export function Markers(props: MarkersProps) {
             props.map!.data.addGeoJson(stations);
             props.map!.data.addListener('click', onMarkerClick);
             props.map!.data.addListener('dblclick', onMarkerDoubleClick);
+            props.map!.data.addListener('rightclick', onMarkerRightClick);
             props.map!.data.setStyle((feature: google.maps.Data.Feature) => {
                 const station = createRoadStation(feature);
-                return styleManager.getStyle(station.stationId);
+                return styleManager.getStyle(station);
             });
         };
 
@@ -41,7 +42,7 @@ export function Markers(props: MarkersProps) {
     const onMarkerClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map && selectedFeatureRef.current === event.feature) {
             const station = createRoadStation(event.feature);
-            const newStyle = styleManager.changeStyle(station.stationId);
+            const newStyle = styleManager.changeStyle(station);
             props.map.data.overrideStyle(event.feature, newStyle);
         } else {
             props.onFeatureSelect(event.feature);
@@ -51,8 +52,17 @@ export function Markers(props: MarkersProps) {
     const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map) {
             const station = createRoadStation(event.feature);
-            const newStyle = styleManager.changeStyle(station.stationId);
+            const newStyle = styleManager.changeStyle(station);
             props.map.data.overrideStyle(event.feature, newStyle);
+            props.onFeatureSelect(null);
+        }
+    };
+
+    const onMarkerRightClick = (event: google.maps.Data.MouseEvent) => {
+        if (props.map) {
+            const station = createRoadStation(event.feature);
+            const resetStyle = styleManager.resetStyle(station);
+            props.map.data.overrideStyle(event.feature, resetStyle);
             props.onFeatureSelect(null);
         }
     };
