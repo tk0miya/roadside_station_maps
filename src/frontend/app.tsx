@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { RoadStationMap } from './RoadStationMap';
+import { RoadStationMap } from './components/RoadStationMap';
 
 const container = document.getElementById('map-canvas');
 if (container) {
