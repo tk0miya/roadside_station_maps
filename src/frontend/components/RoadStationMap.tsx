@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { InfoWindow } from './InfoWindow';
 import { ClipboardButton } from './ClipboardButton';
 import { Markers } from './Markers';
+import { getStyleManagerInstance } from '../style-manager';
 
 const getCurrentPosition = (): Promise<GeolocationPosition> => {
     return new Promise((resolve) => {
@@ -13,6 +14,7 @@ export function RoadStationMap() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
+    const styleManager = getStyleManagerInstance();
 
     useEffect(() => {
         if (mapContainerRef.current) {
@@ -45,6 +47,7 @@ export function RoadStationMap() {
                 map={map}
                 selectedFeature={feature}
                 onFeatureSelect={setFeature}
+                styleManager={styleManager}
             />
             <InfoWindow
                 selectedFeature={feature}
