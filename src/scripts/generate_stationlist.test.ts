@@ -39,7 +39,7 @@ describe('generate_stationlist', () => {
 
       // Verify all stations have the correct prefecture ID
       stations.forEach(station => {
-        expect(station.pref_id).toBe('13');
+        expect(station.prefId).toBe('13');
       });
 
       // Check for known stations in Iwate

@@ -2,7 +2,7 @@ const esbuild = require('esbuild');
 
 // Common configuration
 const config = {
-    entryPoints: ['html/js/app.tsx'],
+    entryPoints: ['src/frontend/app.tsx'],
     bundle: true,
     outfile: 'html/js/bundle.js',
     platform: 'browser',
