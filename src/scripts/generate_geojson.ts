@@ -12,8 +12,8 @@ interface GeoJSONFeature {
     coordinates: [number, number];
   };
   properties: {
-    pref_id: string;
-    station_id: string;
+    prefId: string;
+    stationId: string;
     name: string;
     address: string;
     tel: string;
@@ -48,8 +48,8 @@ function convertFeature(station: Station): GeoJSONFeature | null {
       coordinates: [lng, lat]
     },
     properties: {
-      pref_id: station.pref_id,
-      station_id: station.station_id,
+      prefId: station.prefId,
+      stationId: station.stationId,
       name: station.name,
       address: station.address,
       tel: station.tel,

@@ -1,6 +1,6 @@
 export interface Station {
-  pref_id: string;
-  station_id: string;
+  prefId: string;
+  stationId: string;
   name: string;
   address: string;
   tel: string;

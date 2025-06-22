@@ -81,15 +81,15 @@ export async function* getPrefectures(): AsyncGenerator<Prefecture> {
     const name = $element.text();
 
     if (uri) {
-      const pref_id = uri.split('/')[3];
-      yield { id: pref_id, name, uri };
+      const prefId = uri.split('/')[3];
+      yield { id: prefId, name, uri };
     }
   }
 }
 
 export async function getStationDetails(stationUri: string, prefId: string): Promise<Station> {
   const uri = getUrl(stationUri);
-  const station_id = uri.split('/').pop() || '';
+  const stationId = uri.split('/').pop() || '';
   
   let name = '';
   let address = '';
@@ -153,8 +153,8 @@ export async function getStationDetails(stationUri: string, prefId: string): Pro
 
 
   return {
-    pref_id: prefId,
-    station_id,
+    prefId,
+    stationId,
     name,
     address,
     tel,

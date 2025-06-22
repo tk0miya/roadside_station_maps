@@ -58,10 +58,10 @@ describe('generate_stationlist', () => {
       const station = await getStationDetails(stationUri, prefId);
       
       // Verify prefecture ID (passed as parameter)
-      expect(station.pref_id).toBe('23');
+      expect(station.prefId).toBe('23');
       
       // Verify station ID (extracted from URI)
-      expect(station.station_id).toBe('19150');
+      expect(station.stationId).toBe('19150');
       
       // Verify station name
       expect(station.name).toBe('箱根峠');

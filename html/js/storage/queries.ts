@@ -40,33 +40,33 @@ export class QueryStorage {
         this.c4 = new Uint8Array();
     }
 
-    load_from_localStorage(): void {
+    loadFromLocalStorage(): void {
         const styles: Record<string, number[]> = {"1": [], "2": [], "3": [], "4": []};
-        Object.keys(localStorage).forEach((station_id) => {
-            const style_id = localStorage.getItem(station_id);
-            if (style_id && styles[style_id]) {
-                styles[style_id].push(parseInt(station_id));
+        Object.keys(localStorage).forEach((stationId) => {
+            const styleId = localStorage.getItem(stationId);
+            if (styleId && styles[styleId]) {
+                styles[styleId].push(parseInt(stationId));
             }
         });
 
-        Object.keys(styles).forEach((style_id) => {
-            const station_ids = styles[style_id];
-            if (station_ids.length > 0) {
-                const max_style_id = Math.max.apply(null, station_ids);
-                const size = Math.ceil(max_style_id / 8);
+        Object.keys(styles).forEach((styleId) => {
+            const stationIds = styles[styleId];
+            if (stationIds.length > 0) {
+                const maxStyleId = Math.max.apply(null, stationIds);
+                const size = Math.ceil(maxStyleId / 8);
                 const buf = new Uint8Array(size);
 
-                station_ids.forEach((station_id) => {
-                    const idx = Math.floor(station_id / 8);
-                    const shift = station_id % 8;
+                stationIds.forEach((stationId) => {
+                    const idx = Math.floor(stationId / 8);
+                    const shift = stationId % 8;
                     buf[idx] |= 1 << shift;
                 });
-                (this as any)["c" + style_id] = encode(buf);
+                (this as any)["c" + styleId] = encode(buf);
             }
         });
     }
 
-    load_from_queries(queries: Queries): void {
+    loadFromQueries(queries: Queries): void {
         this.c1 = decode(queries.c1);
         this.c2 = decode(queries.c2);
         this.c3 = decode(queries.c3);

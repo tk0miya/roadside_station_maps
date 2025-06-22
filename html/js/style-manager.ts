@@ -20,7 +20,7 @@ export class StyleManager {
     constructor(private storage: Storage) {}
 
     private getStationId(station: RoadStation | string): string {
-        return typeof station === 'string' ? station : station.station_id;
+        return typeof station === 'string' ? station : station.stationId;
     }
 
     private getStyleId(stationId: string): number {
@@ -58,7 +58,7 @@ export function getStyleManagerInstance(): StyleManager {
     const queries = queryString.parse(location.search);
     if (queries.mode === 'shared') {
         const storage = new QueryStorage();
-        storage.load_from_queries(queries);
+        storage.loadFromQueries(queries);
         return new StyleManager(storage);
     }
     return new StyleManager(localStorage);

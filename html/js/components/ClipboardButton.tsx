@@ -11,7 +11,7 @@ function getURL() {
         return baseuri;
     } else {
         const storage = new QueryStorage();
-        storage.load_from_localStorage();
+        storage.loadFromLocalStorage();
 
         if (baseuri.indexOf("?") > 0) {
             return window.location.href + "&" + queryString.stringify(storage);

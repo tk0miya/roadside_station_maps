@@ -31,7 +31,7 @@ export function Markers(props: MarkersProps) {
             props.map!.data.addListener('dblclick', onMarkerDoubleClick);
             props.map!.data.setStyle((feature: google.maps.Data.Feature) => {
                 const station = createRoadStation(feature);
-                return styleManager.getStyle(station.station_id);
+                return styleManager.getStyle(station.stationId);
             });
         };
 
@@ -41,7 +41,7 @@ export function Markers(props: MarkersProps) {
     const onMarkerClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map && selectedFeatureRef.current === event.feature) {
             const station = createRoadStation(event.feature);
-            const newStyle = styleManager.changeStyle(station.station_id);
+            const newStyle = styleManager.changeStyle(station.stationId);
             props.map.data.overrideStyle(event.feature, newStyle);
         } else {
             props.onFeatureSelect(event.feature);
@@ -51,7 +51,7 @@ export function Markers(props: MarkersProps) {
     const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map) {
             const station = createRoadStation(event.feature);
-            const newStyle = styleManager.changeStyle(station.station_id);
+            const newStyle = styleManager.changeStyle(station.stationId);
             props.map.data.overrideStyle(event.feature, newStyle);
             props.onFeatureSelect(null);
         }
