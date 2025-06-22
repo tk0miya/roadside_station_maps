@@ -1,11 +1,8 @@
 import queryString from 'query-string';
 import { QueryStorage } from './storage/queries';
+import { RoadStation } from './roadstation';
 
-interface Style {
-    icon: string;
-}
-
-const STYLES: Record<number, Style> = {
+const STYLES: Record<number, google.maps.Data.StyleOptions> = {
     0: { icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' },
     1: { icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' },
     2: { icon: 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png' },
@@ -22,7 +19,11 @@ interface Storage {
 export class StyleManager {
     constructor(private storage: Storage) {}
 
-    getStyleId(stationId: string): number {
+    private getStationId(station: RoadStation | string): string {
+        return typeof station === 'string' ? station : station.station_id;
+    }
+
+    private getStyleId(stationId: string): number {
         const styleId = this.storage.getItem(stationId);
         if (styleId) {
             return parseInt(styleId);
@@ -30,16 +31,18 @@ export class StyleManager {
         return 0;
     }
 
-    setStyleId(stationId: string, styleId: number): void {
+    private setStyleId(stationId: string, styleId: number): void {
         this.storage.setItem(stationId, styleId.toString());
     }
 
-    getStyle(stationId: string): Style {
+    getStyle(station: RoadStation | string): google.maps.Data.StyleOptions {
+        const stationId = this.getStationId(station);
         const styleId = this.getStyleId(stationId);
         return STYLES[styleId];
     }
 
-    changeStyle(stationId: string): Style {
+    changeStyle(station: RoadStation | string): google.maps.Data.StyleOptions {
+        const stationId = this.getStationId(station);
         let styleId = this.getStyleId(stationId);
         if (styleId >= 4) {
             styleId = 0;
@@ -60,5 +63,3 @@ export function getStyleManagerInstance(): StyleManager {
     }
     return new StyleManager(localStorage);
 }
-
-export type { Style, Storage };
