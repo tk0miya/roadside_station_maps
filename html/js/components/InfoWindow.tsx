@@ -12,7 +12,7 @@ var createRoadStation = queries.mode == 'shared'
     : createLocalStorageRoadStation;
 
 export interface InfoWindowProps {
-    feature: google.maps.Data.Feature | null;
+    selectedFeature: google.maps.Data.Feature | null;
     map: google.maps.Map | null;
 }
 
@@ -30,9 +30,9 @@ export var InfoWindow = function(props: InfoWindowProps) {
 
     useEffect(() => {
         if (infoWindowRef.current && contentElementRef.current && contentRootRef.current) {
-            if (props.feature) {
+            if (props.selectedFeature) {
                 // Update content
-                const station = createRoadStation(props.feature);
+                const station = createRoadStation(props.selectedFeature);
                 contentRootRef.current.render(
                     <div>
                         <div>
@@ -44,7 +44,7 @@ export var InfoWindow = function(props: InfoWindowProps) {
                     </div>
                 );
 
-                const geometry = props.feature.getGeometry()! as google.maps.Data.Point;
+                const geometry = props.selectedFeature.getGeometry()! as google.maps.Data.Point;
                 infoWindowRef.current.setOptions({
                     position: geometry.get(),
                     content: contentElementRef.current,
@@ -56,7 +56,7 @@ export var InfoWindow = function(props: InfoWindowProps) {
                 infoWindowRef.current.close();
             }
         }
-    }, [props.feature, props.map]);
+    }, [props.selectedFeature, props.map]);
 
     return null; // This component doesn't render anything directly
 };
