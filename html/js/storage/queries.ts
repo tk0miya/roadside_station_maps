@@ -7,7 +7,7 @@ function encode(array: Uint8Array): string {
 function decode(buf: string | undefined): Uint8Array {
     if (buf) {
         try {
-            return new Uint8Array(atob(buf).split("").map(function(c) {
+            return new Uint8Array(atob(buf).split("").map((c) => {
                 return c.charCodeAt(0);
             }));
         } catch (e) {
@@ -42,7 +42,7 @@ export class QueryStorage {
 
     load_from_localStorage(): void {
         const styles: Record<string, number[]> = {"1": [], "2": [], "3": [], "4": []};
-        Object.keys(localStorage).forEach(function(station_id){
+        Object.keys(localStorage).forEach((station_id) => {
             const style_id = localStorage.getItem(station_id);
             if (style_id && styles[style_id]) {
                 styles[style_id].push(parseInt(station_id));
@@ -56,7 +56,7 @@ export class QueryStorage {
                 const size = Math.ceil(max_style_id / 8);
                 const buf = new Uint8Array(size);
 
-                station_ids.forEach(function(station_id){
+                station_ids.forEach((station_id) => {
                     const idx = Math.floor(station_id / 8);
                     const shift = station_id % 8;
                     buf[idx] |= 1 << shift;

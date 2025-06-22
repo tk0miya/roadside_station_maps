@@ -43,7 +43,7 @@ interface ClipboardButtonProps {
     map: google.maps.Map | null;
 }
 
-export const ClipboardButton = function(props: ClipboardButtonProps) {
+export function ClipboardButton(props: ClipboardButtonProps) {
     const [lastCopiedAt, setLastCopiedAt] = useState<number | null>(null);
 
     useEffect(() => {
@@ -56,7 +56,7 @@ export const ClipboardButton = function(props: ClipboardButtonProps) {
 
         // Initialize clipboard functionality with direct element reference
         const clipboard = new Clipboard(div, {
-            text: function (_trigger: Element) {
+            text: (_trigger: Element) => {
                 return getURL();
             }
         });

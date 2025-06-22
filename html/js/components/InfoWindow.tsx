@@ -8,7 +8,7 @@ export interface InfoWindowProps {
     map: google.maps.Map | null;
 }
 
-export const InfoWindow = function(props: InfoWindowProps) {
+export function InfoWindow(props: InfoWindowProps) {
     const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
     const contentElementRef = useRef<HTMLElement | null>(null);
     const contentRootRef = useRef<any>(null);
