@@ -2,8 +2,8 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 const { useEffect, useRef } = React;
 
-import { createRoadStation as createQueriesRoadStation } from './roadstation/queries';
-import { createRoadStation as createLocalStorageRoadStation } from './roadstation/localstorage';
+import { createRoadStation as createQueriesRoadStation } from '../roadstation/queries';
+import { createRoadStation as createLocalStorageRoadStation } from '../roadstation/localstorage';
 import queryString from 'query-string';
 
 var queries = queryString.parse(location.search);
@@ -13,7 +13,7 @@ var createRoadStation = queries.mode == 'shared'
 
 export interface InfoWindowProps {
     feature: google.maps.Data.Feature | null;
-    map: google.maps.Map;
+    map: google.maps.Map | null;
 }
 
 export var InfoWindow = function(props: InfoWindowProps) {
