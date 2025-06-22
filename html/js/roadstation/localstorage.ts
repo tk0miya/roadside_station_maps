@@ -1,6 +1,6 @@
-import { RoadStationCore } from './core';
+import { RoadStation } from './core';
 
 export function createRoadStation(feature: google.maps.Data.Feature) {
-    return new RoadStationCore(feature, localStorage);
+    return new RoadStation(feature, localStorage);
 }
 
