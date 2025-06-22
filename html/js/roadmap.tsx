@@ -1,10 +1,15 @@
-import React from 'react';
-const { useEffect, useRef, useState } = React;
+import { useEffect, useRef, useState } from 'react';
 import { InfoWindow } from './components/InfoWindow';
 import { ClipboardButton } from './components/ClipboardButton';
 import { Markers } from './components/Markers';
 
-export var RoadStationMap = function() {
+const getCurrentPosition = (): Promise<GeolocationPosition> => {
+    return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(resolve);
+    });
+};
+
+export const RoadStationMap = function() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
@@ -23,11 +28,14 @@ export var RoadStationMap = function() {
         if (!map) return;
 
         map.addListener("click", () => setFeature(null));
-        navigator.geolocation.getCurrentPosition(pos => onCurrentPositionGot(pos, map));
+        getCurrentPosition().then(onLocationDetected);
     }, [map]);
-    const onCurrentPositionGot = (pos: GeolocationPosition, map: google.maps.Map) => {
-        var latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-        map.setCenter(latlng);
+
+    const onLocationDetected = (pos: GeolocationPosition) => {
+        if (map) {
+            const latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+            map.setCenter(latlng);
+        }
     };
 
     return (

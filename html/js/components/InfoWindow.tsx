@@ -1,13 +1,12 @@
-import React from 'react';
+import { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-const { useEffect, useRef } = React;
 
 import { createRoadStation as createQueriesRoadStation } from '../roadstation/queries';
 import { createRoadStation as createLocalStorageRoadStation } from '../roadstation/localstorage';
 import queryString from 'query-string';
 
-var queries = queryString.parse(location.search);
-var createRoadStation = queries.mode == 'shared'
+const queries = queryString.parse(location.search);
+const createRoadStation = queries.mode == 'shared'
     ? createQueriesRoadStation(queries)
     : createLocalStorageRoadStation;
 
@@ -16,7 +15,7 @@ export interface InfoWindowProps {
     map: google.maps.Map | null;
 }
 
-export var InfoWindow = function(props: InfoWindowProps) {
+export const InfoWindow = function(props: InfoWindowProps) {
     const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
     const contentElementRef = useRef<HTMLElement | null>(null);
     const contentRootRef = useRef<any>(null);

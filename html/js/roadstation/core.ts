@@ -17,7 +17,7 @@ interface Storage {
     removeItem(key: string): void;
 }
 
-export class RoadStationCore {
+export class RoadStation {
     feature: google.maps.Data.Feature;
     storage: Storage;
     pref_id: string;

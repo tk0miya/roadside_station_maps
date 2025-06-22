@@ -1,17 +1,16 @@
-import React from 'react';
-const { useEffect, useState } = React;
+import { useEffect, useState } from 'react';
 import Clipboard from 'clipboard';
 import queryString from 'query-string';
 import { QueryStorage } from '../storage/queries';
 
 // Get the current URL for sharing
 function getURL() {
-    var queries = queryString.parse(location.search);
-    var baseuri = window.location.href;
+    const queries = queryString.parse(location.search);
+    const baseuri = window.location.href;
     if (queries.mode == 'shared') {
         return baseuri;
     } else {
-        var storage = new QueryStorage();
+        const storage = new QueryStorage();
         storage.load_from_localStorage();
 
         if (baseuri.indexOf("?") > 0) {
@@ -44,7 +43,7 @@ interface ClipboardButtonProps {
     map: google.maps.Map | null;
 }
 
-export var ClipboardButton = function(props: ClipboardButtonProps) {
+export const ClipboardButton = function(props: ClipboardButtonProps) {
     const [lastCopiedAt, setLastCopiedAt] = useState<number | null>(null);
 
     useEffect(() => {
