@@ -4,8 +4,8 @@ import queryString from 'query-string';
 import { createRoadStation as createQueriesRoadStation } from '../roadstation/queries';
 import { createRoadStation as createLocalStorageRoadStation } from '../roadstation/localstorage';
 
-var queries = queryString.parse(location.search);
-var createRoadStation = queries.mode == 'shared'
+const queries = queryString.parse(location.search);
+const createRoadStation = queries.mode == 'shared'
     ? createQueriesRoadStation(queries)
     : createLocalStorageRoadStation;
 
@@ -15,7 +15,7 @@ interface MarkersProps {
     onFeatureSelect: (feature: google.maps.Data.Feature | null) => void;
 }
 
-export var Markers = function(props: MarkersProps) {
+export const Markers = function(props: MarkersProps) {
     const selectedFeatureRef = useRef<google.maps.Data.Feature | null>(null);
 
     useEffect(() => {
@@ -43,7 +43,7 @@ export var Markers = function(props: MarkersProps) {
 
     const onMarkerClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map && selectedFeatureRef.current === event.feature) {
-            var station = createRoadStation(event.feature);
+            const station = createRoadStation(event.feature);
             props.map.data.overrideStyle(event.feature, station.changeStyle());
         } else {
             props.onFeatureSelect(event.feature);
@@ -52,7 +52,7 @@ export var Markers = function(props: MarkersProps) {
 
     const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map) {
-            var station = createRoadStation(event.feature);
+            const station = createRoadStation(event.feature);
             props.map.data.overrideStyle(event.feature, station.changeStyle());
             props.onFeatureSelect(null);
         }

@@ -3,7 +3,7 @@ import { InfoWindow } from './components/InfoWindow';
 import { ClipboardButton } from './components/ClipboardButton';
 import { Markers } from './components/Markers';
 
-export var RoadStationMap = function() {
+export const RoadStationMap = function() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
@@ -25,7 +25,7 @@ export var RoadStationMap = function() {
         navigator.geolocation.getCurrentPosition(pos => onCurrentPositionGot(pos, map));
     }, [map]);
     const onCurrentPositionGot = (pos: GeolocationPosition, map: google.maps.Map) => {
-        var latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+        const latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
         map.setCenter(latlng);
     };
 
