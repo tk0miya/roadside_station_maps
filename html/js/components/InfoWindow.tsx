@@ -1,14 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createRoadStation as createQueriesRoadStation } from '../roadstation/queries';
-import { createRoadStation as createLocalStorageRoadStation } from '../roadstation/localstorage';
-import queryString from 'query-string';
-
-const queries = queryString.parse(location.search);
-const createRoadStation = queries.mode == 'shared'
-    ? createQueriesRoadStation(queries)
-    : createLocalStorageRoadStation;
+import { createRoadStation } from '../roadstation';
 
 export interface InfoWindowProps {
     selectedFeature: google.maps.Data.Feature | null;
