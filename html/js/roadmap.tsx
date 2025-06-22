@@ -3,6 +3,12 @@ import { InfoWindow } from './components/InfoWindow';
 import { ClipboardButton } from './components/ClipboardButton';
 import { Markers } from './components/Markers';
 
+const getCurrentPosition = (): Promise<GeolocationPosition> => {
+    return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(resolve);
+    });
+};
+
 export const RoadStationMap = function() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -22,11 +28,14 @@ export const RoadStationMap = function() {
         if (!map) return;
 
         map.addListener("click", () => setFeature(null));
-        navigator.geolocation.getCurrentPosition(pos => onCurrentPositionGot(pos, map));
+        getCurrentPosition().then(onLocationDetected);
     }, [map]);
-    const onCurrentPositionGot = (pos: GeolocationPosition, map: google.maps.Map) => {
-        const latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-        map.setCenter(latlng);
+
+    const onLocationDetected = (pos: GeolocationPosition) => {
+        if (map) {
+            const latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+            map.setCenter(latlng);
+        }
     };
 
     return (
