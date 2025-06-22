@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { InfoWindow } from './components/InfoWindow';
-import { ClipboardButton } from './components/ClipboardButton';
-import { Markers } from './components/Markers';
+import { InfoWindow } from './InfoWindow';
+import { ClipboardButton } from './ClipboardButton';
+import { Markers } from './Markers';
 
 const getCurrentPosition = (): Promise<GeolocationPosition> => {
     return new Promise((resolve) => {
