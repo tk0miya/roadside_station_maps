@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { createRoadStation } from '../roadstation';
+import { createRoadStation } from '../road-station';
 import { getStyleManagerInstance } from '../style-manager';
 
 const styleManager = getStyleManagerInstance();

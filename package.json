@@ -19,8 +19,8 @@
         "typecheck": "tsc --noEmit",
         "serve": "node -e \"require('./esbuild.config.js').serve().then(s => console.log('Server at http://localhost:' + s.port))\"",
         "dev": "npm run serve",
-        "generate:geojson": "npx tsx src/scripts/generate_geojson.ts",
-        "generate:stations": "npx tsx src/scripts/generate_stationlist.ts",
+        "generate:geojson": "npx tsx src/scripts/generate-geojson.ts",
+        "generate:stations": "npx tsx src/scripts/generate-stationlist.ts",
         "generate:all": "npm run generate:stations && npm run generate:geojson",
         "test": "vitest"
     },

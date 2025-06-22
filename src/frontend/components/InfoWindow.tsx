@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createRoadStation } from '../roadstation';
+import { createRoadStation } from '../road-station';
 
 export interface InfoWindowProps {
     selectedFeature: google.maps.Data.Feature | null;

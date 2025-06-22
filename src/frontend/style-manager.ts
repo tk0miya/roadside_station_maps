@@ -1,6 +1,6 @@
 import queryString from 'query-string';
 import { QueryStorage } from './storage/queries';
-import { RoadStation } from './roadstation';
+import { RoadStation } from './road-station';
 
 const STYLES: Record<number, google.maps.Data.StyleOptions> = {
     0: { icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' },
