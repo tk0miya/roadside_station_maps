@@ -9,7 +9,7 @@ const getCurrentPosition = (): Promise<GeolocationPosition> => {
     });
 };
 
-export const RoadStationMap = function() {
+export function RoadStationMap() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
