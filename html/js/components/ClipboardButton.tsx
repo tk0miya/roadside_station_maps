@@ -1,5 +1,4 @@
-import React from 'react';
-const { useEffect, useState } = React;
+import { useEffect, useState } from 'react';
 import Clipboard from 'clipboard';
 import queryString from 'query-string';
 import { QueryStorage } from '../storage/queries';

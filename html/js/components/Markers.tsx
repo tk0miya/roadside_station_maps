@@ -1,5 +1,4 @@
-import React from 'react';
-const { useEffect, useRef } = React;
+import { useEffect, useRef } from 'react';
 import queryString from 'query-string';
 
 import { createRoadStation as createQueriesRoadStation } from '../roadstation/queries';

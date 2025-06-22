@@ -1,5 +1,4 @@
-import React from 'react';
-const { useEffect, useRef, useState } = React;
+import { useEffect, useRef, useState } from 'react';
 import { InfoWindow } from './components/InfoWindow';
 import { ClipboardButton } from './components/ClipboardButton';
 import { Markers } from './components/Markers';

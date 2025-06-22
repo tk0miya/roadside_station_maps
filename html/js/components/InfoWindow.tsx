@@ -1,6 +1,5 @@
-import React from 'react';
+import { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-const { useEffect, useRef } = React;
 
 import { createRoadStation as createQueriesRoadStation } from '../roadstation/queries';
 import { createRoadStation as createLocalStorageRoadStation } from '../roadstation/localstorage';
