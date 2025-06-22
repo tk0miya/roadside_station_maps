@@ -21,7 +21,7 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "types": ["node", "jquery", "@types/google.maps", "react", "react-dom"]
+    "types": ["node", "@types/google.maps", "react", "react-dom"]
   },
   "include": [
     "src/**/*",
