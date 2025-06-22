@@ -29,6 +29,7 @@ export function Markers(props: MarkersProps) {
             props.map!.data.addGeoJson(stations);
             props.map!.data.addListener('click', onMarkerClick);
             props.map!.data.addListener('dblclick', onMarkerDoubleClick);
+            props.map!.data.addListener('rightclick', onMarkerRightClick);
             props.map!.data.setStyle((feature: google.maps.Data.Feature) => {
                 const station = createRoadStation(feature);
                 return styleManager.getStyle(station);
@@ -53,6 +54,15 @@ export function Markers(props: MarkersProps) {
             const station = createRoadStation(event.feature);
             const newStyle = styleManager.changeStyle(station);
             props.map.data.overrideStyle(event.feature, newStyle);
+            props.onFeatureSelect(null);
+        }
+    };
+
+    const onMarkerRightClick = (event: google.maps.Data.MouseEvent) => {
+        if (props.map) {
+            const station = createRoadStation(event.feature);
+            const resetStyle = styleManager.resetStyle(station);
+            props.map.data.overrideStyle(event.feature, resetStyle);
             props.onFeatureSelect(null);
         }
     };

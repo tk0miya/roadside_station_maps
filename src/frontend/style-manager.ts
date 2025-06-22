@@ -45,12 +45,18 @@ export class StyleManager {
         const stationId = this.getStationId(station);
         let styleId = this.getStyleId(stationId);
         if (styleId >= 4) {
-            styleId = 0;
+            return this.resetStyle(station);
         } else {
             styleId += 1;
+            this.setStyleId(stationId, styleId);
+            return STYLES[styleId];
         }
-        this.setStyleId(stationId, styleId);
-        return STYLES[styleId];
+    }
+
+    resetStyle(station: RoadStation | string): google.maps.Data.StyleOptions {
+        const stationId = this.getStationId(station);
+        this.storage.removeItem(stationId);
+        return STYLES[0];
     }
 }
 
