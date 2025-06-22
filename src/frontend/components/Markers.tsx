@@ -1,14 +1,13 @@
 import { useEffect, useRef } from 'react';
 
 import { createRoadStation } from '../road-station';
-import { getStyleManagerInstance } from '../style-manager';
-
-const styleManager = getStyleManagerInstance();
+import { StyleManager } from '../style-manager';
 
 interface MarkersProps {
     map: google.maps.Map | null;
     selectedFeature: google.maps.Data.Feature | null;
     onFeatureSelect: (feature: google.maps.Data.Feature | null) => void;
+    styleManager: StyleManager;
 }
 
 export function Markers(props: MarkersProps) {
@@ -32,7 +31,7 @@ export function Markers(props: MarkersProps) {
             props.map!.data.addListener('rightclick', onMarkerRightClick);
             props.map!.data.setStyle((feature: google.maps.Data.Feature) => {
                 const station = createRoadStation(feature);
-                return styleManager.getStyle(station);
+                return props.styleManager.getStyle(station);
             });
         };
 
@@ -42,7 +41,7 @@ export function Markers(props: MarkersProps) {
     const onMarkerClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map && selectedFeatureRef.current === event.feature) {
             const station = createRoadStation(event.feature);
-            const newStyle = styleManager.changeStyle(station);
+            const newStyle = props.styleManager.changeStyle(station);
             props.map.data.overrideStyle(event.feature, newStyle);
         } else {
             props.onFeatureSelect(event.feature);
@@ -52,7 +51,7 @@ export function Markers(props: MarkersProps) {
     const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map) {
             const station = createRoadStation(event.feature);
-            const newStyle = styleManager.changeStyle(station);
+            const newStyle = props.styleManager.changeStyle(station);
             props.map.data.overrideStyle(event.feature, newStyle);
             props.onFeatureSelect(null);
         }
@@ -61,7 +60,7 @@ export function Markers(props: MarkersProps) {
     const onMarkerRightClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map) {
             const station = createRoadStation(event.feature);
-            const resetStyle = styleManager.resetStyle(station);
+            const resetStyle = props.styleManager.resetStyle(station);
             props.map.data.overrideStyle(event.feature, resetStyle);
             props.onFeatureSelect(null);
         }
