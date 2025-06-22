@@ -24,9 +24,8 @@
     "types": ["node", "jquery", "@types/google.maps", "react", "react-dom"]
   },
   "include": [
-    "html/js/**/*",
-    "*.js",
-    "src/**/*"
+    "src/**/*",
+    "*.js"
   ],
   "exclude": [
     "node_modules",

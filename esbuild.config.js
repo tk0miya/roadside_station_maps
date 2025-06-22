@@ -13,8 +13,7 @@ const config = {
         '.ts': 'tsx',
         '.tsx': 'tsx',
     },
-    jsxFactory: 'React.createElement',
-    jsxFragment: 'React.Fragment',
+    jsx: 'automatic',
     sourcemap: true,
     minify: true,
     define: {
