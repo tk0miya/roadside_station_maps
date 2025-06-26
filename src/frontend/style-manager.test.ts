@@ -8,11 +8,13 @@ import { createMockStorage, createMockStation } from '../test-utils/test-utils';
 // Mock QueryStorage
 vi.mock('./storage/queries', () => ({
     QueryStorage: vi.fn(() => ({
-        loadFromQueries: vi.fn(),
-        getItem: vi.fn(),
-        setItem: vi.fn(),
-        removeItem: vi.fn(),
+        loadFromQueries: vi.fn()
     })),
+}));
+
+// Mock LocalStorage
+vi.mock('./storage/local-storage', () => ({
+    LocalStorage: vi.fn(),
 }));
 
 describe('StyleManager', () => {
@@ -21,7 +23,7 @@ describe('StyleManager', () => {
         it('should return default style when no style is stored', () => {
             const mockStorage = createMockStorage();
             const styleManager = new StyleManager(mockStorage);
-            
+
             const style = styleManager.getStyle('001');
 
             expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' });
@@ -195,8 +197,8 @@ describe('getStyleManagerInstance', () => {
 
         expect(instance).toBeInstanceOf(StyleManager);
 
-        const { QueryStorage } = await import('./storage/queries');
-        expect(QueryStorage).not.toHaveBeenCalled();
+        const { LocalStorage } = await import('./storage/local-storage');
+        expect(LocalStorage).toHaveBeenCalled();
     });
 
     it('should use QueryStorage when mode is shared', async () => {

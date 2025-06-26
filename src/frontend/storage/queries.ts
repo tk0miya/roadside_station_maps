@@ -1,4 +1,6 @@
 
+import { Storage } from './types';
+
 function encode(array: Uint8Array): string {
     return btoa(String.fromCharCode.apply(null, Array.from(array)));
 }
@@ -25,7 +27,7 @@ interface Queries {
     c4?: string;
 }
 
-export class QueryStorage {
+export class QueryStorage implements Storage {
     mode: string;
     c1: Uint8Array;
     c2: Uint8Array;
@@ -99,6 +101,24 @@ export class QueryStorage {
 
     removeItem(_key: string): void {
         // skip
+    }
+
+    listItems(): string[] {
+        const items: string[] = [];
+        const maxId = Math.max(
+            this.c1.length * 8,
+            this.c2.length * 8,
+            this.c3.length * 8,
+            this.c4.length * 8
+        );
+
+        for (let id = 0; id < maxId; id++) {
+            if (this.getItem(id.toString()) !== null) {
+                items.push(id.toString());
+            }
+        }
+
+        return items;
     }
 }
 
