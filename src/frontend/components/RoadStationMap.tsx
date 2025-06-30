@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { InfoWindow } from './InfoWindow';
 import { ClipboardButton } from './ClipboardButton';
 import { Markers } from './Markers';
+import { StationCounter } from './StationCounter';
 import { getStyleManagerInstance } from '../style-manager';
 import { StationsGeoJSON } from '../types/geojson';
 
@@ -16,6 +17,7 @@ export function RoadStationMap() {
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
     const [stations, setStations] = useState<StationsGeoJSON | null>(null);
+    const [styleVersion, setStyleVersion] = useState(0);
     const styleManager = getStyleManagerInstance();
 
     useEffect(() => {
@@ -65,12 +67,19 @@ export function RoadStationMap() {
                 onFeatureSelect={setFeature}
                 styleManager={styleManager}
                 stations={stations}
+                onStyleChange={() => setStyleVersion(v => v + 1)}
             />
             <InfoWindow
                 selectedFeature={feature}
                 map={map}
             />
             <ClipboardButton map={map} />
+            <StationCounter
+                styleManager={styleManager}
+                stations={stations}
+                styleVersion={styleVersion}
+                map={map}
+            />
         </>
     );
 };
