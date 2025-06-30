@@ -10,6 +10,7 @@ interface MarkersProps {
     onFeatureSelect: (feature: google.maps.Data.Feature | null) => void;
     styleManager: StyleManager;
     stations: StationsGeoJSON | null;
+    onStyleChange: () => void;
 }
 
 export function Markers(props: MarkersProps) {
@@ -38,6 +39,7 @@ export function Markers(props: MarkersProps) {
             const station = createRoadStation(event.feature);
             const newStyle = props.styleManager.changeStyle(station);
             props.map.data.overrideStyle(event.feature, newStyle);
+            props.onStyleChange();
         } else {
             props.onFeatureSelect(event.feature);
         }
@@ -48,7 +50,7 @@ export function Markers(props: MarkersProps) {
             const station = createRoadStation(event.feature);
             const newStyle = props.styleManager.changeStyle(station);
             props.map.data.overrideStyle(event.feature, newStyle);
-            props.onFeatureSelect(null);
+            props.onStyleChange();
         }
     };
 
@@ -58,6 +60,7 @@ export function Markers(props: MarkersProps) {
             const resetStyle = props.styleManager.resetStyle(station);
             props.map.data.overrideStyle(event.feature, resetStyle);
             props.onFeatureSelect(null);
+            props.onStyleChange();
         }
     };
 

@@ -4,7 +4,7 @@ import { LocalStorage } from './storage/local-storage';
 import { Storage } from './storage/types';
 import { RoadStation } from './road-station';
 
-const STYLES: Record<number, google.maps.Data.StyleOptions> = {
+export const STYLES: Record<number, google.maps.Data.StyleOptions> = {
     0: { icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' },
     1: { icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' },
     2: { icon: 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png' },
@@ -53,6 +53,22 @@ export class StyleManager {
         const stationId = this.getStationId(station);
         this.storage.removeItem(stationId);
         return STYLES[0];
+    }
+
+    countByStyle(totalStations: number): Record<number, number> {
+        const counts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
+
+        const stationIds = this.storage.listItems();
+        stationIds.forEach(stationId => {
+            const styleId = this.getStyleId(stationId);
+            counts[styleId]++;
+        });
+
+        // StyleId 0 = 全道の駅数 - 設定済みの道の駅数
+        const setStationsCount = Object.values(counts).reduce((sum, count) => sum + count, 0) - counts[0];
+        counts[0] = totalStations - setStationsCount;
+
+        return counts;
     }
 
 }

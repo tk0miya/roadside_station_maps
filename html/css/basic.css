@@ -28,3 +28,25 @@ div.clipboard-message {
     background-color: white;
     box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;
 }
+
+div.station-counter {
+    background-color: white;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;
+    margin: 10px;
+    padding: 8px;
+    border-radius: 2px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+}
+
+div.station-counter-style {
+    display: flex;
+    align-items: center;
+    margin: 2px 0;
+}
+
+div.station-counter-style img {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+}
