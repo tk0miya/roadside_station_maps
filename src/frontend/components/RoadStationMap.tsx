@@ -3,6 +3,7 @@ import { InfoWindow } from './InfoWindow';
 import { ClipboardButton } from './ClipboardButton';
 import { Markers } from './Markers';
 import { getStyleManagerInstance } from '../style-manager';
+import { StationsGeoJSON } from '../types/geojson';
 
 const getCurrentPosition = (): Promise<GeolocationPosition> => {
     return new Promise((resolve) => {
@@ -14,6 +15,7 @@ export function RoadStationMap() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
+    const [stations, setStations] = useState<StationsGeoJSON | null>(null);
     const styleManager = getStyleManagerInstance();
 
     useEffect(() => {
@@ -24,6 +26,20 @@ export function RoadStationMap() {
             });
             setMap(mapInstance);
         }
+    }, []);
+
+    // Fetch stations data once
+    useEffect(() => {
+        const fetchStations = async () => {
+            try {
+                const response = await fetch('../data/stations.geojson');
+                const data = await response.json();
+                setStations(data);
+            } catch (error) {
+                console.error('Error fetching stations:', error);
+            }
+        };
+        fetchStations();
     }, []);
 
     useEffect(() => {
@@ -48,6 +64,7 @@ export function RoadStationMap() {
                 selectedFeature={feature}
                 onFeatureSelect={setFeature}
                 styleManager={styleManager}
+                stations={stations}
             />
             <InfoWindow
                 selectedFeature={feature}
