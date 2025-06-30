@@ -50,7 +50,6 @@ export function Markers(props: MarkersProps) {
             const station = createRoadStation(event.feature);
             const newStyle = props.styleManager.changeStyle(station);
             props.map.data.overrideStyle(event.feature, newStyle);
-            props.onFeatureSelect(null);
             props.onStyleChange();
         }
     };
