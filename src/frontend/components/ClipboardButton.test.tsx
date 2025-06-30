@@ -63,10 +63,11 @@ describe('ClipboardButton', () => {
         render(<ClipboardButton map={mockMap} />);
 
         // Should add button to TOP_LEFT controls
-        const topLeftControls = mockMap.controls[1] as unknown as HTMLElement[];
-        expect(topLeftControls).toHaveLength(1);
-
-        const buttonElement = topLeftControls[0];
+        expect(mockMap.controls[1].push).toHaveBeenCalledTimes(1);
+        
+        // Check the element that was pushed
+        const pushCall = (mockMap.controls[1].push as any).mock.calls[0];
+        const buttonElement = pushCall[0] as HTMLElement;
         expect(buttonElement.className).toBe('clipboard');
         expect(buttonElement.innerText).toBe('シェア');
     });
