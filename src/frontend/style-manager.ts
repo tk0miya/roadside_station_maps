@@ -1,5 +1,7 @@
 import queryString from 'query-string';
 import { QueryStorage } from './storage/queries';
+import { LocalStorage } from './storage/local-storage';
+import { Storage } from './storage/types';
 import { RoadStation } from './road-station';
 
 const STYLES: Record<number, google.maps.Data.StyleOptions> = {
@@ -10,14 +12,8 @@ const STYLES: Record<number, google.maps.Data.StyleOptions> = {
     4: { icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' },
 };
 
-interface Storage {
-    getItem(key: string): string | null;
-    setItem(key: string, value: string): void;
-    removeItem(key: string): void;
-}
-
 export class StyleManager {
-    constructor(private storage: Storage) {}
+    constructor(private storage: Storage) { }
 
     private getStationId(station: RoadStation | string): string {
         return typeof station === 'string' ? station : station.stationId;
@@ -58,6 +54,7 @@ export class StyleManager {
         this.storage.removeItem(stationId);
         return STYLES[0];
     }
+
 }
 
 export function getStyleManagerInstance(): StyleManager {
@@ -67,5 +64,5 @@ export function getStyleManagerInstance(): StyleManager {
         storage.loadFromQueries(queries);
         return new StyleManager(storage);
     }
-    return new StyleManager(localStorage);
+    return new StyleManager(new LocalStorage());
 }
