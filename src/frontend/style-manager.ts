@@ -55,6 +55,22 @@ export class StyleManager {
         return STYLES[0];
     }
 
+    countByStyle(totalStations: number): Record<number, number> {
+        const counts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
+
+        const stationIds = this.storage.listItems();
+        stationIds.forEach(stationId => {
+            const styleId = this.getStyleId(stationId);
+            counts[styleId]++;
+        });
+
+        // StyleId 0 = 全道の駅数 - 設定済みの道の駅数
+        const setStationsCount = Object.values(counts).reduce((sum, count) => sum + count, 0) - counts[0];
+        counts[0] = totalStations - setStationsCount;
+
+        return counts;
+    }
+
 }
 
 export function getStyleManagerInstance(): StyleManager {

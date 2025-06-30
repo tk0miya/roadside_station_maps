@@ -164,6 +164,56 @@ describe('StyleManager', () => {
             expect(mockStorage.getItem('003')).toBeNull();
         });
     });
+
+    describe('countByStyle', () => {
+        it('should return all stations as style 0 when no styles are stored', () => {
+            const mockStorage = createMockStorage();
+            const styleManager = new StyleManager(mockStorage);
+
+            const counts = styleManager.countByStyle(100);
+
+            expect(counts).toEqual({ 0: 100, 1: 0, 2: 0, 3: 0, 4: 0 });
+        });
+
+        it('should count stored styles correctly', () => {
+            const mockStorage = createMockStorage();
+            mockStorage.setItem('001', '1');  // blue
+            mockStorage.setItem('002', '1');  // blue
+            mockStorage.setItem('003', '2');  // purple
+            mockStorage.setItem('004', '4');  // green
+            const styleManager = new StyleManager(mockStorage);
+
+            const counts = styleManager.countByStyle(100);
+
+            expect(counts).toEqual({ 0: 96, 1: 2, 2: 1, 3: 0, 4: 1 });
+        });
+
+        it('should calculate style 0 count correctly', () => {
+            const mockStorage = createMockStorage();
+            mockStorage.setItem('001', '2');  // purple stored
+            mockStorage.setItem('002', '3');  // yellow stored
+            const styleManager = new StyleManager(mockStorage);
+
+            const counts = styleManager.countByStyle(10);
+
+            expect(counts).toEqual({ 0: 8, 1: 0, 2: 1, 3: 1, 4: 0 });
+        });
+
+        it('should handle mixed storage scenarios', () => {
+            const mockStorage = createMockStorage();
+            mockStorage.setItem('station1', '0');
+            mockStorage.setItem('station2', '1');
+            mockStorage.setItem('station3', '2');
+            mockStorage.setItem('station4', '3');
+            mockStorage.setItem('station5', '4');
+            mockStorage.setItem('station6', '1');
+            const styleManager = new StyleManager(mockStorage);
+
+            const counts = styleManager.countByStyle(20);
+
+            expect(counts).toEqual({ 0: 15, 1: 2, 2: 1, 3: 1, 4: 1 });
+        });
+    });
 });
 
 describe('getStyleManagerInstance', () => {
