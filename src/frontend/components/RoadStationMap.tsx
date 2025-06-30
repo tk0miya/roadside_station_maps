@@ -24,7 +24,9 @@ export function RoadStationMap() {
         if (mapContainerRef.current) {
             const mapInstance = new google.maps.Map(mapContainerRef.current, {
                 center: { lat: 35.6896342, lng: 139.6921007 }, // Shinjuku, Tokyo
-                zoom: 9
+                zoom: 9,
+                fullscreenControl: false,
+                cameraControl: false
             });
             setMap(mapInstance);
         }
