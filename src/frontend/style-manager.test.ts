@@ -243,10 +243,10 @@ describe('StyleManager', () => {
             expect(result).toHaveProperty('c4');
             
             // Should have specific encoded values based on our QueryStorage setup
-            // '18786' (internalId 0) with style '1' -> c1: 'AQ==' (bit 0 set)
-            // '18787' (internalId 1) with style '2' -> c2: 'Ag==' (bit 1 set)
-            expect(result.c1).toBe('AQ==');
-            expect(result.c2).toBe('Ag==');
+            // '18786' (internalId 0) with style '1' -> c1: 'AQ' (bit 0 set, URL-safe)
+            // '18787' (internalId 1) with style '2' -> c2: 'Ag' (bit 1 set, URL-safe)
+            expect(result.c1).toBe('AQ');
+            expect(result.c2).toBe('Ag');
             expect(result.c3).toBe('');
             expect(result.c4).toBe('');
         });
