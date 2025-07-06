@@ -17,7 +17,9 @@
 - **TypeScriptコードの変更時**: 必ずBiomeでlintとformatを実行
   - `npm run lint` でコードチェック
   - `npm run format` でコードフォーマット
+  - `npm run typecheck` で型チェック
   - または `npm run lint:fix` で自動修正
+- **プロジェクト完了時**: 必ずlint、format、typecheckを実行してコードの品質を確保
 
 ## コミットルール
 
@@ -55,10 +57,12 @@
 - `npm run serve` - ポート8081で開発サーバーを起動（ライブリロード付き）
 - `npm run dev` - 開発サーバー起動（serveのエイリアス）
 
-### テスト
+### テスト・品質管理
 - `npm test` - Vitestでユニットテストを実行
 - `npm run lint` - Biomeでコード品質チェック
 - `npm run format` - Biomeでコードフォーマット
+- `npm run typecheck` - TypeScriptの型チェック
+- `npm run lint:fix` - Biomeでコードの自動修正
 
 
 ## アーキテクチャ
