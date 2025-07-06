@@ -19,16 +19,9 @@ function decode(buf: string | undefined): Uint8Array {
     return new Uint8Array();
 }
 
-interface Queries {
-    c1?: string;
-    c2?: string;
-    c3?: string;
-    c4?: string;
-}
-
 export class StationStyleSerializer {
-    static serialize(storage: Storage, stations: StationsGeoJSON): Queries {
-        const queries: Queries = {};
+    static serialize(storage: Storage, stations: StationsGeoJSON): Record<string, string> {
+        const queries: Record<string, string> = {};
 
         // Create station ID to internal ID mapping
         const stationIdToInternalId = new Map<string, string>();
@@ -82,7 +75,11 @@ export class StationStyleSerializer {
             internalIdToStationId.set(feature.properties.internalId, feature.properties.stationId);
         });
 
-        const processStyle = (encodedData: string | undefined, styleId: string): void => {
+        const processStyle = (encodedData: string | null | Array<string | null> | undefined, styleId: string): void => {
+            // Only process if it's a string
+            if (typeof encodedData !== 'string') {
+                return;
+            }
             const buf = decode(encodedData);
 
             for (let i = 0; i < buf.length; i++) {
