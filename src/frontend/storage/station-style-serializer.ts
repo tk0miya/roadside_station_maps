@@ -1,8 +1,22 @@
 import { Storage } from './types';
 import { StationsGeoJSON } from '../types/geojson';
+import { QueryStorage } from './query-storage';
 
 function encode(array: Uint8Array): string {
     return btoa(String.fromCharCode.apply(null, Array.from(array)));
+}
+
+function decode(buf: string | undefined): Uint8Array {
+    if (buf) {
+        try {
+            return new Uint8Array(atob(buf).split("").map((c) => {
+                return c.charCodeAt(0);
+            }));
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    return new Uint8Array();
 }
 
 interface Queries {
@@ -56,5 +70,38 @@ export class StationStyleSerializer {
         queries.c4 = convertInternalIdsToQuery(internalIdsByStyle['4']);
 
         return queries;
+    }
+
+    static deserialize(storage: QueryStorage, stations: StationsGeoJSON): void {
+        // Clear existing data
+        storage.clearItems();
+
+        // Create internal ID to station ID mapping
+        const internalIdToStationId = new Map<string, string>();
+        stations.features.forEach(feature => {
+            internalIdToStationId.set(feature.properties.internalId, feature.properties.stationId);
+        });
+
+        const processStyle = (encodedData: string | undefined, styleId: string): void => {
+            const buf = decode(encodedData);
+
+            for (let i = 0; i < buf.length; i++) {
+                for (let bit = 0; bit < 8; bit++) {
+                    if (buf[i] & (1 << bit)) {
+                        const internalId = (i * 8 + bit).toString();
+                        const stationId = internalIdToStationId.get(internalId);
+                        if (stationId) {
+                            storage.setItem(stationId, styleId);
+                        }
+                    }
+                }
+            }
+        };
+
+        // Process each style from the queries stored in storage
+        processStyle(storage.queries.c1, '1');
+        processStyle(storage.queries.c2, '2');
+        processStyle(storage.queries.c3, '3');
+        processStyle(storage.queries.c4, '4');
     }
 }
