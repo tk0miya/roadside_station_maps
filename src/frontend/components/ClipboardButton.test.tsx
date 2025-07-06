@@ -4,8 +4,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { ClipboardButton } from './ClipboardButton';
-import { createMockMap, createMockStorage } from '../../test-utils/test-utils';
+import { createMockMap } from '../../test-utils/test-utils';
 import { StyleManager } from '../style-manager';
+import { QueryStorage } from '../storage/query-storage';
 
 // Mock modules
 vi.mock('clipboard', () => ({
@@ -55,16 +56,16 @@ describe('ClipboardButton', () => {
     });
 
     it('should return null (no visual rendering)', () => {
-        const mockStorage = createMockStorage();
-        const styleManager = new StyleManager(mockStorage);
+        const storage = new QueryStorage();
+        const styleManager = new StyleManager(storage);
         const { container } = render(<ClipboardButton map={null} styleManager={styleManager} />);
         expect(container.firstChild).toBeNull();
     });
 
     it('should add clipboard button to map controls when map and styleManager are provided', () => {
         const mockMap = createMockMap();
-        const mockStorage = createMockStorage();
-        const styleManager = new StyleManager(mockStorage);
+        const storage = new QueryStorage();
+        const styleManager = new StyleManager(storage);
         
         render(<ClipboardButton map={mockMap} styleManager={styleManager} />);
 

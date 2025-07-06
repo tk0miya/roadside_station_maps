@@ -1,16 +1,5 @@
 import { vi } from 'vitest';
 
-// Create mock storage using Map
-export const createMockStorage = () => {
-    const storage = new Map<string, string>();
-    return {
-        getItem: (key: string) => storage.get(key) || null,
-        setItem: (key: string, value: string) => storage.set(key, value),
-        removeItem: (key: string) => storage.delete(key),
-        listItems: () => Array.from(storage.keys()),
-    };
-};
-
 
 // Create mock Google Maps instance with controls
 export const createMockMap = () => {

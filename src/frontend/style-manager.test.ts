@@ -5,15 +5,15 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { StyleManager, getStyleManagerInstance } from './style-manager';
 import { QueryStorage } from './storage/query-storage';
 import { LocalStorage } from './storage/local-storage';
-import { createMockStorage, createMockStation, createMockStations } from '../test-utils/test-utils';
+import { createMockStation, createMockStations } from '../test-utils/test-utils';
 
 
 describe('StyleManager', () => {
 
     describe('getStyle', () => {
         it('should return default style when no style is stored', () => {
-            const mockStorage = createMockStorage();
-            const styleManager = new StyleManager(mockStorage);
+            const storage = new QueryStorage();
+            const styleManager = new StyleManager(storage);
 
             const style = styleManager.getStyle('001');
 
@@ -21,9 +21,9 @@ describe('StyleManager', () => {
         });
 
         it('should return stored style', () => {
-            const mockStorage = createMockStorage();
-            mockStorage.setItem('002', '2');
-            const styleManager = new StyleManager(mockStorage);
+            const storage = new QueryStorage();
+            storage.setItem('002', '2');
+            const styleManager = new StyleManager(storage);
 
             const style = styleManager.getStyle('002');
 
@@ -31,10 +31,10 @@ describe('StyleManager', () => {
         });
 
         it('should accept RoadStation object when style is stored', () => {
-            const mockStorage = createMockStorage();
+            const storage = new QueryStorage();
             const station = createMockStation('003');
-            mockStorage.setItem('003', '1');
-            const styleManager = new StyleManager(mockStorage);
+            storage.setItem('003', '1');
+            const styleManager = new StyleManager(storage);
 
             const style = styleManager.getStyle(station);
 
@@ -42,9 +42,9 @@ describe('StyleManager', () => {
         });
 
         it('should accept RoadStation object when no style is stored', () => {
-            const mockStorage = createMockStorage();
+            const storage = new QueryStorage();
             const station = createMockStation('004');
-            const styleManager = new StyleManager(mockStorage);
+            const styleManager = new StyleManager(storage);
 
             const style = styleManager.getStyle(station);
 
@@ -54,112 +54,112 @@ describe('StyleManager', () => {
 
     describe('changeStyle', () => {
         it('should increment style from 0 to 1', () => {
-            const mockStorage = createMockStorage();
-            mockStorage.setItem('001', '0');
-            const styleManager = new StyleManager(mockStorage);
+            const storage = new QueryStorage();
+            storage.setItem('001', '0');
+            const styleManager = new StyleManager(storage);
 
             const newStyle = styleManager.changeStyle('001');
 
             expect(newStyle).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' });
-            expect(mockStorage.getItem('001')).toBe('1');
+            expect(storage.getItem('001')).toBe('1');
         });
 
         it('should increment style from 3 to 4', () => {
-            const mockStorage = createMockStorage();
-            mockStorage.setItem('002', '3');
-            const styleManager = new StyleManager(mockStorage);
+            const storage = new QueryStorage();
+            storage.setItem('002', '3');
+            const styleManager = new StyleManager(storage);
 
             const newStyle = styleManager.changeStyle('002');
 
             expect(newStyle).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' });
-            expect(mockStorage.getItem('002')).toBe('4');
+            expect(storage.getItem('002')).toBe('4');
         });
 
         it('should reset style when at maximum (4)', () => {
-            const mockStorage = createMockStorage();
-            mockStorage.setItem('003', '4');
-            const styleManager = new StyleManager(mockStorage);
+            const storage = new QueryStorage();
+            storage.setItem('003', '4');
+            const styleManager = new StyleManager(storage);
 
             const newStyle = styleManager.changeStyle('003');
 
             expect(newStyle).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' });
-            expect(mockStorage.getItem('003')).toBeNull();
+            expect(storage.getItem('003')).toBeNull();
         });
 
         it('should handle no stored style (default to 0 then increment to 1)', () => {
-            const mockStorage = createMockStorage();
-            const styleManager = new StyleManager(mockStorage);
+            const storage = new QueryStorage();
+            const styleManager = new StyleManager(storage);
 
             const newStyle = styleManager.changeStyle('004');
 
             expect(newStyle).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' });
-            expect(mockStorage.getItem('004')).toBe('1');
+            expect(storage.getItem('004')).toBe('1');
         });
 
         it('should accept RoadStation object with stored style', () => {
-            const mockStorage = createMockStorage();
+            const storage = new QueryStorage();
             const station = createMockStation('005');
-            mockStorage.setItem('005', '2');
-            const styleManager = new StyleManager(mockStorage);
+            storage.setItem('005', '2');
+            const styleManager = new StyleManager(storage);
 
             const newStyle = styleManager.changeStyle(station);
 
             expect(newStyle).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' });
-            expect(mockStorage.getItem('005')).toBe('3');
+            expect(storage.getItem('005')).toBe('3');
         });
 
         it('should accept RoadStation object with no stored style', () => {
-            const mockStorage = createMockStorage();
+            const storage = new QueryStorage();
             const station = createMockStation('006');
-            const styleManager = new StyleManager(mockStorage);
+            const styleManager = new StyleManager(storage);
 
             const newStyle = styleManager.changeStyle(station);
 
             expect(newStyle).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' });
-            expect(mockStorage.getItem('006')).toBe('1');
+            expect(storage.getItem('006')).toBe('1');
         });
     });
 
     describe('resetStyle', () => {
         it('should remove stored style and return default', () => {
-            const mockStorage = createMockStorage();
-            mockStorage.setItem('001', '3');
-            const styleManager = new StyleManager(mockStorage);
+            const storage = new QueryStorage();
+            storage.setItem('001', '3');
+            const styleManager = new StyleManager(storage);
 
             const style = styleManager.resetStyle('001');
 
             expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' });
-            expect(mockStorage.getItem('001')).toBeNull();
+            expect(storage.getItem('001')).toBeNull();
         });
 
         it('should accept RoadStation object with stored style', () => {
-            const mockStorage = createMockStorage();
+            const storage = new QueryStorage();
             const station = createMockStation('002');
-            mockStorage.setItem('002', '2');
-            const styleManager = new StyleManager(mockStorage);
+            storage.setItem('002', '2');
+            const styleManager = new StyleManager(storage);
 
             const style = styleManager.resetStyle(station);
 
             expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' });
-            expect(mockStorage.getItem('002')).toBeNull();
+            expect(storage.getItem('002')).toBeNull();
         });
 
         it('should accept RoadStation object with no stored style', () => {
-            const mockStorage = createMockStorage();
+            const storage = new QueryStorage();
             const station = createMockStation('003');
-            const styleManager = new StyleManager(mockStorage);
+            const styleManager = new StyleManager(storage);
 
             const style = styleManager.resetStyle(station);
 
             expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' });
-            expect(mockStorage.getItem('003')).toBeNull();
+            expect(storage.getItem('003')).toBeNull();
         });
     });
 
     describe('countByStyle', () => {
         it('should return all stations as style 0 when no styles are stored', () => {
-            const mockStorage = createMockStorage();
-            const styleManager = new StyleManager(mockStorage);
+            const storage = new QueryStorage();
+            const styleManager = new StyleManager(storage);
 
             const counts = styleManager.countByStyle(100);
 
@@ -167,12 +167,12 @@ describe('StyleManager', () => {
         });
 
         it('should count stored styles correctly', () => {
-            const mockStorage = createMockStorage();
-            mockStorage.setItem('001', '1');  // blue
-            mockStorage.setItem('002', '1');  // blue
-            mockStorage.setItem('003', '2');  // purple
-            mockStorage.setItem('004', '4');  // green
-            const styleManager = new StyleManager(mockStorage);
+            const storage = new QueryStorage();
+            storage.setItem('001', '1');  // blue
+            storage.setItem('002', '1');  // blue
+            storage.setItem('003', '2');  // purple
+            storage.setItem('004', '4');  // green
+            const styleManager = new StyleManager(storage);
 
             const counts = styleManager.countByStyle(100);
 
@@ -180,10 +180,10 @@ describe('StyleManager', () => {
         });
 
         it('should calculate style 0 count correctly', () => {
-            const mockStorage = createMockStorage();
-            mockStorage.setItem('001', '2');  // purple stored
-            mockStorage.setItem('002', '3');  // yellow stored
-            const styleManager = new StyleManager(mockStorage);
+            const storage = new QueryStorage();
+            storage.setItem('001', '2');  // purple stored
+            storage.setItem('002', '3');  // yellow stored
+            const styleManager = new StyleManager(storage);
 
             const counts = styleManager.countByStyle(10);
 
@@ -191,14 +191,14 @@ describe('StyleManager', () => {
         });
 
         it('should handle mixed storage scenarios', () => {
-            const mockStorage = createMockStorage();
-            mockStorage.setItem('station1', '0');
-            mockStorage.setItem('station2', '1');
-            mockStorage.setItem('station3', '2');
-            mockStorage.setItem('station4', '3');
-            mockStorage.setItem('station5', '4');
-            mockStorage.setItem('station6', '1');
-            const styleManager = new StyleManager(mockStorage);
+            const storage = new QueryStorage();
+            storage.setItem('station1', '0');
+            storage.setItem('station2', '1');
+            storage.setItem('station3', '2');
+            storage.setItem('station4', '3');
+            storage.setItem('station5', '4');
+            storage.setItem('station6', '1');
+            const styleManager = new StyleManager(storage);
 
             const counts = styleManager.countByStyle(20);
 

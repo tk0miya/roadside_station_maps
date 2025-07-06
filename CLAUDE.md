@@ -64,6 +64,11 @@
 - `npm run typecheck` - TypeScriptの型チェック
 - `npm run lint:fix` - Biomeでコードの自動修正
 
+## テストルール
+
+- **test-utilsの使用**: テストでモックオブジェクトが必要な場合は `src/test-utils/test-utils.ts` のヘルパー関数を使用
+- **StyleManagerを使用するテスト**: StyleManagerを使用するテストでは、基本的に `QueryStorage` インスタンスを使用してStyleManagerを作成（オンメモリ実装のため外部モックは不要）
+
 
 ## アーキテクチャ
 
