@@ -1,27 +1,14 @@
 import { useEffect, useState } from 'react';
 import Clipboard from 'clipboard';
 import queryString from 'query-string';
-import { QueryStorage } from '../storage/query-storage';
-import { StationsGeoJSON } from '../types/geojson';
+import { StyleManager } from '../style-manager';
 
 // Get the current URL for sharing
-function getURL(stations: StationsGeoJSON) {
-    const queries = queryString.parse(location.search);
-    const baseuri = window.location.href;
-    if (queries.mode == 'shared') {
-        return baseuri;
-    } else {
-        const storage = new QueryStorage();
-        storage.loadFromLocalStorage();
-        storage.setStationsData(stations);
-
-        const queries = { ...storage.toQuery(), mode: 'shared' };
-        if (baseuri.indexOf("?") > 0) {
-            return window.location.href + "&" + queryString.stringify(queries);
-        } else {
-            return window.location.href + "?" + queryString.stringify(queries);
-        }
-    }
+function getURL(styleManager: StyleManager) {
+    const queries = { ...styleManager.toQuery(), mode: 'shared' };
+    const url = new URL(window.location.href);
+    url.search = queryString.stringify(queries);
+    return url.toString();
 }
 
 // Utility function to fade out an element
@@ -44,14 +31,14 @@ async function fadeOut(element: HTMLElement, delay: number): Promise<void> {
 
 interface ClipboardButtonProps {
     map: google.maps.Map | null;
-    stations: StationsGeoJSON | null;
+    styleManager: StyleManager;
 }
 
 export function ClipboardButton(props: ClipboardButtonProps) {
     const [lastCopiedAt, setLastCopiedAt] = useState<number | null>(null);
 
     useEffect(() => {
-        if (!props.map || !props.stations) return;
+        if (!props.map) return;
 
         // Create clipboard button
         const div = document.createElement('div');
@@ -61,7 +48,7 @@ export function ClipboardButton(props: ClipboardButtonProps) {
         // Initialize clipboard functionality with direct element reference
         const clipboard = new Clipboard(div, {
             text: (_trigger: Element) => {
-                return getURL(props.stations!);
+                return getURL(props.styleManager);
             }
         });
 
@@ -72,7 +59,7 @@ export function ClipboardButton(props: ClipboardButtonProps) {
 
         // Add to map controls
         props.map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
-    }, [props.map, props.stations]);
+    }, [props.map, props.styleManager]);
 
     // Handle copy success message display
     useEffect(() => {

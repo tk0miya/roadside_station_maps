@@ -76,7 +76,7 @@ export function RoadStationMap() {
                 selectedFeature={feature}
                 map={map}
             />
-            <ClipboardButton map={map} stations={stations} />
+            <ClipboardButton map={map} styleManager={styleManagerRef.current} />
             <StationCounter
                 styleManager={styleManagerRef.current}
                 stations={stations}

@@ -1,13 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { QueryStorage } from './query-storage';
-import { LocalStorage } from './local-storage';
 import { createMockStations } from '../../test-utils/test-utils';
-
-// Mock LocalStorage
-vi.mock('./local-storage');
 
 // Create default mock stations for most tests
 const mockStations = createMockStations(3);
@@ -186,48 +182,6 @@ describe('QueryStorage', () => {
     });
   });
 
-  describe('loadFromLocalStorage', () => {
-    it('should copy data from LocalStorage', () => {
-      const queryStorage = new QueryStorage();
-      queryStorage.setStationsData(mockStations);
-      
-      const mockLocalStorage = {
-        listItems: vi.fn().mockReturnValue(['18786', '18787']),
-        getItem: vi.fn()
-          .mockReturnValueOnce('1')
-          .mockReturnValueOnce('2'),
-      };
-
-      (LocalStorage as any).mockImplementation(() => mockLocalStorage);
-
-      queryStorage.loadFromLocalStorage();
-
-      expect(mockLocalStorage.listItems).toHaveBeenCalled();
-      expect(mockLocalStorage.getItem).toHaveBeenCalledWith('18786');
-      expect(mockLocalStorage.getItem).toHaveBeenCalledWith('18787');
-      expect(queryStorage.getItem('18786')).toBe('1');
-      expect(queryStorage.getItem('18787')).toBe('2');
-    });
-
-    it('should clear existing data before loading', () => {
-      const queryStorage = new QueryStorage();
-      queryStorage.setStationsData(mockStations);
-      
-      queryStorage.setItem('18788', '3');
-      
-      const mockLocalStorage = {
-        listItems: vi.fn().mockReturnValue(['18786']),
-        getItem: vi.fn().mockReturnValue('1'),
-      };
-
-      (LocalStorage as any).mockImplementation(() => mockLocalStorage);
-
-      queryStorage.loadFromLocalStorage();
-
-      expect(queryStorage.getItem('18788')).toBeNull();
-      expect(queryStorage.getItem('18786')).toBe('1');
-    });
-  });
 
   describe('toQuery and loadFromQueries round-trip', () => {
     it('should handle empty data round-trip', () => {

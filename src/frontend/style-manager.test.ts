@@ -3,19 +3,10 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { StyleManager, getStyleManagerInstance } from './style-manager';
-import { createMockStorage, createMockStation } from '../test-utils/test-utils';
+import { QueryStorage } from './storage/query-storage';
+import { LocalStorage } from './storage/local-storage';
+import { createMockStorage, createMockStation, createMockStations } from '../test-utils/test-utils';
 
-// Mock QueryStorage
-vi.mock('./storage/query-storage', () => ({
-    QueryStorage: vi.fn(() => ({
-        loadFromQueries: vi.fn()
-    })),
-}));
-
-// Mock LocalStorage
-vi.mock('./storage/local-storage', () => ({
-    LocalStorage: vi.fn(),
-}));
 
 describe('StyleManager', () => {
 
@@ -214,6 +205,52 @@ describe('StyleManager', () => {
             expect(counts).toEqual({ 0: 15, 1: 2, 2: 1, 3: 1, 4: 1 });
         });
     });
+
+    describe('toQuery', () => {
+        it('should generate empty queries when storage is empty', () => {
+            const queryStorage = new QueryStorage();
+            const styleManager = new StyleManager(queryStorage);
+            
+            const mockStations = createMockStations(3);
+            styleManager.setStations(mockStations);
+            
+            const result = styleManager.toQuery();
+            
+            // All queries should be empty strings
+            expect(result.c1).toBe('');
+            expect(result.c2).toBe('');
+            expect(result.c3).toBe('');
+            expect(result.c4).toBe('');
+        });
+
+        it('should generate queries from storage data', () => {
+            const queryStorage = new QueryStorage();
+            const styleManager = new StyleManager(queryStorage);
+            
+            const mockStations = createMockStations(3);
+            styleManager.setStations(mockStations);
+            
+            // Set some data in the QueryStorage
+            queryStorage.setItem('18786', '1');
+            queryStorage.setItem('18787', '2');
+            
+            const result = styleManager.toQuery();
+            
+            // Should return actual query structure
+            expect(result).toHaveProperty('c1');
+            expect(result).toHaveProperty('c2');
+            expect(result).toHaveProperty('c3');
+            expect(result).toHaveProperty('c4');
+            
+            // Should have specific encoded values based on our QueryStorage setup
+            // '18786' (internalId 0) with style '1' -> c1: 'AQ==' (bit 0 set)
+            // '18787' (internalId 1) with style '2' -> c2: 'Ag==' (bit 1 set)
+            expect(result.c1).toBe('AQ==');
+            expect(result.c2).toBe('Ag==');
+            expect(result.c3).toBe('');
+            expect(result.c4).toBe('');
+        });
+    });
 });
 
 describe('getStyleManagerInstance', () => {
@@ -244,11 +281,8 @@ describe('getStyleManagerInstance', () => {
         });
 
         const instance = getStyleManagerInstance();
-
         expect(instance).toBeInstanceOf(StyleManager);
-
-        const { LocalStorage } = await import('./storage/local-storage');
-        expect(LocalStorage).toHaveBeenCalled();
+        expect(instance.storage).toBeInstanceOf(LocalStorage);
     });
 
     it('should use QueryStorage when mode is shared', async () => {
@@ -262,9 +296,7 @@ describe('getStyleManagerInstance', () => {
         });
 
         const instance = getStyleManagerInstance();
-
-        const { QueryStorage } = await import('./storage/query-storage');
-        expect(QueryStorage).toHaveBeenCalled();
         expect(instance).toBeInstanceOf(StyleManager);
+        expect(instance.storage).toBeInstanceOf(QueryStorage);
     });
 });

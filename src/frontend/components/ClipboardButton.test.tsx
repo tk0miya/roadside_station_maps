@@ -4,7 +4,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { ClipboardButton } from './ClipboardButton';
-import { createMockMap, createMockStations } from '../../test-utils/test-utils';
+import { createMockMap, createMockStorage } from '../../test-utils/test-utils';
+import { StyleManager } from '../style-manager';
 
 // Mock modules
 vi.mock('clipboard', () => ({
@@ -54,14 +55,18 @@ describe('ClipboardButton', () => {
     });
 
     it('should return null (no visual rendering)', () => {
-        const { container } = render(<ClipboardButton map={null} stations={null} />);
+        const mockStorage = createMockStorage();
+        const styleManager = new StyleManager(mockStorage);
+        const { container } = render(<ClipboardButton map={null} styleManager={styleManager} />);
         expect(container.firstChild).toBeNull();
     });
 
-    it('should add clipboard button to map controls when map and stations are provided', () => {
+    it('should add clipboard button to map controls when map and styleManager are provided', () => {
         const mockMap = createMockMap();
-        const mockStations = createMockStations(3);
-        render(<ClipboardButton map={mockMap} stations={mockStations} />);
+        const mockStorage = createMockStorage();
+        const styleManager = new StyleManager(mockStorage);
+        
+        render(<ClipboardButton map={mockMap} styleManager={styleManager} />);
 
         // Should add button to TOP_LEFT controls
         expect(mockMap.controls[1].push).toHaveBeenCalledTimes(1);
