@@ -30,13 +30,13 @@ describe('StationStyleSerializer', () => {
 
       const queries = StationStyleSerializer.serialize(queryStorage, mockStations);
 
-      // c1: bit 0 set: [1] -> "AQ=="
-      expect(queries.c1).toBe('AQ==');
-      // c2: bit 1 set: [2] -> "Ag=="
-      expect(queries.c2).toBe('Ag==');
+      // c1: bit 0 set: [1] -> "AQ" (URL-safe, no padding)
+      expect(queries.c1).toBe('AQ');
+      // c2: bit 1 set: [2] -> "Ag" (URL-safe, no padding)
+      expect(queries.c2).toBe('Ag');
       expect(queries.c3).toBe('');
-      // c4: bit 2 set: [4] -> "BA=="
-      expect(queries.c4).toBe('BA==');
+      // c4: bit 2 set: [4] -> "BA" (URL-safe, no padding)
+      expect(queries.c4).toBe('BA');
     });
 
     it('should handle multiple stations with same style', () => {
@@ -49,8 +49,8 @@ describe('StationStyleSerializer', () => {
 
       const queries = StationStyleSerializer.serialize(queryStorage, testStations);
 
-      // c1: bits 0,1,2 set: [7] -> "Bw=="
-      expect(queries.c1).toBe('Bw==');
+      // c1: bits 0,1,2 set: [7] -> "Bw" (URL-safe, no padding)
+      expect(queries.c1).toBe('Bw');
       expect(queries.c2).toBe('');
       expect(queries.c3).toBe('');
       expect(queries.c4).toBe('');
@@ -70,16 +70,16 @@ describe('StationStyleSerializer', () => {
       const queries = StationStyleSerializer.serialize(queryStorage, testStations);
 
       // c1: bits 9 and 99 set
-      expect(queries.c1).toBe('AAIAAAAAAAAAAAAACA==');
+      expect(queries.c1).toBe('AAIAAAAAAAAAAAAACA');
 
       // c2: bit 24 set
-      expect(queries.c2).toBe('AAAAAQ==');
+      expect(queries.c2).toBe('AAAAAQ');
 
       // c3: bit 49 set
-      expect(queries.c3).toBe('AAAAAAAAAg==');
+      expect(queries.c3).toBe('AAAAAAAAAg');
 
       // c4: bit 74 set
-      expect(queries.c4).toBe('AAAAAAAAAAAABA==');
+      expect(queries.c4).toBe('AAAAAAAAAAAABA');
     });
 
     it('should skip stations not in the stations data', () => {
@@ -89,7 +89,7 @@ describe('StationStyleSerializer', () => {
 
       const queries = StationStyleSerializer.serialize(queryStorage, mockStations);
 
-      expect(queries.c1).toBe('AQ=='); // Only 18786 should be encoded
+      expect(queries.c1).toBe('AQ'); // Only 18786 should be encoded
       expect(queries.c2).toBe(''); // 99999 should be skipped
       expect(queries.c3).toBe('');
       expect(queries.c4).toBe('');

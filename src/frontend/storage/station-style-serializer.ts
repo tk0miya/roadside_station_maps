@@ -3,13 +3,22 @@ import { StationsGeoJSON } from '../types/geojson';
 import { QueryStorage } from './query-storage';
 
 function encode(array: Uint8Array): string {
-    return btoa(String.fromCharCode.apply(null, Array.from(array)));
+    return btoa(String.fromCharCode.apply(null, Array.from(array)))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
 }
 
 function decode(buf: string | undefined): Uint8Array {
     if (buf) {
         try {
-            return new Uint8Array(atob(buf).split("").map((c) => {
+            // URL-safe Base64を標準Base64に戻す
+            let standardBase64 = buf.replace(/-/g, '+').replace(/_/g, '/');
+            // パディングを追加
+            while (standardBase64.length % 4) {
+                standardBase64 += '=';
+            }
+            return new Uint8Array(atob(standardBase64).split("").map((c) => {
                 return c.charCodeAt(0);
             }));
         } catch (e) {
