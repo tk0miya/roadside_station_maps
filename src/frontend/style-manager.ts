@@ -21,9 +21,10 @@ export class StyleManager {
 
     setStations(stations: StationsGeoJSON): void {
         this.stations = stations;
-        // Pass stations data to QueryStorage if it supports it
+        
+        // Process queries if this is a QueryStorage
         if (this.storage instanceof QueryStorage) {
-            this.storage.setStationsData(stations);
+            StationStyleSerializer.deserialize(this.storage, stations);
         }
     }
 
@@ -90,13 +91,13 @@ export class StyleManager {
         return StationStyleSerializer.serialize(this.storage, this.stations);
     }
 
+
 }
 
 export function getStyleManagerInstance(): StyleManager {
     const queries = queryString.parse(location.search);
     if (queries.mode === 'shared') {
-        const storage = new QueryStorage();
-        storage.loadFromQueries(queries);
+        const storage = new QueryStorage(queries);
         return new StyleManager(storage);
     }
     return new StyleManager(new LocalStorage());

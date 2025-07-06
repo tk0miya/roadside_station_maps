@@ -3,10 +3,6 @@
  */
 import { describe, it, expect } from 'vitest';
 import { QueryStorage } from './query-storage';
-import { createMockStations } from '../../test-utils/test-utils';
-
-// Create default mock stations for most tests
-const mockStations = createMockStations(3);
 
 describe('QueryStorage', () => {
 
@@ -85,55 +81,6 @@ describe('QueryStorage', () => {
   });
 
 
-  describe('loadFromQueries', () => {
-    it('should process queries after stations data is set', () => {
-      const queryStorage = new QueryStorage();
-      
-      // Load queries first (they will be pending)
-      queryStorage.loadFromQueries({
-        c1: 'AQ==', // Base64 for [1] - represents internalId 0
-        c2: 'Ag==', // Base64 for [2] - represents internalId 1
-      });
-
-      // Queries should not be accessible yet
-      expect(queryStorage.getItem('18786')).toBeNull();
-      expect(queryStorage.getItem('18787')).toBeNull();
-
-      // Set stations data to trigger processing
-      queryStorage.setStationsData(mockStations);
-
-      // Now queries should be processed and stations mapped
-      expect(queryStorage.getItem('18786')).toBe('1'); // internalId 0 -> stationId 18786
-      expect(queryStorage.getItem('18787')).toBe('2'); // internalId 1 -> stationId 18787
-    });
-
-    it('should handle empty queries', () => {
-      const queryStorage = new QueryStorage();
-      
-      queryStorage.loadFromQueries({});
-      queryStorage.setStationsData(mockStations);
-      
-      expect(queryStorage.listItems()).toEqual([]);
-    });
-
-    it('should handle queries with all style types', () => {
-      const queryStorage = new QueryStorage();
-      
-      // Create queries for all 4 styles with different stations
-      queryStorage.loadFromQueries({
-        c1: 'AQ==', // Base64 for [1] - internalId 0
-        c2: 'Ag==', // Base64 for [2] - internalId 1  
-        c3: 'BA==', // Base64 for [4] - internalId 2
-        c4: '', // Empty
-      });
-
-      queryStorage.setStationsData(mockStations);
-
-      expect(queryStorage.getItem('18786')).toBe('1');
-      expect(queryStorage.getItem('18787')).toBe('2');
-      expect(queryStorage.getItem('18788')).toBe('3');
-    });
-  });
 
 
 });
