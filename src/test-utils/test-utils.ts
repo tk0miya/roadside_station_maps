@@ -80,18 +80,18 @@ export const createMockFeature = (stationId: string, overrides: Record<string, s
 };
 
 // Create mock StationsGeoJSON
-export const createMockStations = (count: number) => ({
+export const createMockStations = (count: number, startId: number = 18786) => ({
     type: 'FeatureCollection' as const,
     features: Array.from({ length: count }, (_, i) => ({
         type: 'Feature' as const,
         geometry: {
             type: 'Point' as const,
-            coordinates: [0, 0] as [number, number]
+            coordinates: [139.0 + i * 0.1, 35.0 + i * 0.1] as [number, number]
         },
         properties: {
-            stationId: `${i + 1}`.padStart(3, '0'),
+            stationId: `${startId + i}`,
             internalId: `${i}`,
-            name: `Station ${i + 1}`,
+            name: `Station ${String.fromCharCode(65 + i)}`, // Station A, B, C...
             address: '',
             hours: '',
             uri: '',
