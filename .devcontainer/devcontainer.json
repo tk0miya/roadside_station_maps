@@ -7,13 +7,17 @@
 	"features": {
 		"ghcr.io/anthropics/devcontainer-features/claude-code:latest": {}
 	},
-	"postCreateCommand": "sudo chown -R node:node /home/node/.claude ${containerWorkspaceFolder}/node_modules /shell_history",
-	"postStartCommand": "cd /home/node && rm -f .claude.json && ln -s .claude/.claude.json",
+	"postCreateCommand": "sudo chown -R node:node ${containerWorkspaceFolder}/node_modules /shell_history",
 	"mounts": [
 		{
-			"type": "volume",
-			"source": "roadside_station_maps__claude",
+			"type": "bind",
+			"source": "${localEnv:HOME}/.claude",
 			"target": "/home/node/.claude"
+		},
+		{
+			"type": "bind",
+			"source": "${localEnv:HOME}/.claude.json",
+			"target": "/home/node/.claude.json"
 		},
 		{
 			"type": "volume",
