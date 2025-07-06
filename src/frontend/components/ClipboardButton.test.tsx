@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { ClipboardButton } from './ClipboardButton';
-import { createMockMap } from '../../test-utils/test-utils';
+import { createMockMap, createMockStations } from '../../test-utils/test-utils';
 
 // Mock modules
 vi.mock('clipboard', () => ({
@@ -54,13 +54,14 @@ describe('ClipboardButton', () => {
     });
 
     it('should return null (no visual rendering)', () => {
-        const { container } = render(<ClipboardButton map={null} />);
+        const { container } = render(<ClipboardButton map={null} stations={null} />);
         expect(container.firstChild).toBeNull();
     });
 
-    it('should add clipboard button to map controls when map is provided', () => {
+    it('should add clipboard button to map controls when map and stations are provided', () => {
         const mockMap = createMockMap();
-        render(<ClipboardButton map={mockMap} />);
+        const mockStations = createMockStations(3);
+        render(<ClipboardButton map={mockMap} stations={mockStations} />);
 
         // Should add button to TOP_LEFT controls
         expect(mockMap.controls[1].push).toHaveBeenCalledTimes(1);

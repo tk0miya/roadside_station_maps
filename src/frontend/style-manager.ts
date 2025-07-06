@@ -3,6 +3,7 @@ import { QueryStorage } from './storage/queries';
 import { LocalStorage } from './storage/local-storage';
 import { Storage } from './storage/types';
 import { RoadStation } from './road-station';
+import { StationsGeoJSON } from './types/geojson';
 
 export const STYLES: Record<number, google.maps.Data.StyleOptions> = {
     0: { icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' },
@@ -14,6 +15,13 @@ export const STYLES: Record<number, google.maps.Data.StyleOptions> = {
 
 export class StyleManager {
     constructor(private storage: Storage) { }
+
+    setStations(stations: StationsGeoJSON): void {
+        // Pass stations data to QueryStorage if it supports it
+        if (this.storage instanceof QueryStorage) {
+            this.storage.setStationsData(stations);
+        }
+    }
 
     private getStationId(station: RoadStation | string): string {
         return typeof station === 'string' ? station : station.stationId;

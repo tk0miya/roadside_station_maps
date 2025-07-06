@@ -14,6 +14,7 @@ interface GeoJSONFeature {
   properties: {
     prefId: string;
     stationId: string;
+    internalId: string;
     name: string;
     address: string;
     tel: string;
@@ -29,7 +30,7 @@ interface GeoJSONFeatureCollection {
 }
 
 
-function convertFeature(station: Station): GeoJSONFeature | null {
+function convertFeature(station: Station, internalId: number): GeoJSONFeature | null {
   if (station.lat === 'None' || station.lng === 'None') {
     return null;
   }
@@ -50,6 +51,7 @@ function convertFeature(station: Station): GeoJSONFeature | null {
     properties: {
       prefId: station.prefId,
       stationId: station.stationId,
+      internalId: internalId.toString(),
       name: station.name,
       address: station.address,
       tel: station.tel,
@@ -62,8 +64,11 @@ function convertFeature(station: Station): GeoJSONFeature | null {
 
 function main(): void {
   const stations = StationCSV.load(STATION_FILENAME);
+  
+  // Sort by stationId for stable internal ID assignment
   const features = stations
-    .map(convertFeature)
+    .sort((a, b) => parseInt(a.stationId) - parseInt(b.stationId))
+    .map((station, index) => convertFeature(station, index))
     .filter((feature): feature is GeoJSONFeature => feature !== null);
 
   const featureCollection: GeoJSONFeatureCollection = {

@@ -90,6 +90,7 @@ export const createMockStations = (count: number) => ({
         },
         properties: {
             stationId: `${i + 1}`.padStart(3, '0'),
+            internalId: `${i}`,
             name: `Station ${i + 1}`,
             address: '',
             hours: '',

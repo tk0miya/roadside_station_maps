@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import Clipboard from 'clipboard';
 import queryString from 'query-string';
 import { QueryStorage } from '../storage/queries';
+import { StationsGeoJSON } from '../types/geojson';
 
 // Get the current URL for sharing
-function getURL() {
+function getURL(stations: StationsGeoJSON) {
     const queries = queryString.parse(location.search);
     const baseuri = window.location.href;
     if (queries.mode == 'shared') {
@@ -12,11 +13,13 @@ function getURL() {
     } else {
         const storage = new QueryStorage();
         storage.loadFromLocalStorage();
+        storage.setStationsData(stations);
 
+        const queries = { ...storage.toQuery(), mode: 'shared' };
         if (baseuri.indexOf("?") > 0) {
-            return window.location.href + "&" + queryString.stringify(storage);
+            return window.location.href + "&" + queryString.stringify(queries);
         } else {
-            return window.location.href + "?" + queryString.stringify(storage);
+            return window.location.href + "?" + queryString.stringify(queries);
         }
     }
 }
@@ -41,13 +44,14 @@ async function fadeOut(element: HTMLElement, delay: number): Promise<void> {
 
 interface ClipboardButtonProps {
     map: google.maps.Map | null;
+    stations: StationsGeoJSON | null;
 }
 
 export function ClipboardButton(props: ClipboardButtonProps) {
     const [lastCopiedAt, setLastCopiedAt] = useState<number | null>(null);
 
     useEffect(() => {
-        if (!props.map) return;
+        if (!props.map || !props.stations) return;
 
         // Create clipboard button
         const div = document.createElement('div');
@@ -57,7 +61,7 @@ export function ClipboardButton(props: ClipboardButtonProps) {
         // Initialize clipboard functionality with direct element reference
         const clipboard = new Clipboard(div, {
             text: (_trigger: Element) => {
-                return getURL();
+                return getURL(props.stations!);
             }
         });
 
@@ -68,7 +72,7 @@ export function ClipboardButton(props: ClipboardButtonProps) {
 
         // Add to map controls
         props.map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
-    }, [props.map]);
+    }, [props.map, props.stations]);
 
     // Handle copy success message display
     useEffect(() => {
@@ -76,7 +80,7 @@ export function ClipboardButton(props: ClipboardButtonProps) {
 
         const showMessage = async () => {
             if (!props.map) return;
-            
+
             const topControls = props.map.controls[google.maps.ControlPosition.TOP_CENTER];
             const messageDiv = document.createElement('div');
             messageDiv.className = 'clipboard-message';

@@ -1,5 +1,6 @@
 export interface StationProperties {
     stationId: string;
+    internalId: string;
     name: string;
     address: string;
     hours: string;
