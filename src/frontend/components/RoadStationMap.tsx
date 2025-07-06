@@ -18,7 +18,7 @@ export function RoadStationMap() {
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
     const [stations, setStations] = useState<StationsGeoJSON | null>(null);
     const [styleVersion, setStyleVersion] = useState(0);
-    const styleManager = getStyleManagerInstance();
+    const styleManagerRef = useRef(getStyleManagerInstance());
 
     useEffect(() => {
         if (mapContainerRef.current) {
@@ -38,6 +38,7 @@ export function RoadStationMap() {
             try {
                 const response = await fetch('../data/stations.geojson');
                 const data = await response.json();
+                styleManagerRef.current.setStations(data);
                 setStations(data);
             } catch (error) {
                 console.error('Error fetching stations:', error);
@@ -67,7 +68,7 @@ export function RoadStationMap() {
                 map={map}
                 selectedFeature={feature}
                 onFeatureSelect={setFeature}
-                styleManager={styleManager}
+                styleManager={styleManagerRef.current}
                 stations={stations}
                 onStyleChange={() => setStyleVersion(v => v + 1)}
             />
@@ -75,9 +76,9 @@ export function RoadStationMap() {
                 selectedFeature={feature}
                 map={map}
             />
-            <ClipboardButton map={map} />
+            <ClipboardButton map={map} stations={stations} />
             <StationCounter
-                styleManager={styleManager}
+                styleManager={styleManagerRef.current}
                 stations={stations}
                 styleVersion={styleVersion}
                 map={map}

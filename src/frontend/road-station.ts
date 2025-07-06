@@ -1,5 +1,6 @@
 export interface RoadStation {
     readonly stationId: string;
+    readonly internalId: string;
     readonly name: string;
     readonly address: string;
     readonly hours: string;
@@ -12,6 +13,7 @@ export function createRoadStation(feature: google.maps.Data.Feature): RoadStatio
     return {
         prefId: feature.getProperty("prefId") as string,
         stationId: feature.getProperty("stationId") as string,
+        internalId: feature.getProperty("internalId") as string,
         name: feature.getProperty("name") as string,
         address: feature.getProperty("address") as string,
         hours: feature.getProperty("hours") as string,
