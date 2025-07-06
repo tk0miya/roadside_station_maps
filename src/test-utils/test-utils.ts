@@ -45,6 +45,7 @@ export const createMockMap = () => {
 export const createMockStation = (stationId: string, overrides: Record<string, string> = {}) => {
     const defaultProperties = {
         stationId,
+        internalId: `${stationId}`,
         name: `Station ${stationId}`,
         address: `Address ${stationId}`,
         hours: '9:00-17:00',
