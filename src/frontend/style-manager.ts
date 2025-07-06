@@ -1,5 +1,5 @@
 import queryString from 'query-string';
-import { QueryStorage } from './storage/queries';
+import { QueryStorage } from './storage/query-storage';
 import { LocalStorage } from './storage/local-storage';
 import { Storage } from './storage/types';
 import { RoadStation } from './road-station';

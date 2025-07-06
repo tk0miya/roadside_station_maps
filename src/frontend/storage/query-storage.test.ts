@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi } from 'vitest';
-import { QueryStorage } from './queries';
+import { QueryStorage } from './query-storage';
 import { LocalStorage } from './local-storage';
 import { createMockStations } from '../../test-utils/test-utils';
 

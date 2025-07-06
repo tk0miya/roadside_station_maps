@@ -6,7 +6,7 @@ import { StyleManager, getStyleManagerInstance } from './style-manager';
 import { createMockStorage, createMockStation } from '../test-utils/test-utils';
 
 // Mock QueryStorage
-vi.mock('./storage/queries', () => ({
+vi.mock('./storage/query-storage', () => ({
     QueryStorage: vi.fn(() => ({
         loadFromQueries: vi.fn()
     })),
@@ -263,7 +263,7 @@ describe('getStyleManagerInstance', () => {
 
         const instance = getStyleManagerInstance();
 
-        const { QueryStorage } = await import('./storage/queries');
+        const { QueryStorage } = await import('./storage/query-storage');
         expect(QueryStorage).toHaveBeenCalled();
         expect(instance).toBeInstanceOf(StyleManager);
     });

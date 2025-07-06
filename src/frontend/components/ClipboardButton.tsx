@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Clipboard from 'clipboard';
 import queryString from 'query-string';
-import { QueryStorage } from '../storage/queries';
+import { QueryStorage } from '../storage/query-storage';
 import { StationsGeoJSON } from '../types/geojson';
 
 // Get the current URL for sharing
