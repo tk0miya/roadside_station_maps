@@ -1,16 +1,5 @@
 import { vi } from 'vitest';
 
-// Create mock storage using Map
-export const createMockStorage = () => {
-    const storage = new Map<string, string>();
-    return {
-        getItem: (key: string) => storage.get(key) || null,
-        setItem: (key: string, value: string) => storage.set(key, value),
-        removeItem: (key: string) => storage.delete(key),
-        listItems: () => Array.from(storage.keys()),
-    };
-};
-
 
 // Create mock Google Maps instance with controls
 export const createMockMap = () => {
@@ -45,6 +34,7 @@ export const createMockMap = () => {
 export const createMockStation = (stationId: string, overrides: Record<string, string> = {}) => {
     const defaultProperties = {
         stationId,
+        internalId: `${stationId}`,
         name: `Station ${stationId}`,
         address: `Address ${stationId}`,
         hours: '9:00-17:00',
