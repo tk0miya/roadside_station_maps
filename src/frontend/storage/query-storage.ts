@@ -1,7 +1,6 @@
 
 import { Storage } from './types';
 import { StationsGeoJSON } from '../types/geojson';
-import { LocalStorage } from './local-storage';
 
 function encode(array: Uint8Array): string {
     return btoa(String.fromCharCode.apply(null, Array.from(array)));
@@ -136,21 +135,6 @@ export class QueryStorage implements Storage {
         return queries;
     }
 
-    loadFromLocalStorage(): void {
-        const localStorage = new LocalStorage();
-        const stationIds = localStorage.listItems();
-
-        // Clear existing data
-        this.clearItems();
-
-        // Copy data from LocalStorage
-        stationIds.forEach(stationId => {
-            const styleId = localStorage.getItem(stationId);
-            if (styleId) {
-                this.setItem(stationId, styleId);
-            }
-        });
-    }
 
     loadFromQueries(queries: Queries): void {
         // Store queries for later processing when stations data is available
@@ -196,12 +180,6 @@ export class QueryStorage implements Storage {
         return [...this.c1, ...this.c2, ...this.c3, ...this.c4];
     }
 
-    private clearItems(): void {
-        this.c1.clear();
-        this.c2.clear();
-        this.c3.clear();
-        this.c4.clear();
-    }
 }
 
 

@@ -1,5 +1,5 @@
 import queryString from 'query-string';
-import { QueryStorage } from './storage/queries';
+import { QueryStorage } from './storage/query-storage';
 import { LocalStorage } from './storage/local-storage';
 import { Storage } from './storage/types';
 import { RoadStation } from './road-station';
@@ -14,9 +14,12 @@ export const STYLES: Record<number, google.maps.Data.StyleOptions> = {
 };
 
 export class StyleManager {
-    constructor(private storage: Storage) { }
+    private stations: StationsGeoJSON | null = null;
+
+    constructor(public storage: Storage) { }
 
     setStations(stations: StationsGeoJSON): void {
+        this.stations = stations;
         // Pass stations data to QueryStorage if it supports it
         if (this.storage instanceof QueryStorage) {
             this.storage.setStationsData(stations);
@@ -77,6 +80,28 @@ export class StyleManager {
         counts[0] = totalStations - setStationsCount;
 
         return counts;
+    }
+
+    toQuery(): { c1?: string; c2?: string; c3?: string; c4?: string } {
+        if (!this.stations) {
+            throw new Error('Stations data not set. Call setStations() first.');
+        }
+
+        // Create a temporary QueryStorage to convert from current storage
+        const queryStorage = new QueryStorage();
+
+        // Transfer data from current storage to QueryStorage
+        const stationIds = this.storage.listItems();
+        stationIds.forEach(stationId => {
+            const styleId = this.storage.getItem(stationId);
+            if (styleId) {
+                queryStorage.setItem(stationId, styleId);
+            }
+        });
+
+        // Set station data and generate queries
+        queryStorage.setStationsData(this.stations);
+        return queryStorage.toQuery();
     }
 
 }
