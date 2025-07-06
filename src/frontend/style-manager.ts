@@ -4,6 +4,7 @@ import { LocalStorage } from './storage/local-storage';
 import { Storage } from './storage/types';
 import { RoadStation } from './road-station';
 import { StationsGeoJSON } from './types/geojson';
+import { StationStyleSerializer } from './storage/station-style-serializer';
 
 export const STYLES: Record<number, google.maps.Data.StyleOptions> = {
     0: { icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' },
@@ -86,22 +87,7 @@ export class StyleManager {
         if (!this.stations) {
             throw new Error('Stations data not set. Call setStations() first.');
         }
-
-        // Create a temporary QueryStorage to convert from current storage
-        const queryStorage = new QueryStorage();
-
-        // Transfer data from current storage to QueryStorage
-        const stationIds = this.storage.listItems();
-        stationIds.forEach(stationId => {
-            const styleId = this.storage.getItem(stationId);
-            if (styleId) {
-                queryStorage.setItem(stationId, styleId);
-            }
-        });
-
-        // Set station data and generate queries
-        queryStorage.setStationsData(this.stations);
-        return queryStorage.toQuery();
+        return StationStyleSerializer.serialize(this.storage, this.stations);
     }
 
 }

@@ -2,11 +2,6 @@
 import { Storage } from './types';
 import { StationsGeoJSON } from '../types/geojson';
 
-function encode(array: Uint8Array): string {
-    return btoa(String.fromCharCode.apply(null, Array.from(array)));
-}
-
-
 function decode(buf: string | undefined): Uint8Array {
     if (buf) {
         try {
@@ -20,14 +15,12 @@ function decode(buf: string | undefined): Uint8Array {
     return new Uint8Array();
 }
 
-
 interface Queries {
     c1?: string;
     c2?: string;
     c3?: string;
     c4?: string;
 }
-
 
 export class QueryStorage implements Storage {
     mode: string = 'shared';
@@ -38,7 +31,6 @@ export class QueryStorage implements Storage {
     private pendingQueries: Queries | null = null;
     private stations: StationsGeoJSON | null = null;
 
-
     setStationsData(stations: StationsGeoJSON): void {
         this.stations = stations;
 
@@ -47,16 +39,6 @@ export class QueryStorage implements Storage {
             this.processPendingQueries(this.pendingQueries);
             this.pendingQueries = null;
         }
-    }
-
-    private getStationIdMapping(): Map<string, string> {
-        const mapping = new Map<string, string>();
-        if (this.stations) {
-            this.stations.features.forEach(feature => {
-                mapping.set(feature.properties.stationId, feature.properties.internalId);
-            });
-        }
-        return mapping;
     }
 
     private getInternalIdMapping(): Map<string, string> {
@@ -101,41 +83,6 @@ export class QueryStorage implements Storage {
         this.c4 = processStyle(queries.c4);
     }
 
-    toQuery(): Queries {
-        const queries: Queries = {};
-
-        const stationIdToInternalId = this.getStationIdMapping();
-
-        const convertSetToQuery = (stationSet: Set<string>): string => {
-            if (stationSet.size === 0) return '';
-
-            const internalIds = Array.from(stationSet)
-                .map(stationId => stationIdToInternalId.get(stationId))
-                .filter((internalId): internalId is string => internalId !== undefined)
-                .map(internalId => parseInt(internalId));
-
-            const maxId = Math.max(...internalIds);
-            const size = Math.ceil((maxId + 1) / 8);
-            const buf = new Uint8Array(size);
-
-            internalIds.forEach(id => {
-                const idx = Math.floor(id / 8);
-                const shift = id % 8;
-                buf[idx] |= 1 << shift;
-            });
-
-            return encode(buf);
-        };
-
-        queries.c1 = convertSetToQuery(this.c1);
-        queries.c2 = convertSetToQuery(this.c2);
-        queries.c3 = convertSetToQuery(this.c3);
-        queries.c4 = convertSetToQuery(this.c4);
-
-        return queries;
-    }
-
-
     loadFromQueries(queries: Queries): void {
         // Store queries for later processing when stations data is available
         this.pendingQueries = queries;
@@ -179,7 +126,4 @@ export class QueryStorage implements Storage {
     listItems(): string[] {
         return [...this.c1, ...this.c2, ...this.c3, ...this.c4];
     }
-
 }
-
-
