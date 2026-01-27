@@ -19,8 +19,10 @@ const mockMap = {} as google.maps.Map;
 Object.defineProperty(global, 'google', {
     value: {
         maps: {
-            InfoWindow: vi.fn(() => mockInfoWindow),
-            Size: vi.fn(),
+            InfoWindow: vi.fn(function () {
+                return mockInfoWindow;
+            }),
+            Size: vi.fn(function () {}),
         },
     },
     writable: true,
