@@ -33,7 +33,7 @@
         "react-dom": "^19.2.3"
     },
     "devDependencies": {
-        "@biomejs/biome": "^2.0.6",
+        "@biomejs/biome": "^2.3.13",
         "@testing-library/react": "^16.3.2",
         "@types/cheerio": "^1.0.0",
         "@types/clipboard": "^2.0.10",
