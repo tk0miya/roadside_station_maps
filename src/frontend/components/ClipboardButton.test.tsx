@@ -10,10 +10,12 @@ import { QueryStorage } from '../storage/query-storage';
 
 // Mock modules
 vi.mock('clipboard', () => ({
-    default: vi.fn(() => ({
-        on: vi.fn(),
-        destroy: vi.fn(),
-    })),
+    default: vi.fn(function () {
+        return {
+            on: vi.fn(),
+            destroy: vi.fn(),
+        };
+    }),
 }));
 
 
