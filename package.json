@@ -41,7 +41,7 @@
         "@types/node": "^24.0.0",
         "@types/react": "^19.2.10",
         "@types/react-dom": "^19.2.3",
-        "esbuild": "^0.27.2",
+        "esbuild": "^0.27.3",
         "jsdom": "^27.4.0",
         "typescript": "^5.9.3",
         "vitest": "^4.0.18"
