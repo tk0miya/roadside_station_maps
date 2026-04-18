@@ -24,6 +24,7 @@ jobs:
       - name: Auto-approve and merge
         if: steps.metadata.outputs.update-type == 'version-update:semver-minor' || steps.metadata.outputs.update-type == 'version-update:semver-patch'
         run: |
+          gh pr edit "$PR_URL" --add-label "auto-merge"
           gh pr review --approve "$PR_URL"
           gh pr merge --auto --merge "$PR_URL"
         env:
@@ -43,6 +44,7 @@ jobs:
 
       - name: Approve a PR
         run: |
+          gh pr edit "$PR_URL" --add-label "auto-merge"
           gh pr review --approve "$PR_URL"
           gh pr merge --auto --merge "$PR_URL"
         env:
