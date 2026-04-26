@@ -206,6 +206,51 @@ describe('StyleManager', () => {
         });
     });
 
+    describe('setStations', () => {
+        beforeEach(() => {
+            localStorage.clear();
+        });
+
+        it('should remove stored entries for stations not present in the GeoJSON (LocalStorage)', () => {
+            const storage = new LocalStorage();
+            storage.setItem('18786', '1');  // exists in mock stations
+            storage.setItem('99999', '2');  // does not exist
+            const styleManager = new StyleManager(storage);
+
+            const mockStations = createMockStations(3);
+            styleManager.setStations(mockStations);
+
+            expect(storage.getItem('18786')).toBe('1');
+            expect(storage.getItem('99999')).toBeNull();
+        });
+
+        it('should keep all stored entries when every stationId exists in the GeoJSON', () => {
+            const storage = new LocalStorage();
+            storage.setItem('18786', '1');
+            storage.setItem('18787', '2');
+            const styleManager = new StyleManager(storage);
+
+            const mockStations = createMockStations(3);
+            styleManager.setStations(mockStations);
+
+            expect(storage.getItem('18786')).toBe('1');
+            expect(storage.getItem('18787')).toBe('2');
+        });
+
+        it('should reflect cleanup in countByStyle (LocalStorage)', () => {
+            const storage = new LocalStorage();
+            storage.setItem('18786', '1');  // valid
+            storage.setItem('99999', '2');  // invalid (removed station)
+            const styleManager = new StyleManager(storage);
+
+            const mockStations = createMockStations(3);
+            styleManager.setStations(mockStations);
+
+            const counts = styleManager.countByStyle(3);
+            expect(counts).toEqual({ 0: 2, 1: 1, 2: 0, 3: 0, 4: 0 });
+        });
+    });
+
     describe('toQuery', () => {
         it('should generate empty queries when storage is empty', () => {
             const queryStorage = new QueryStorage();
