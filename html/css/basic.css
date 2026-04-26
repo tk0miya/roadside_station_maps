@@ -50,3 +50,7 @@ div.station-counter-style img {
     height: 20px;
     margin-right: 5px;
 }
+
+div.login-button {
+    margin: 10px;
+}

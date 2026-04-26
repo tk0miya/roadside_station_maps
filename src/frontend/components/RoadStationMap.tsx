@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { InfoWindow } from './InfoWindow';
 import { ClipboardButton } from './ClipboardButton';
+import { LoginButton } from './LoginButton';
 import { Markers } from './Markers';
 import { StationCounter } from './StationCounter';
 import { getStyleManagerInstance } from '../style-manager';
@@ -77,6 +78,7 @@ export function RoadStationMap() {
                 map={map}
             />
             <ClipboardButton map={map} styleManager={styleManagerRef.current} />
+            <LoginButton map={map} />
             <StationCounter
                 styleManager={styleManagerRef.current}
                 stations={stations}
