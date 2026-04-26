@@ -21,11 +21,19 @@ export class StyleManager {
 
     setStations(stations: StationsGeoJSON): void {
         this.stations = stations;
-        
+
         // Process queries if this is a QueryStorage
         if (this.storage instanceof QueryStorage) {
             StationStyleSerializer.deserialize(this.storage, stations);
         }
+
+        // Remove stored entries for stations that no longer exist in the GeoJSON
+        const validStationIds = new Set(stations.features.map(feature => feature.properties.stationId));
+        this.storage.listItems().forEach(stationId => {
+            if (!validStationIds.has(stationId)) {
+                this.storage.removeItem(stationId);
+            }
+        });
     }
 
     private getStationId(station: RoadStation | string): string {
