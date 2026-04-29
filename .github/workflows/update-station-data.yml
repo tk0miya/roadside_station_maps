@@ -43,5 +43,6 @@ jobs:
         commit-message: "Update station data"
         branch: bot/update-station-data
         title: "Update station data"
+        labels: auto-merge
         token: ${{ steps.app-token.outputs.token }}
 
