@@ -33,7 +33,7 @@ jobs:
         run: npx biome migrate --write
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.app-token.outputs.token }}
           branch: chore/biome-migrate
