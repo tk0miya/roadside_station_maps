@@ -9,13 +9,8 @@ import { RoadStation } from './road-station';
 import { StationsGeoJSON } from './types/geojson';
 import type { AuthState } from '@shared/auth-types';
 
-export const STYLES: Record<number, google.maps.Data.StyleOptions> = {
-    0: { icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' },
-    1: { icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' },
-    2: { icon: 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png' },
-    3: { icon: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' },
-    4: { icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' },
-};
+export const STYLE_COUNT = 5;
+const MAX_STYLE_ID = STYLE_COUNT - 1;
 
 export class StyleManager {
     constructor(public storage: Storage) { }
@@ -34,7 +29,8 @@ export class StyleManager {
         return typeof station === 'string' ? station : station.stationId;
     }
 
-    private getStyleId(stationId: string): number {
+    getStyle(station: RoadStation | string): number {
+        const stationId = this.getStationId(station);
         const styleId = this.storage.getItem(stationId);
         if (styleId) {
             return parseInt(styleId);
@@ -42,44 +38,36 @@ export class StyleManager {
         return 0;
     }
 
-    private setStyleId(stationId: string, styleId: number): void {
-        this.storage.setItem(stationId, styleId.toString());
-    }
-
-    getStyle(station: RoadStation | string): google.maps.Data.StyleOptions {
+    changeStyle(station: RoadStation | string): number {
         const stationId = this.getStationId(station);
-        const styleId = this.getStyleId(stationId);
-        return STYLES[styleId];
-    }
-
-    changeStyle(station: RoadStation | string): google.maps.Data.StyleOptions {
-        const stationId = this.getStationId(station);
-        let styleId = this.getStyleId(stationId);
-        if (styleId >= 4) {
-            return this.resetStyle(station);
-        } else {
-            styleId += 1;
-            this.setStyleId(stationId, styleId);
-            return STYLES[styleId];
+        const current = this.getStyle(stationId);
+        if (current >= MAX_STYLE_ID) {
+            return this.resetStyle(stationId);
         }
+        const next = current + 1;
+        this.storage.setItem(stationId, next.toString());
+        return next;
     }
 
-    resetStyle(station: RoadStation | string): google.maps.Data.StyleOptions {
+    resetStyle(station: RoadStation | string): number {
         const stationId = this.getStationId(station);
         this.storage.removeItem(stationId);
-        return STYLES[0];
+        return 0;
     }
 
     countByStyle(totalStations: number): Record<number, number> {
-        const counts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
+        const counts: Record<number, number> = {};
+        for (let i = 0; i < STYLE_COUNT; i++) {
+            counts[i] = 0;
+        }
 
         const stationIds = this.storage.listItems();
         stationIds.forEach(stationId => {
-            const styleId = this.getStyleId(stationId);
+            const styleId = this.getStyle(stationId);
             counts[styleId]++;
         });
 
-        // StyleId 0 = 全道の駅数 - 設定済みの道の駅数
+        // StyleId 0 = total stations - assigned stations
         const setStationsCount = Object.values(counts).reduce((sum, count) => sum + count, 0) - counts[0];
         counts[0] = totalStations - setStationsCount;
 

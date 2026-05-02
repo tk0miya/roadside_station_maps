@@ -12,23 +12,19 @@ import type { AuthState } from '@shared/auth-types';
 describe('StyleManager', () => {
 
     describe('getStyle', () => {
-        it('should return default style when no style is stored', () => {
+        it('should return 0 when no style is stored', () => {
             const storage = new MemoryStorage();
             const styleManager = new StyleManager(storage);
 
-            const style = styleManager.getStyle('001');
-
-            expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' });
+            expect(styleManager.getStyle('001')).toBe(0);
         });
 
-        it('should return stored style', () => {
+        it('should return stored style id', () => {
             const storage = new MemoryStorage();
             storage.setItem('002', '2');
             const styleManager = new StyleManager(storage);
 
-            const style = styleManager.getStyle('002');
-
-            expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png' });
+            expect(styleManager.getStyle('002')).toBe(2);
         });
 
         it('should accept RoadStation object when style is stored', () => {
@@ -37,9 +33,7 @@ describe('StyleManager', () => {
             storage.setItem('003', '1');
             const styleManager = new StyleManager(storage);
 
-            const style = styleManager.getStyle(station);
-
-            expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' });
+            expect(styleManager.getStyle(station)).toBe(1);
         });
 
         it('should accept RoadStation object when no style is stored', () => {
@@ -47,9 +41,7 @@ describe('StyleManager', () => {
             const station = createMockStation('004');
             const styleManager = new StyleManager(storage);
 
-            const style = styleManager.getStyle(station);
-
-            expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' });
+            expect(styleManager.getStyle(station)).toBe(0);
         });
     });
 
@@ -59,9 +51,7 @@ describe('StyleManager', () => {
             storage.setItem('001', '0');
             const styleManager = new StyleManager(storage);
 
-            const newStyle = styleManager.changeStyle('001');
-
-            expect(newStyle).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' });
+            expect(styleManager.changeStyle('001')).toBe(1);
             expect(storage.getItem('001')).toBe('1');
         });
 
@@ -70,9 +60,7 @@ describe('StyleManager', () => {
             storage.setItem('002', '3');
             const styleManager = new StyleManager(storage);
 
-            const newStyle = styleManager.changeStyle('002');
-
-            expect(newStyle).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' });
+            expect(styleManager.changeStyle('002')).toBe(4);
             expect(storage.getItem('002')).toBe('4');
         });
 
@@ -81,9 +69,7 @@ describe('StyleManager', () => {
             storage.setItem('003', '4');
             const styleManager = new StyleManager(storage);
 
-            const newStyle = styleManager.changeStyle('003');
-
-            expect(newStyle).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' });
+            expect(styleManager.changeStyle('003')).toBe(0);
             expect(storage.getItem('003')).toBeNull();
         });
 
@@ -91,9 +77,7 @@ describe('StyleManager', () => {
             const storage = new MemoryStorage();
             const styleManager = new StyleManager(storage);
 
-            const newStyle = styleManager.changeStyle('004');
-
-            expect(newStyle).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' });
+            expect(styleManager.changeStyle('004')).toBe(1);
             expect(storage.getItem('004')).toBe('1');
         });
 
@@ -103,9 +87,7 @@ describe('StyleManager', () => {
             storage.setItem('005', '2');
             const styleManager = new StyleManager(storage);
 
-            const newStyle = styleManager.changeStyle(station);
-
-            expect(newStyle).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' });
+            expect(styleManager.changeStyle(station)).toBe(3);
             expect(storage.getItem('005')).toBe('3');
         });
 
@@ -114,22 +96,18 @@ describe('StyleManager', () => {
             const station = createMockStation('006');
             const styleManager = new StyleManager(storage);
 
-            const newStyle = styleManager.changeStyle(station);
-
-            expect(newStyle).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' });
+            expect(styleManager.changeStyle(station)).toBe(1);
             expect(storage.getItem('006')).toBe('1');
         });
     });
 
     describe('resetStyle', () => {
-        it('should remove stored style and return default', () => {
+        it('should remove stored style and return 0', () => {
             const storage = new MemoryStorage();
             storage.setItem('001', '3');
             const styleManager = new StyleManager(storage);
 
-            const style = styleManager.resetStyle('001');
-
-            expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' });
+            expect(styleManager.resetStyle('001')).toBe(0);
             expect(storage.getItem('001')).toBeNull();
         });
 
@@ -139,9 +117,7 @@ describe('StyleManager', () => {
             storage.setItem('002', '2');
             const styleManager = new StyleManager(storage);
 
-            const style = styleManager.resetStyle(station);
-
-            expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' });
+            expect(styleManager.resetStyle(station)).toBe(0);
             expect(storage.getItem('002')).toBeNull();
         });
 
@@ -150,9 +126,7 @@ describe('StyleManager', () => {
             const station = createMockStation('003');
             const styleManager = new StyleManager(storage);
 
-            const style = styleManager.resetStyle(station);
-
-            expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' });
+            expect(styleManager.resetStyle(station)).toBe(0);
             expect(storage.getItem('003')).toBeNull();
         });
     });

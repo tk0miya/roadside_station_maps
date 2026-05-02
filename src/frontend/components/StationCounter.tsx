@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import { StyleManager, STYLES } from '../style-manager';
+import { MARKER_ICONS } from '../marker-icons';
+import { StyleManager } from '../style-manager';
 import { StationsGeoJSON } from '../types/geojson';
 
 interface StationCounterProps {
@@ -36,16 +37,12 @@ export function StationCounter({ styleManager, stations, styleVersion: _styleVer
         // Render React content
         contentRootRef.current.render(
             <div>
-                {[0, 1, 2, 3, 4].map((styleId) => {
-                    const icon = STYLES[styleId].icon as string;
-                    const count = counts[styleId];
-                    return (
-                        <div key={styleId} className="station-counter-style">
-                            <img src={icon} />
-                            <span>{count}</span>
-                        </div>
-                    );
-                })}
+                {MARKER_ICONS.map((icon, styleId) => (
+                    <div key={styleId} className="station-counter-style">
+                        <img src={icon} />
+                        <span>{counts[styleId]}</span>
+                    </div>
+                ))}
             </div>
         );
     }, [stations, _styleVersion, styleManager]);
