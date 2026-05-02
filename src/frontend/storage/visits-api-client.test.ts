@@ -76,34 +76,6 @@ describe('VisitsApiClient', () => {
         );
     });
 
-    it('skips bulkPut when no visits are provided', async () => {
-        await client.bulkPut([]);
-        expect(fetchMock).not.toHaveBeenCalled();
-    });
-
-    it('PUTs all visits in a single bulk request', async () => {
-        fetchMock.mockResolvedValueOnce(emptyResponse());
-
-        await client.bulkPut([
-            { stationId: '111', styleId: 1 },
-            { stationId: '222', styleId: 4 },
-        ]);
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(fetchMock).toHaveBeenCalledWith(
-            'https://api.example.com/api/visits',
-            expect.objectContaining({
-                method: 'PUT',
-                body: JSON.stringify({
-                    visits: [
-                        { stationId: '111', styleId: 1 },
-                        { stationId: '222', styleId: 4 },
-                    ],
-                }),
-            })
-        );
-    });
-
     it('throws VisitsApiError without calling fetch when ID token is missing', async () => {
         const noTokenClient = new VisitsApiClient({
             baseUrl: 'https://api.example.com',

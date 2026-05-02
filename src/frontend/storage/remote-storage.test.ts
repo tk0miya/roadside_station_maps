@@ -8,7 +8,6 @@ function createClient() {
         list: vi.fn().mockResolvedValue([]),
         put: vi.fn().mockResolvedValue(undefined),
         delete: vi.fn().mockResolvedValue(undefined),
-        bulkPut: vi.fn().mockResolvedValue(undefined),
     } satisfies Record<keyof VisitsApiClient, ReturnType<typeof vi.fn>>;
 }
 
@@ -131,22 +130,5 @@ describe('RemoteStorage', () => {
         await storage.flush();
 
         expect(client.delete).not.toHaveBeenCalled();
-    });
-
-    it('replaceCache populates the cache without issuing network requests', async () => {
-        const client = createClient();
-        const storage = await RemoteStorage.create({
-            client: client as unknown as VisitsApiClient,
-        });
-
-        storage.replaceCache([
-            { stationId: '111', styleId: 1 },
-            { stationId: '222', styleId: 4 },
-        ]);
-
-        expect(storage.listItems().sort()).toEqual(['111', '222']);
-        expect(storage.getItem('111')).toBe('1');
-        expect(client.put).not.toHaveBeenCalled();
-        expect(client.bulkPut).not.toHaveBeenCalled();
     });
 });

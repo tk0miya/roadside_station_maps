@@ -1,9 +1,4 @@
-import type {
-    BulkPutVisitsRequest,
-    ListVisitsResponse,
-    PutVisitRequest,
-    VisitRecord,
-} from '@shared/api-types';
+import type { ListVisitsResponse, PutVisitRequest, VisitRecord } from '@shared/api-types';
 
 export interface VisitsApiClientOptions {
     baseUrl: string;
@@ -49,16 +44,6 @@ export class VisitsApiClient {
 
     async delete(stationId: string): Promise<void> {
         await this.request(`/api/visits/${encodeURIComponent(stationId)}`, { method: 'DELETE' });
-    }
-
-    async bulkPut(visits: Array<{ stationId: string; styleId: number }>): Promise<void> {
-        if (visits.length === 0) return;
-        const body: BulkPutVisitsRequest = { visits };
-        await this.request('/api/visits', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-        });
     }
 
     private async request(path: string, init: RequestInit): Promise<Response> {
