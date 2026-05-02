@@ -1,13 +1,14 @@
 import Clipboard from 'clipboard';
-import queryString from 'query-string';
 import { useEffect, useRef, useState } from 'react';
-import { StyleManager } from '../style-manager';
+import { getAuthManagerInstance } from '../auth/auth-manager';
+import { useAuth } from '../auth/use-auth';
+import { API_BASE_URL } from '../config';
+import { SharesApiClient } from '../storage/shares-api-client';
 
-// Get the current URL for sharing
-function getURL(styleManager: StyleManager) {
-    const queries = { ...styleManager.toQuery(), mode: 'shared' };
+// Build the shareable URL for the given share id
+function buildShareURL(shareId: string): string {
     const url = new URL(window.location.href);
-    url.search = queryString.stringify(queries);
+    url.search = `?share=${encodeURIComponent(shareId)}`;
     return url.toString();
 }
 
@@ -18,32 +19,64 @@ async function fadeOut(element: HTMLElement, delay: number): Promise<void> {
     element.style.opacity = '1';
 
     // Wait for the delay
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
 
     // Start fade out
     element.style.opacity = '0';
 
     // Wait for transition to complete
-    await new Promise<void>(resolve => {
+    await new Promise<void>((resolve) => {
         element.addEventListener('transitionend', () => resolve(), { once: true });
     });
 }
 
 interface ClipboardButtonProps {
     map: google.maps.Map | null;
-    styleManager: StyleManager;
 }
 
 export function ClipboardButton(props: ClipboardButtonProps) {
+    const auth = useAuth();
     const [lastCopiedAt, setLastCopiedAt] = useState<number | null>(null);
-    const styleManagerRef = useRef<StyleManager>(props.styleManager);
+    const [shareId, setShareId] = useState<string | null>(null);
+    const shareIdRef = useRef<string | null>(null);
+
+    // Sharing is only available to signed-in users.
+    const isSignedIn = auth.user !== null;
 
     useEffect(() => {
-        styleManagerRef.current = props.styleManager;
-    }, [props.styleManager]);
+        shareIdRef.current = shareId;
+    }, [shareId]);
+
+    // Pre-fetch (or create) the share id so the click handler can copy synchronously.
+    useEffect(() => {
+        if (!isSignedIn) {
+            setShareId(null);
+            return;
+        }
+
+        let cancelled = false;
+        const client = new SharesApiClient({
+            baseUrl: API_BASE_URL,
+            getIdToken: () => getAuthManagerInstance().getState().idToken,
+        });
+        client
+            .create()
+            .then((id) => {
+                if (cancelled) return;
+                setShareId(id);
+            })
+            .catch((error) => {
+                if (cancelled) return;
+                console.error('Failed to create share id:', error);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [isSignedIn]);
 
     useEffect(() => {
-        if (!props.map) return;
+        if (!props.map || !isSignedIn) return;
 
         // Create clipboard button
         const div = document.createElement('div');
@@ -53,7 +86,8 @@ export function ClipboardButton(props: ClipboardButtonProps) {
         // Initialize clipboard functionality with direct element reference
         const clipboard = new Clipboard(div, {
             text: (_trigger: Element) => {
-                return getURL(styleManagerRef.current);
+                const id = shareIdRef.current;
+                return id ? buildShareURL(id) : '';
             },
         });
 
@@ -63,8 +97,17 @@ export function ClipboardButton(props: ClipboardButtonProps) {
         });
 
         // Add to map controls
-        props.map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
-    }, [props.map]);
+        const controls = props.map.controls[google.maps.ControlPosition.TOP_LEFT];
+        controls.push(div);
+
+        return () => {
+            clipboard.destroy();
+            const index = controls.getArray().indexOf(div);
+            if (index >= 0) {
+                controls.removeAt(index);
+            }
+        };
+    }, [props.map, isSignedIn]);
 
     // Handle copy success message display
     useEffect(() => {
@@ -88,5 +131,6 @@ export function ClipboardButton(props: ClipboardButtonProps) {
         showMessage();
     }, [lastCopiedAt, props.map]);
 
-    return null; // This component doesn't render anything directly
-};
+    // This component doesn't render anything directly
+    return null;
+}

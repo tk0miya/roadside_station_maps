@@ -53,7 +53,7 @@ export function RoadStationMap() {
     }, []);
 
     // Build the StyleManager whenever the auth state changes. RemoteStorage hydrates
-    // asynchronously when signed in; LocalStorage / QueryStorage resolve immediately.
+    // asynchronously when signed in; LocalStorage / MemoryStorage resolve immediately.
     useEffect(() => {
         let cancelled = false;
         setStyleManager((previous) => {
@@ -128,7 +128,7 @@ export function RoadStationMap() {
                         stations={stations}
                         onStyleChange={() => setStyleVersion((v) => v + 1)}
                     />
-                    <ClipboardButton map={map} styleManager={styleManager} />
+                    <ClipboardButton map={map} />
                     <StationCounter
                         styleManager={styleManager}
                         stations={stations}

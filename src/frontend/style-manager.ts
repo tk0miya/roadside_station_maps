@@ -1,9 +1,9 @@
 import queryString from 'query-string';
 import { API_BASE_URL } from './config';
 import { LocalStorage } from './storage/local-storage';
-import { QueryStorage } from './storage/query-storage';
+import { MemoryStorage } from './storage/memory-storage';
 import { RemoteStorage } from './storage/remote-storage';
-import { StationStyleSerializer } from './storage/station-style-serializer';
+import { SharesApiClient } from './storage/shares-api-client';
 import { Storage } from './storage/types';
 import { VisitsApiClient, type VisitsApiError } from './storage/visits-api-client';
 import { RoadStation } from './road-station';
@@ -19,18 +19,9 @@ export const STYLES: Record<number, google.maps.Data.StyleOptions> = {
 };
 
 export class StyleManager {
-    private stations: StationsGeoJSON | null = null;
-
     constructor(public storage: Storage) { }
 
     setStations(stations: StationsGeoJSON): void {
-        this.stations = stations;
-
-        // Process queries if this is a QueryStorage
-        if (this.storage instanceof QueryStorage) {
-            StationStyleSerializer.deserialize(this.storage, stations);
-        }
-
         // Remove stored entries for stations that no longer exist in the GeoJSON
         const validStationIds = new Set(stations.features.map(feature => feature.properties.stationId));
         this.storage.listItems().forEach(stationId => {
@@ -95,24 +86,6 @@ export class StyleManager {
 
         return counts;
     }
-
-    toQuery(): { c1?: string; c2?: string; c3?: string; c4?: string } {
-        if (!this.stations) {
-            throw new Error('Stations data not set. Call setStations() first.');
-        }
-        return StationStyleSerializer.serialize(this.storage, this.stations);
-    }
-
-
-}
-
-export function getStyleManagerInstance(): StyleManager {
-    const queries = queryString.parse(location.search);
-    if (queries.mode === 'shared') {
-        const storage = new QueryStorage(queries);
-        return new StyleManager(storage);
-    }
-    return new StyleManager(new LocalStorage());
 }
 
 export interface CreateStyleManagerOptions {
@@ -125,19 +98,30 @@ export interface CreateStyleManagerOptions {
 /**
  * Async StyleManager factory aware of the user's auth state.
  *
- * - `?mode=shared`  -> in-memory QueryStorage (URL-based shared view)
+ * - `?share=<id>` -> MemoryStorage hydrated from the shares API
  * - signed-in user -> RemoteStorage backed by the Workers + D1 API
  * - otherwise      -> LocalStorage (guest mode, identical to legacy behavior)
  */
 export async function createStyleManager(options: CreateStyleManagerOptions): Promise<StyleManager> {
     const queries = queryString.parse(location.search);
-    if (queries.mode === 'shared') {
-        return new StyleManager(new QueryStorage(queries));
+    const baseUrl = options.apiBaseUrl ?? API_BASE_URL;
+
+    if (typeof queries.share === 'string' && queries.share.length > 0) {
+        const sharesClient = new SharesApiClient({
+            baseUrl,
+            getIdToken: options.getIdToken,
+        });
+        const visits = await sharesClient.get(queries.share);
+        const entries: Array<[string, string]> = visits.map((visit) => [
+            visit.stationId,
+            String(visit.styleId),
+        ]);
+        return new StyleManager(new MemoryStorage(entries));
     }
 
     if (options.authState.idToken) {
         const client = new VisitsApiClient({
-            baseUrl: options.apiBaseUrl ?? API_BASE_URL,
+            baseUrl,
             getIdToken: options.getIdToken,
         });
         const storage = await RemoteStorage.create({
