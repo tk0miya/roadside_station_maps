@@ -3,4 +3,5 @@ export interface Storage {
     setItem(key: string, value: string): void;
     removeItem(key: string): void;
     listItems(): string[];
+    flush(): Promise<void>;
 }
