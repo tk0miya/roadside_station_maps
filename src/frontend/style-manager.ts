@@ -62,6 +62,22 @@ export class StyleManager {
         }
     }
 
+    setStyle(station: RoadStation | string, styleId: number): google.maps.Data.StyleOptions {
+        if (!(styleId in STYLES)) {
+            throw new Error(`Invalid styleId: ${styleId}`);
+        }
+        const stationId = this.getStationId(station);
+        if (styleId === 0) {
+            return this.resetStyle(station);
+        }
+        this.setStyleId(stationId, styleId);
+        return STYLES[styleId];
+    }
+
+    getCurrentStyleId(station: RoadStation | string): number {
+        return this.getStyleId(this.getStationId(station));
+    }
+
     resetStyle(station: RoadStation | string): google.maps.Data.StyleOptions {
         const stationId = this.getStationId(station);
         this.storage.removeItem(stationId);

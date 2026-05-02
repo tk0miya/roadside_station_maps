@@ -50,3 +50,30 @@ div.station-counter-style img {
     height: 20px;
     margin-right: 5px;
 }
+
+div.color-picker {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+button.color-picker-button {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 2px;
+    cursor: pointer;
+    line-height: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button.color-picker-button.selected {
+    border-color: #1976d2;
+    background-color: rgba(25, 118, 210, 0.1);
+}
+
+button.color-picker-button img {
+    width: 28px;
+    height: 28px;
+    display: block;
+}

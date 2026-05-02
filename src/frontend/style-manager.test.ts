@@ -156,6 +156,84 @@ describe('StyleManager', () => {
         });
     });
 
+    describe('setStyle', () => {
+        it('should set style to a specific id', () => {
+            const storage = new QueryStorage();
+            const styleManager = new StyleManager(storage);
+
+            const style = styleManager.setStyle('001', 3);
+
+            expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' });
+            expect(storage.getItem('001')).toBe('3');
+        });
+
+        it('should overwrite an existing style', () => {
+            const storage = new QueryStorage();
+            storage.setItem('002', '1');
+            const styleManager = new StyleManager(storage);
+
+            const style = styleManager.setStyle('002', 4);
+
+            expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' });
+            expect(storage.getItem('002')).toBe('4');
+        });
+
+        it('should reset stored style when setting to 0', () => {
+            const storage = new QueryStorage();
+            storage.setItem('003', '2');
+            const styleManager = new StyleManager(storage);
+
+            const style = styleManager.setStyle('003', 0);
+
+            expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' });
+            expect(storage.getItem('003')).toBeNull();
+        });
+
+        it('should accept RoadStation object', () => {
+            const storage = new QueryStorage();
+            const station = createMockStation('004');
+            const styleManager = new StyleManager(storage);
+
+            const style = styleManager.setStyle(station, 2);
+
+            expect(style).toEqual({ icon: 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png' });
+            expect(storage.getItem('004')).toBe('2');
+        });
+
+        it('should throw on an unknown style id', () => {
+            const storage = new QueryStorage();
+            const styleManager = new StyleManager(storage);
+
+            expect(() => styleManager.setStyle('001', 99)).toThrow();
+        });
+    });
+
+    describe('getCurrentStyleId', () => {
+        it('should return 0 when no style is stored', () => {
+            const storage = new QueryStorage();
+            const styleManager = new StyleManager(storage);
+
+            expect(styleManager.getCurrentStyleId('001')).toBe(0);
+        });
+
+        it('should return the stored style id', () => {
+            const storage = new QueryStorage();
+            storage.setItem('002', '3');
+            const styleManager = new StyleManager(storage);
+
+            expect(styleManager.getCurrentStyleId('002')).toBe(3);
+        });
+
+        it('should accept RoadStation object', () => {
+            const storage = new QueryStorage();
+            const station = createMockStation('003');
+            storage.setItem('003', '4');
+            const styleManager = new StyleManager(storage);
+
+            expect(styleManager.getCurrentStyleId(station)).toBe(4);
+        });
+    });
+
     describe('countByStyle', () => {
         it('should return all stations as style 0 when no styles are stored', () => {
             const storage = new QueryStorage();

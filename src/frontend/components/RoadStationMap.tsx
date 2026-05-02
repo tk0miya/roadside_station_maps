@@ -75,6 +75,8 @@ export function RoadStationMap() {
             <InfoWindow
                 selectedFeature={feature}
                 map={map}
+                styleManager={styleManagerRef.current}
+                onStyleChange={() => setStyleVersion(v => v + 1)}
             />
             <ClipboardButton map={map} styleManager={styleManagerRef.current} />
             <StationCounter
