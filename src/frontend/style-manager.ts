@@ -9,7 +9,7 @@ import { Storage } from './storage/types';
 import { VisitsApiClient, type VisitsApiError } from './storage/visits-api-client';
 import { RoadStation } from './road-station';
 import { StationsGeoJSON } from './types/geojson';
-import type { AuthState } from './auth/types';
+import type { AuthState } from '../shared/auth-types';
 
 export const STYLES: Record<number, google.maps.Data.StyleOptions> = {
     0: { icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' },

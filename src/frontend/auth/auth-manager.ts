@@ -2,7 +2,7 @@ import { LocalStorage } from '../storage/local-storage';
 import type { Storage } from '../storage/types';
 import { GOOGLE_CLIENT_ID } from './config';
 import { verifyIdToken } from './jwt';
-import type { AuthState } from './types';
+import type { AuthState } from '../../shared/auth-types';
 
 export const ID_TOKEN_STORAGE_KEY = 'auth:idToken';
 

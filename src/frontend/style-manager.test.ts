@@ -7,7 +7,7 @@ import { QueryStorage } from './storage/query-storage';
 import { LocalStorage } from './storage/local-storage';
 import { RemoteStorage } from './storage/remote-storage';
 import { createMockStation, createMockStations } from '../test-utils/test-utils';
-import type { AuthState } from './auth/types';
+import type { AuthState } from '../shared/auth-types';
 
 
 describe('StyleManager', () => {
