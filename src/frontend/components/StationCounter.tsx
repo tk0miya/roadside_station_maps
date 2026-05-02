@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MARKER_ICONS } from '../marker-icons';
-import { StyleManager } from '../style-manager';
+import { STYLE_COUNT, StyleManager } from '../style-manager';
 import { StationsGeoJSON } from '../types/geojson';
 
 interface StationCounterProps {
@@ -9,6 +9,23 @@ interface StationCounterProps {
     stations: StationsGeoJSON | null;
     styleVersion: number;
     map: google.maps.Map | null;
+}
+
+function countByStyle(styleManager: StyleManager, totalStations: number): Record<number, number> {
+    const counts: Record<number, number> = {};
+    for (let i = 0; i < STYLE_COUNT; i++) {
+        counts[i] = 0;
+    }
+
+    for (const [, styleId] of styleManager.entries()) {
+        counts[styleId]++;
+    }
+
+    // StyleId 0 = total stations - assigned stations
+    const assignedCount = Object.values(counts).reduce((sum, count) => sum + count, 0) - counts[0];
+    counts[0] = totalStations - assignedCount;
+
+    return counts;
 }
 
 export function StationCounter({ styleManager, stations, styleVersion: _styleVersion, map }: StationCounterProps) {
@@ -21,7 +38,7 @@ export function StationCounter({ styleManager, stations, styleVersion: _styleVer
         // Create counter container
         contentElementRef.current = document.createElement('div');
         contentElementRef.current.className = 'station-counter';
-        
+
         contentRootRef.current = createRoot(contentElementRef.current);
 
         // Add to map controls
@@ -32,7 +49,7 @@ export function StationCounter({ styleManager, stations, styleVersion: _styleVer
         if (!contentRootRef.current || !stations) return;
 
         const totalStations = stations.features.length;
-        const counts = styleManager.countByStyle(totalStations);
+        const counts = countByStyle(styleManager, totalStations);
 
         // Render React content
         contentRootRef.current.render(
