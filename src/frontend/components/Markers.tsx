@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 
 import { createRoadStation } from '../road-station';
 import { MARKER_ICONS } from '../marker-icons';
-import { StyleManager } from '../style-manager';
+import type { Storage } from '../storage';
+import { changeStyle, getStyle, resetStyle } from '../style';
 import { StationsGeoJSON } from '../types/geojson';
 
 const styleOptionsFor = (styleId: number): google.maps.Data.StyleOptions => ({
@@ -13,29 +14,29 @@ interface MarkersProps {
     map: google.maps.Map | null;
     selectedFeature: google.maps.Data.Feature | null;
     onFeatureSelect: (feature: google.maps.Data.Feature | null) => void;
-    styleManager: StyleManager;
+    storage: Storage;
     stations: StationsGeoJSON | null;
     onStyleChange: () => void;
 }
 
 export function Markers(props: MarkersProps) {
     const selectedFeatureRef = useRef<google.maps.Data.Feature | null>(null);
-    const styleManagerRef = useRef<StyleManager>(props.styleManager);
+    const storageRef = useRef<Storage>(props.storage);
 
     useEffect(() => {
         selectedFeatureRef.current = props.selectedFeature;
     }, [props.selectedFeature]);
 
-    // Keep handlers and the data-layer style callback bound to the latest StyleManager
+    // Keep handlers and the data-layer style callback bound to the latest storage
     // so login/logout transitions immediately switch storage backends without remounting.
     useEffect(() => {
-        styleManagerRef.current = props.styleManager;
+        storageRef.current = props.storage;
         if (!props.map) return;
         props.map.data.setStyle((feature: google.maps.Data.Feature) => {
             const station = createRoadStation(feature);
-            return styleOptionsFor(styleManagerRef.current.getStyle(station));
+            return styleOptionsFor(getStyle(storageRef.current, station));
         });
-    }, [props.map, props.styleManager]);
+    }, [props.map, props.storage]);
 
     useEffect(() => {
         if (!props.map || !props.stations) return;
@@ -46,7 +47,7 @@ export function Markers(props: MarkersProps) {
         const rightClickListener = props.map.data.addListener('rightclick', onMarkerRightClick);
         props.map.data.setStyle((feature: google.maps.Data.Feature) => {
             const station = createRoadStation(feature);
-            return styleOptionsFor(styleManagerRef.current.getStyle(station));
+            return styleOptionsFor(getStyle(storageRef.current, station));
         });
 
         return () => {
@@ -59,7 +60,7 @@ export function Markers(props: MarkersProps) {
     const onMarkerClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map && selectedFeatureRef.current === event.feature) {
             const station = createRoadStation(event.feature);
-            const newStyleId = styleManagerRef.current.changeStyle(station);
+            const newStyleId = changeStyle(storageRef.current, station);
             props.map.data.overrideStyle(event.feature, styleOptionsFor(newStyleId));
             props.onStyleChange();
         } else {
@@ -70,7 +71,7 @@ export function Markers(props: MarkersProps) {
     const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map) {
             const station = createRoadStation(event.feature);
-            const newStyleId = styleManagerRef.current.changeStyle(station);
+            const newStyleId = changeStyle(storageRef.current, station);
             props.map.data.overrideStyle(event.feature, styleOptionsFor(newStyleId));
             props.onStyleChange();
         }
@@ -79,7 +80,7 @@ export function Markers(props: MarkersProps) {
     const onMarkerRightClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map) {
             const station = createRoadStation(event.feature);
-            const newStyleId = styleManagerRef.current.resetStyle(station);
+            const newStyleId = resetStyle(storageRef.current, station);
             props.map.data.overrideStyle(event.feature, styleOptionsFor(newStyleId));
             props.onFeatureSelect(null);
             props.onStyleChange();
