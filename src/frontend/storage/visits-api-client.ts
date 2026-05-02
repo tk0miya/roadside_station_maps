@@ -3,7 +3,6 @@ import type { ListVisitsResponse, PutVisitRequest, VisitRecord } from '@shared/a
 export interface VisitsApiClientOptions {
     baseUrl: string;
     getIdToken: () => string | null;
-    fetchImpl?: typeof fetch;
 }
 
 export class VisitsApiError extends Error {
@@ -19,12 +18,10 @@ export class VisitsApiError extends Error {
 export class VisitsApiClient {
     private readonly baseUrl: string;
     private readonly getIdToken: () => string | null;
-    private readonly fetchImpl: typeof fetch;
 
     constructor(options: VisitsApiClientOptions) {
         this.baseUrl = options.baseUrl.replace(/\/$/, '');
         this.getIdToken = options.getIdToken;
-        this.fetchImpl = options.fetchImpl ?? fetch.bind(globalThis);
     }
 
     async list(): Promise<VisitRecord[]> {
@@ -52,7 +49,7 @@ export class VisitsApiClient {
             throw new VisitsApiError('Missing ID token; user must be signed in');
         }
 
-        const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
+        const response = await fetch(`${this.baseUrl}${path}`, {
             ...init,
             headers: {
                 ...(init.headers ?? {}),

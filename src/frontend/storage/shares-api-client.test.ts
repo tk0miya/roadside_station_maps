@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
 import { SharesApiClient, SharesApiError } from './shares-api-client';
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -9,16 +9,19 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 describe('SharesApiClient', () => {
-    let fetchMock: ReturnType<typeof vi.fn>;
+    let fetchMock: MockInstance<typeof fetch>;
     let client: SharesApiClient;
 
     beforeEach(() => {
-        fetchMock = vi.fn();
+        fetchMock = vi.spyOn(globalThis, 'fetch');
         client = new SharesApiClient({
             baseUrl: 'https://api.example.com/',
             getIdToken: () => 'test-token',
-            fetchImpl: fetchMock as unknown as typeof fetch,
         });
+    });
+
+    afterEach(() => {
+        fetchMock.mockRestore();
     });
 
     it('POSTs /api/shares with the bearer token and returns the share id', async () => {
@@ -40,7 +43,6 @@ describe('SharesApiClient', () => {
         const noTokenClient = new SharesApiClient({
             baseUrl: 'https://api.example.com',
             getIdToken: () => null,
-            fetchImpl: fetchMock as unknown as typeof fetch,
         });
 
         await expect(noTokenClient.create()).rejects.toBeInstanceOf(SharesApiError);
