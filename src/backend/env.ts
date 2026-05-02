@@ -1,5 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import type { AuthUser } from '../shared/auth-types';
+import type { AuthUser } from '@shared/auth-types';
 
 export interface Bindings {
     DB: D1Database;

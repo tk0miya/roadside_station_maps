@@ -3,7 +3,7 @@ import type {
     ListVisitsResponse,
     PutVisitRequest,
     VisitRecord,
-} from '../../shared/api-types';
+} from '@shared/api-types';
 
 export interface VisitsApiClientOptions {
     baseUrl: string;

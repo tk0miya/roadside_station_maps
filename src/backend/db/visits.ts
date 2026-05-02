@@ -1,5 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import type { VisitRecord } from '../../shared/api-types';
+import type { VisitRecord } from '@shared/api-types';
 
 interface VisitRow {
     station_id: string;

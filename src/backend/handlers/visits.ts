@@ -1,9 +1,5 @@
 import { Hono, type Context } from 'hono';
-import type {
-    BulkPutVisitsRequest,
-    ListVisitsResponse,
-    PutVisitRequest,
-} from '../../shared/api-types';
+import type { BulkPutVisitsRequest, ListVisitsResponse, PutVisitRequest } from '@shared/api-types';
 import { bulkUpsertVisits, deleteVisit, listVisits, upsertVisit } from '../db/visits';
 import type { AppEnv } from '../env';
 

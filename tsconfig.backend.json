@@ -16,6 +16,9 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@shared/*": ["./src/shared/*"]
+    },
     "types": ["@cloudflare/workers-types", "node"]
   },
   "include": [

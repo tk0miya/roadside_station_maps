@@ -21,6 +21,9 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@shared/*": ["./src/shared/*"]
+    },
     "types": ["node", "@types/google.maps", "react", "react-dom"]
   },
   "include": [

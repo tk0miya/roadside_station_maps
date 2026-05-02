@@ -1,3 +1,4 @@
+import * as path from 'node:path';
 import * as esbuild from 'esbuild';
 
 // Common configuration
@@ -16,6 +17,9 @@ const config: esbuild.BuildOptions = {
     jsx: 'automatic',
     sourcemap: true,
     minify: true,
+    alias: {
+        '@shared': path.resolve(__dirname, 'src/shared'),
+    },
     define: {
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
     },
