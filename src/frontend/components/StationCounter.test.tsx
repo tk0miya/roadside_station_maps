@@ -32,7 +32,7 @@ describe('StationCounter', () => {
 
         expect(container.firstChild).toBeNull(); // Component renders null
         expect(mockStyleManager.countByStyle).toHaveBeenCalledWith(100);
-        expect(mockMap.controls[3].push).toHaveBeenCalledTimes(1);
+        expect(mockMap.controls[7].push).toHaveBeenCalledTimes(1);
     });
 
     it('should not render when map is null', () => {
