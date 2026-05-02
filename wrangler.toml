@@ -17,11 +17,11 @@ ALLOWED_ORIGINS = "https://tk0miya.github.io"
 [[d1_databases]]
 binding = "DB"
 database_name = "roadside-station-maps"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "9a092c48-70c9-496f-83fc-037033aa3907"
 migrations_dir = "migrations"
 
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "roadside-station-maps"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "9a092c48-70c9-496f-83fc-037033aa3907"
 migrations_dir = "migrations"
