@@ -1,6 +1,5 @@
 import { decodeJwt } from 'jose';
 import type { AuthState, AuthUser } from '@shared/auth-types';
-import { GOOGLE_CLIENT_ID } from '../config';
 
 export const ID_TOKEN_STORAGE_KEY = 'auth:idToken';
 
@@ -82,18 +81,4 @@ export class AuthManager {
             listener(next);
         }
     }
-}
-
-let instance: AuthManager | null = null;
-
-export function getAuthManagerInstance(): AuthManager {
-    if (!instance) {
-        instance = new AuthManager(GOOGLE_CLIENT_ID);
-    }
-    return instance;
-}
-
-// Exposed for tests to reset the singleton between cases.
-export function resetAuthManagerInstanceForTests(): void {
-    instance = null;
 }

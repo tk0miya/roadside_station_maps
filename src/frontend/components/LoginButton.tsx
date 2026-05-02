@@ -1,8 +1,7 @@
 import { GoogleLogin } from '@react-oauth/google';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { getAuthManagerInstance } from '../auth/auth-manager';
-import { useAuth } from '../auth/use-auth';
+import { useAuthManager } from '../auth/auth-context';
 
 interface LoginButtonProps {
     map: google.maps.Map | null;
@@ -11,7 +10,8 @@ interface LoginButtonProps {
 export function LoginButton({ map }: LoginButtonProps) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [container, setContainer] = useState<HTMLDivElement | null>(null);
-    const state = useAuth();
+    const authManager = useAuthManager();
+    const { user } = authManager.getState();
 
     useEffect(() => {
         if (!map) return;
@@ -26,20 +26,20 @@ export function LoginButton({ map }: LoginButtonProps) {
         const controls = map.controls[google.maps.ControlPosition.TOP_RIGHT];
         const index = controls.getArray().indexOf(containerRef.current);
 
-        if (state.user) {
+        if (user) {
             if (index !== -1) controls.removeAt(index);
         } else if (index === -1) {
             controls.push(containerRef.current);
         }
-    }, [map, state.user]);
+    }, [map, user]);
 
-    if (!container || state.user) return null;
+    if (!container || user) return null;
 
     return createPortal(
         <GoogleLogin
             onSuccess={(response) => {
                 if (response.credential) {
-                    getAuthManagerInstance().handleCredential(response.credential);
+                    authManager.handleCredential(response.credential);
                 }
             }}
         />,
