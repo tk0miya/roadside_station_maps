@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getAuthManagerInstance } from './auth-manager';
-import type { AuthState } from './types';
+import type { AuthState } from '@shared/auth-types';
 
 export function useAuth(): AuthState {
     const manager = getAuthManagerInstance();

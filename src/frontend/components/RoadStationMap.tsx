@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { InfoWindow } from './InfoWindow';
+import { getAuthManagerInstance } from '../auth/auth-manager';
+import { useAuth } from '../auth/use-auth';
+import { RemoteStorage } from '../storage/remote-storage';
+import { type StyleManager, createStyleManager } from '../style-manager';
+import { StationsGeoJSON } from '../types/geojson';
 import { ClipboardButton } from './ClipboardButton';
+import { InfoWindow } from './InfoWindow';
 import { LoginButton } from './LoginButton';
 import { Markers } from './Markers';
 import { StationCounter } from './StationCounter';
-import { getStyleManagerInstance } from '../style-manager';
-import { StationsGeoJSON } from '../types/geojson';
 
 const getCurrentPosition = (): Promise<GeolocationPosition> => {
     return new Promise((resolve) => {
@@ -14,12 +17,14 @@ const getCurrentPosition = (): Promise<GeolocationPosition> => {
 };
 
 export function RoadStationMap() {
+    const auth = useAuth();
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
     const [stations, setStations] = useState<StationsGeoJSON | null>(null);
     const [styleVersion, setStyleVersion] = useState(0);
-    const styleManagerRef = useRef(getStyleManagerInstance());
+    const [styleManager, setStyleManager] = useState<StyleManager | null>(null);
+    const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
         if (mapContainerRef.current) {
@@ -27,7 +32,7 @@ export function RoadStationMap() {
                 center: { lat: 35.6896342, lng: 139.6921007 }, // Shinjuku, Tokyo
                 zoom: 9,
                 fullscreenControl: false,
-                cameraControl: false
+                cameraControl: false,
             });
             setMap(mapInstance);
         }
@@ -39,7 +44,6 @@ export function RoadStationMap() {
             try {
                 const response = await fetch('../data/stations.geojson');
                 const data = await response.json();
-                styleManagerRef.current.setStations(data);
                 setStations(data);
             } catch (error) {
                 console.error('Error fetching stations:', error);
@@ -48,10 +52,51 @@ export function RoadStationMap() {
         fetchStations();
     }, []);
 
+    // Build the StyleManager whenever the auth state changes. RemoteStorage hydrates
+    // asynchronously when signed in; LocalStorage / QueryStorage resolve immediately.
+    useEffect(() => {
+        let cancelled = false;
+        setStyleManager((previous) => {
+            if (previous?.storage instanceof RemoteStorage) {
+                void previous.storage.flush();
+            }
+            return null;
+        });
+        setLoadError(null);
+
+        createStyleManager({
+            authState: auth,
+            getIdToken: () => getAuthManagerInstance().getState().idToken,
+            onSyncError: (error) => {
+                console.error('Failed to sync visit:', error);
+            },
+        })
+            .then((manager) => {
+                if (cancelled) return;
+                setStyleManager(manager);
+            })
+            .catch((error) => {
+                if (cancelled) return;
+                console.error('Failed to create StyleManager:', error);
+                setLoadError(error instanceof Error ? error.message : String(error));
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [auth.idToken]);
+
+    // Apply the station list to the StyleManager once both are ready.
+    useEffect(() => {
+        if (!styleManager || !stations) return;
+        styleManager.setStations(stations);
+        setStyleVersion((v) => v + 1);
+    }, [styleManager, stations]);
+
     useEffect(() => {
         if (!map) return;
 
-        map.addListener("click", () => setFeature(null));
+        map.addListener('click', () => setFeature(null));
         getCurrentPosition().then(onLocationDetected);
     }, [map]);
 
@@ -65,27 +110,35 @@ export function RoadStationMap() {
     return (
         <>
             <div ref={mapContainerRef} className="map-canvas" />
-            <Markers
-                map={map}
-                selectedFeature={feature}
-                onFeatureSelect={setFeature}
-                styleManager={styleManagerRef.current}
-                stations={stations}
-                onStyleChange={() => setStyleVersion(v => v + 1)}
-            />
-            <InfoWindow
-                selectedFeature={feature}
-                map={map}
-            />
-            <ClipboardButton map={map} styleManager={styleManagerRef.current} />
+            {!styleManager && !loadError && (
+                <div className="loading-overlay">訪問履歴を読み込み中...</div>
+            )}
+            {loadError && (
+                <div className="loading-overlay loading-overlay-error">
+                    訪問履歴の読み込みに失敗しました: {loadError}
+                </div>
+            )}
+            {styleManager && (
+                <>
+                    <Markers
+                        map={map}
+                        selectedFeature={feature}
+                        onFeatureSelect={setFeature}
+                        styleManager={styleManager}
+                        stations={stations}
+                        onStyleChange={() => setStyleVersion((v) => v + 1)}
+                    />
+                    <ClipboardButton map={map} styleManager={styleManager} />
+                    <StationCounter
+                        styleManager={styleManager}
+                        stations={stations}
+                        styleVersion={styleVersion}
+                        map={map}
+                    />
+                </>
+            )}
+            <InfoWindow selectedFeature={feature} map={map} />
             <LoginButton map={map} />
-            <StationCounter
-                styleManager={styleManagerRef.current}
-                stations={stations}
-                styleVersion={styleVersion}
-                map={map}
-            />
         </>
     );
-};
-
+}

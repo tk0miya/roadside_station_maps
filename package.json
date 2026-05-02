@@ -16,9 +16,13 @@
         "lint": "biome check .",
         "lint:fix": "biome check --write .",
         "format": "biome format --write .",
-        "typecheck": "tsc --noEmit",
+        "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.backend.json",
         "serve": "npx tsx esbuild.config.ts --serve",
         "dev": "npm run serve",
+        "dev:backend": "wrangler dev",
+        "deploy:backend": "wrangler deploy --env production",
+        "db:migrate:local": "wrangler d1 migrations apply DB --local",
+        "db:migrate": "wrangler d1 migrations apply DB --remote --env production",
         "generate:geojson": "npx tsx src/scripts/generate-geojson.ts",
         "generate:stations": "npx tsx src/scripts/generate-stationlist.ts",
         "generate:all": "npm run generate:stations && npm run generate:geojson",
@@ -28,7 +32,9 @@
         "@react-oauth/google": "^0.13.5",
         "cheerio": "^1.2.0",
         "clipboard": "^2.0.11",
+        "hono": "^4.12.16",
         "jaconv": "^1.1.2",
+        "jose": "^6.2.3",
         "jwt-decode": "^4.0.0",
         "query-string": "^9.3.1",
         "react": "^19.2.5",
@@ -36,6 +42,7 @@
     },
     "devDependencies": {
         "@biomejs/biome": "^2.4.13",
+        "@cloudflare/workers-types": "^4.20260502.1",
         "@testing-library/react": "^16.3.2",
         "@types/cheerio": "^1.0.0",
         "@types/clipboard": "^2.0.10",
@@ -46,6 +53,7 @@
         "esbuild": "^0.28.0",
         "jsdom": "^29.0.2",
         "typescript": "^6.0.3",
-        "vitest": "^4.1.5"
+        "vitest": "^4.1.5",
+        "wrangler": "^4.87.0"
     }
 }

@@ -1,5 +1,5 @@
 import { jwtDecode } from 'jwt-decode';
-import type { AuthUser } from './types';
+import type { AuthUser } from '@shared/auth-types';
 
 interface IdTokenPayload {
     sub?: string;

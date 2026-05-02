@@ -1,10 +1,15 @@
 import queryString from 'query-string';
-import { QueryStorage } from './storage/query-storage';
+import { API_BASE_URL } from './config';
 import { LocalStorage } from './storage/local-storage';
+import { migrateLocalToRemote } from './storage/local-to-remote-migrator';
+import { QueryStorage } from './storage/query-storage';
+import { RemoteStorage } from './storage/remote-storage';
+import { StationStyleSerializer } from './storage/station-style-serializer';
 import { Storage } from './storage/types';
+import { VisitsApiClient, type VisitsApiError } from './storage/visits-api-client';
 import { RoadStation } from './road-station';
 import { StationsGeoJSON } from './types/geojson';
-import { StationStyleSerializer } from './storage/station-style-serializer';
+import type { AuthState } from '@shared/auth-types';
 
 export const STYLES: Record<number, google.maps.Data.StyleOptions> = {
     0: { icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' },
@@ -108,5 +113,54 @@ export function getStyleManagerInstance(): StyleManager {
         const storage = new QueryStorage(queries);
         return new StyleManager(storage);
     }
+    return new StyleManager(new LocalStorage());
+}
+
+export interface CreateStyleManagerOptions {
+    authState: AuthState;
+    getIdToken: () => string | null;
+    apiBaseUrl?: string;
+    onSyncError?: (error: VisitsApiError | Error, stationId: string) => void;
+}
+
+/**
+ * Async StyleManager factory aware of the user's auth state.
+ *
+ * - `?mode=shared`  -> in-memory QueryStorage (URL-based shared view)
+ * - signed-in user -> RemoteStorage backed by the Workers + D1 API
+ * - otherwise      -> LocalStorage (guest mode, identical to legacy behavior)
+ */
+export async function createStyleManager(options: CreateStyleManagerOptions): Promise<StyleManager> {
+    const queries = queryString.parse(location.search);
+    if (queries.mode === 'shared') {
+        return new StyleManager(new QueryStorage(queries));
+    }
+
+    if (options.authState.idToken) {
+        const client = new VisitsApiClient({
+            baseUrl: options.apiBaseUrl ?? API_BASE_URL,
+            getIdToken: options.getIdToken,
+        });
+        const storage = await RemoteStorage.create({
+            client,
+            onSyncError: options.onSyncError,
+        });
+
+        // First-sign-in migration: upload any legacy LocalStorage entries to the
+        // cloud. Server-side entries take precedence, so this is safe to retry.
+        try {
+            await migrateLocalToRemote({
+                local: new LocalStorage(),
+                remote: storage,
+                client,
+            });
+        } catch (error) {
+            // Migration failure is non-fatal; the flag is not set so we retry next session.
+            console.error('Failed to migrate local visits to cloud:', error);
+        }
+
+        return new StyleManager(storage);
+    }
+
     return new StyleManager(new LocalStorage());
 }

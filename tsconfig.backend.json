@@ -1,20 +1,15 @@
 {
   "compilerOptions": {
-    "target": "ES2015",
-    "module": "preserve",
-    "lib": ["ESNext", "DOM"],
-    "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "outDir": "./dist",
-    "rootDir": "./",
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022"],
+    "outDir": "./dist/backend",
+    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
@@ -24,19 +19,14 @@
     "paths": {
       "@shared/*": ["./src/shared/*"]
     },
-    "types": ["node", "@types/google.maps", "react", "react-dom"]
+    "types": ["@cloudflare/workers-types", "node"]
   },
   "include": [
-    "src/frontend/**/*",
-    "src/scripts/**/*",
-    "src/shared/**/*",
-    "*.ts"
+    "src/backend/**/*",
+    "src/shared/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "html/js/bundle.js",
-    "bin",
-    "src/backend"
+    "dist"
   ]
 }

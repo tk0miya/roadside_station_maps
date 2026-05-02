@@ -1,5 +1,5 @@
 export interface AuthUser {
-    // Google's stable user id; used as the user key for future online storage.
+    // Google's stable user id; used as the user key for online storage.
     sub: string;
 }
 

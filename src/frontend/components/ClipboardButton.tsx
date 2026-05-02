@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import Clipboard from 'clipboard';
 import queryString from 'query-string';
+import { useEffect, useRef, useState } from 'react';
 import { StyleManager } from '../style-manager';
 
 // Get the current URL for sharing
@@ -36,6 +36,11 @@ interface ClipboardButtonProps {
 
 export function ClipboardButton(props: ClipboardButtonProps) {
     const [lastCopiedAt, setLastCopiedAt] = useState<number | null>(null);
+    const styleManagerRef = useRef<StyleManager>(props.styleManager);
+
+    useEffect(() => {
+        styleManagerRef.current = props.styleManager;
+    }, [props.styleManager]);
 
     useEffect(() => {
         if (!props.map) return;
@@ -48,8 +53,8 @@ export function ClipboardButton(props: ClipboardButtonProps) {
         // Initialize clipboard functionality with direct element reference
         const clipboard = new Clipboard(div, {
             text: (_trigger: Element) => {
-                return getURL(props.styleManager);
-            }
+                return getURL(styleManagerRef.current);
+            },
         });
 
         // Handle copy success with state update
@@ -59,7 +64,7 @@ export function ClipboardButton(props: ClipboardButtonProps) {
 
         // Add to map controls
         props.map.controls[google.maps.ControlPosition.TOP_LEFT].push(div);
-    }, [props.map, props.styleManager]);
+    }, [props.map]);
 
     // Handle copy success message display
     useEffect(() => {
