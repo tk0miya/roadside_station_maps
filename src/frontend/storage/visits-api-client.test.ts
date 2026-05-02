@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
 import { VisitsApiClient, VisitsApiError } from './visits-api-client';
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -13,16 +13,19 @@ function emptyResponse(status = 204): Response {
 }
 
 describe('VisitsApiClient', () => {
-    let fetchMock: ReturnType<typeof vi.fn>;
+    let fetchMock: MockInstance<typeof fetch>;
     let client: VisitsApiClient;
 
     beforeEach(() => {
-        fetchMock = vi.fn();
+        fetchMock = vi.spyOn(globalThis, 'fetch');
         client = new VisitsApiClient({
             baseUrl: 'https://api.example.com/',
             getIdToken: () => 'test-token',
-            fetchImpl: fetchMock as unknown as typeof fetch,
         });
+    });
+
+    afterEach(() => {
+        fetchMock.mockRestore();
     });
 
     it('GETs /api/visits with the bearer token', async () => {
@@ -80,7 +83,6 @@ describe('VisitsApiClient', () => {
         const noTokenClient = new VisitsApiClient({
             baseUrl: 'https://api.example.com',
             getIdToken: () => null,
-            fetchImpl: fetchMock as unknown as typeof fetch,
         });
 
         await expect(noTokenClient.list()).rejects.toBeInstanceOf(VisitsApiError);

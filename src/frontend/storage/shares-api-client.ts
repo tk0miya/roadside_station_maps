@@ -3,7 +3,6 @@ import type { CreateShareResponse, GetShareResponse, VisitRecord } from '@shared
 export interface SharesApiClientOptions {
     baseUrl: string;
     getIdToken: () => string | null;
-    fetchImpl?: typeof fetch;
 }
 
 export class SharesApiError extends Error {
@@ -19,12 +18,10 @@ export class SharesApiError extends Error {
 export class SharesApiClient {
     private readonly baseUrl: string;
     private readonly getIdToken: () => string | null;
-    private readonly fetchImpl: typeof fetch;
 
     constructor(options: SharesApiClientOptions) {
         this.baseUrl = options.baseUrl.replace(/\/$/, '');
         this.getIdToken = options.getIdToken;
-        this.fetchImpl = options.fetchImpl ?? fetch.bind(globalThis);
     }
 
     async create(): Promise<string> {
@@ -33,7 +30,7 @@ export class SharesApiClient {
             throw new SharesApiError('Missing ID token; user must be signed in');
         }
 
-        const response = await this.fetchImpl(`${this.baseUrl}/api/shares`, {
+        const response = await fetch(`${this.baseUrl}/api/shares`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -46,10 +43,9 @@ export class SharesApiClient {
     }
 
     async get(shareId: string): Promise<VisitRecord[]> {
-        const response = await this.fetchImpl(
-            `${this.baseUrl}/shares/${encodeURIComponent(shareId)}`,
-            { method: 'GET' }
-        );
+        const response = await fetch(`${this.baseUrl}/shares/${encodeURIComponent(shareId)}`, {
+            method: 'GET',
+        });
 
         if (!response.ok) {
             throw new SharesApiError(await readErrorMessage(response), response.status);
