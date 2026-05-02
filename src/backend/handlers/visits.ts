@@ -1,12 +1,11 @@
 import { Hono, type Context } from 'hono';
-import type { BulkPutVisitsRequest, ListVisitsResponse, PutVisitRequest } from '@shared/api-types';
-import { bulkUpsertVisits, deleteVisit, listVisits, upsertVisit } from '../db/visits';
+import type { ListVisitsResponse, PutVisitRequest } from '@shared/api-types';
+import { deleteVisit, listVisits, upsertVisit } from '../db/visits';
 import type { AppEnv } from '../env';
 
 const MIN_STYLE_ID = 1;
 const MAX_STYLE_ID = 4;
 const STATION_ID_PATTERN = /^\d+$/;
-const MAX_BULK_SIZE = 2000;
 
 export const visitsRouter = new Hono<AppEnv>();
 
@@ -15,25 +14,6 @@ visitsRouter.get('/', async (c) => {
     const visits = await listVisits(c.env.DB, user.sub);
     const response: ListVisitsResponse = { visits };
     return c.json(response);
-});
-
-visitsRouter.put('/', async (c) => {
-    const user = c.get('user');
-    const body = await readJson<BulkPutVisitsRequest>(c);
-    if (!body || !Array.isArray(body.visits)) {
-        return c.json({ error: 'Invalid request body' }, 400);
-    }
-    if (body.visits.length > MAX_BULK_SIZE) {
-        return c.json({ error: `Too many visits (max ${MAX_BULK_SIZE})` }, 400);
-    }
-    for (const entry of body.visits) {
-        if (!isValidStationId(entry.stationId) || !isValidStyleId(entry.styleId)) {
-            return c.json({ error: 'Invalid visit entry' }, 400);
-        }
-    }
-
-    await bulkUpsertVisits(c.env.DB, user.sub, body.visits, nowSeconds());
-    return c.body(null, 204);
 });
 
 visitsRouter.put('/:stationId', async (c) => {

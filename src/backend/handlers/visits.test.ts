@@ -7,7 +7,6 @@ vi.mock('../db/visits', () => ({
     listVisits: vi.fn(),
     upsertVisit: vi.fn(),
     deleteVisit: vi.fn(),
-    bulkUpsertVisits: vi.fn(),
 }));
 
 import * as visitsDb from '../db/visits';
@@ -160,69 +159,4 @@ describe('visits handlers', () => {
         });
     });
 
-    describe('PUT /visits (bulk)', () => {
-        it('bulk upserts visits', async () => {
-            const res = await buildApp().request(
-                '/visits',
-                {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        visits: [
-                            { stationId: '111', styleId: 1 },
-                            { stationId: '222', styleId: 4 },
-                        ],
-                    }),
-                },
-                TEST_ENV
-            );
-
-            expect(res.status).toBe(204);
-            expect(visitsDb.bulkUpsertVisits).toHaveBeenCalledWith(
-                TEST_ENV.DB,
-                'user-1',
-                [
-                    { stationId: '111', styleId: 1 },
-                    { stationId: '222', styleId: 4 },
-                ],
-                expect.any(Number)
-            );
-        });
-
-        it('rejects entries with invalid station ids', async () => {
-            const res = await buildApp().request(
-                '/visits',
-                {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        visits: [{ stationId: 'bad', styleId: 1 }],
-                    }),
-                },
-                TEST_ENV
-            );
-
-            expect(res.status).toBe(400);
-            expect(visitsDb.bulkUpsertVisits).not.toHaveBeenCalled();
-        });
-
-        it('rejects payloads exceeding the bulk size limit', async () => {
-            const visits = Array.from({ length: 2001 }, (_, i) => ({
-                stationId: String(i + 1),
-                styleId: 1,
-            }));
-            const res = await buildApp().request(
-                '/visits',
-                {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ visits }),
-                },
-                TEST_ENV
-            );
-
-            expect(res.status).toBe(400);
-            expect(visitsDb.bulkUpsertVisits).not.toHaveBeenCalled();
-        });
-    });
 });

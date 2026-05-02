@@ -72,29 +72,6 @@ export class RemoteStorage implements Storage {
         return Array.from(this.cache.keys());
     }
 
-    /**
-     * Replace local cache contents from a bulk import. Used for migrating from
-     * LocalStorage on first sign-in. Does not trigger network writes; the caller
-     * is expected to push to the server explicitly.
-     */
-    replaceCache(entries: Array<{ stationId: string; styleId: number }>): void {
-        this.cache.clear();
-        for (const entry of entries) {
-            this.cache.set(entry.stationId, String(entry.styleId));
-        }
-    }
-
-    /**
-     * Merge new entries into the cache without triggering writes. Used after a
-     * successful bulk migration so the UI reflects the migrated entries
-     * immediately without an extra round-trip to the server.
-     */
-    mergeCache(entries: Array<{ stationId: string; styleId: number }>): void {
-        for (const entry of entries) {
-            this.cache.set(entry.stationId, String(entry.styleId));
-        }
-    }
-
     /** Flush all pending writes immediately. Intended for tests and shutdown. */
     async flush(): Promise<void> {
         const stationIds = Array.from(this.timers.keys());

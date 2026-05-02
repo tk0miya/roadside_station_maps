@@ -45,23 +45,3 @@ export async function deleteVisit(db: D1Database, userId: string, stationId: str
         .bind(userId, stationId)
         .run();
 }
-
-export async function bulkUpsertVisits(
-    db: D1Database,
-    userId: string,
-    visits: Array<{ stationId: string; styleId: number }>,
-    updatedAt: number
-): Promise<void> {
-    if (visits.length === 0) return;
-
-    const statement = db.prepare(
-        `INSERT INTO visits (user_id, station_id, style_id, updated_at)
-         VALUES (?, ?, ?, ?)
-         ON CONFLICT(user_id, station_id) DO UPDATE SET
-             style_id = excluded.style_id,
-             updated_at = excluded.updated_at`
-    );
-
-    const batch = visits.map((visit) => statement.bind(userId, visit.stationId, visit.styleId, updatedAt));
-    await db.batch(batch);
-}
