@@ -14,3 +14,8 @@ const isDevelopmentHost =
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
 export const API_BASE_URL: string = isDevelopmentHost ? DEVELOPMENT_API : PRODUCTION_API;
+
+// Public OAuth client ID for Google Identity Services. The security gate is the
+// Authorized JavaScript origin configured in the Google Cloud Console, not the
+// secrecy of this value.
+export const GOOGLE_CLIENT_ID = '740963820239-n5t81ueg3b27mtcs229fk62na8bfjvva.apps.googleusercontent.com';
