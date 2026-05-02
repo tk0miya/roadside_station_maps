@@ -1,0 +1,27 @@
+name = "roadside-station-maps-api"
+main = "src/backend/index.ts"
+compatibility_date = "2025-01-01"
+
+# Public OAuth client ID; the security gate is the configured authorized origins.
+[vars]
+GOOGLE_CLIENT_ID = "740963820239-n5t81ueg3b27mtcs229fk62na8bfjvva.apps.googleusercontent.com"
+ALLOWED_ORIGINS = "http://localhost:8081"
+
+# Production environment: served from GitHub Pages.
+[env.production.vars]
+GOOGLE_CLIENT_ID = "740963820239-n5t81ueg3b27mtcs229fk62na8bfjvva.apps.googleusercontent.com"
+ALLOWED_ORIGINS = "https://tk0miya.github.io"
+
+# D1 database binding. Run `wrangler d1 create roadside-station-maps` and paste
+# the resulting database_id into the placeholder below.
+[[d1_databases]]
+binding = "DB"
+database_name = "roadside-station-maps"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "roadside-station-maps"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"

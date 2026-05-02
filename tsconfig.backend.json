@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022"],
+    "outDir": "./dist/backend",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "types": ["@cloudflare/workers-types", "node"]
+  },
+  "include": [
+    "src/backend/**/*",
+    "src/shared/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

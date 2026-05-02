@@ -24,13 +24,16 @@
     "types": ["node", "@types/google.maps", "react", "react-dom"]
   },
   "include": [
-    "src/**/*",
+    "src/frontend/**/*",
+    "src/scripts/**/*",
+    "src/shared/**/*",
     "*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "html/js/bundle.js",
-    "bin"
+    "bin",
+    "src/backend"
   ]
 }
