@@ -1,6 +1,7 @@
 import queryString from 'query-string';
 import { API_BASE_URL } from './config';
 import { LocalStorage } from './storage/local-storage';
+import { migrateLocalToRemote } from './storage/local-to-remote-migrator';
 import { QueryStorage } from './storage/query-storage';
 import { RemoteStorage } from './storage/remote-storage';
 import { StationStyleSerializer } from './storage/station-style-serializer';
@@ -144,6 +145,20 @@ export async function createStyleManager(options: CreateStyleManagerOptions): Pr
             client,
             onSyncError: options.onSyncError,
         });
+
+        // First-sign-in migration: upload any legacy LocalStorage entries to the
+        // cloud. Server-side entries take precedence, so this is safe to retry.
+        try {
+            await migrateLocalToRemote({
+                local: new LocalStorage(),
+                remote: storage,
+                client,
+            });
+        } catch (error) {
+            // Migration failure is non-fatal; the flag is not set so we retry next session.
+            console.error('Failed to migrate local visits to cloud:', error);
+        }
+
         return new StyleManager(storage);
     }
 

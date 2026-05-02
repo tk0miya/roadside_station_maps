@@ -84,6 +84,17 @@ export class RemoteStorage implements Storage {
         }
     }
 
+    /**
+     * Merge new entries into the cache without triggering writes. Used after a
+     * successful bulk migration so the UI reflects the migrated entries
+     * immediately without an extra round-trip to the server.
+     */
+    mergeCache(entries: Array<{ stationId: string; styleId: number }>): void {
+        for (const entry of entries) {
+            this.cache.set(entry.stationId, String(entry.styleId));
+        }
+    }
+
     /** Flush all pending writes immediately. Intended for tests and shutdown. */
     async flush(): Promise<void> {
         const stationIds = Array.from(this.timers.keys());
