@@ -11,6 +11,10 @@ type Listener = (state: AuthState) => void;
 export class AuthManager {
     private state: AuthState = { user: null, idToken: null };
     private listeners: Set<Listener> = new Set();
+    // True if the user was authenticated in this session or had a (possibly
+    // expired) token in storage at startup. Used to gate silent re-login
+    // attempts so brand-new visitors are not prompted unexpectedly.
+    hadPreviousSession = false;
 
     constructor(private readonly clientId: string) {
         this.rehydrateFromStorage();
@@ -20,6 +24,7 @@ export class AuthManager {
         const user = this.verifyIdToken(idToken);
         if (!user) return;
         localStorage.setItem(ID_TOKEN_STORAGE_KEY, idToken);
+        this.hadPreviousSession = true;
         this.setState({ user, idToken });
     }
 
@@ -37,6 +42,8 @@ export class AuthManager {
     private rehydrateFromStorage(): void {
         const stored = localStorage.getItem(ID_TOKEN_STORAGE_KEY);
         if (!stored) return;
+
+        this.hadPreviousSession = true;
 
         const user = this.verifyIdToken(stored);
         if (user) {
