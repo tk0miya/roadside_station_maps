@@ -5,7 +5,6 @@ import { SharesApiClient } from './storage/shares-api-client';
 import { Storage } from './storage/types';
 import { VisitsApiClient, type VisitsApiError } from './storage/visits-api-client';
 import { RoadStation } from './road-station';
-import { StationsGeoJSON } from './types/geojson';
 import type { AuthState } from '@shared/auth-types';
 
 export const STYLE_COUNT = 5;
@@ -13,16 +12,6 @@ const MAX_STYLE_ID = STYLE_COUNT - 1;
 
 export class StyleManager {
     constructor(public storage: Storage) { }
-
-    setStations(stations: StationsGeoJSON): void {
-        // Remove stored entries for stations that no longer exist in the GeoJSON
-        const validStationIds = new Set(stations.features.map(feature => feature.properties.stationId));
-        this.storage.listItems().forEach(stationId => {
-            if (!validStationIds.has(stationId)) {
-                this.storage.removeItem(stationId);
-            }
-        });
-    }
 
     private getStationId(station: RoadStation | string): string {
         return typeof station === 'string' ? station : station.stationId;
@@ -67,8 +56,8 @@ export class StyleManager {
         });
 
         // StyleId 0 = total stations - assigned stations
-        const setStationsCount = Object.values(counts).reduce((sum, count) => sum + count, 0) - counts[0];
-        counts[0] = totalStations - setStationsCount;
+        const assignedCount = Object.values(counts).reduce((sum, count) => sum + count, 0) - counts[0];
+        counts[0] = totalStations - assignedCount;
 
         return counts;
     }
