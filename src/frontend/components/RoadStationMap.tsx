@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuthManager } from '../auth/auth-context';
 import { reconcileVisits } from '../reconcile-visits';
-import { createStorage, RemoteStorage, type Storage } from '../storage';
+import { createStorage, type Storage } from '../storage';
 import { StationsGeoJSON } from '../types/geojson';
 import { ShareButton } from './ShareButton';
 import { InfoWindow } from './InfoWindow';
@@ -57,9 +57,7 @@ export function RoadStationMap() {
     useEffect(() => {
         let cancelled = false;
         setStorage((previous) => {
-            if (previous instanceof RemoteStorage) {
-                void previous.flush();
-            }
+            void previous?.flush();
             return null;
         });
         setLoadError(null);

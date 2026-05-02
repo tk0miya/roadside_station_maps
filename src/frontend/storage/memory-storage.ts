@@ -28,4 +28,6 @@ export class MemoryStorage implements Storage {
     listItems(): string[] {
         return Array.from(this.storage.keys());
     }
+
+    async flush(): Promise<void> {}
 }
