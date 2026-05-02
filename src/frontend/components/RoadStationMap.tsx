@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuthManager } from '../auth/auth-context';
 import { reconcileVisits } from '../reconcile-visits';
-import { RemoteStorage } from '../storage/remote-storage';
-import { type StyleManager, createStyleManager } from '../style-manager';
+import { createStorage, RemoteStorage, type Storage } from '../storage';
 import { StationsGeoJSON } from '../types/geojson';
 import { ShareButton } from './ShareButton';
 import { InfoWindow } from './InfoWindow';
@@ -24,7 +23,7 @@ export function RoadStationMap() {
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
     const [stations, setStations] = useState<StationsGeoJSON | null>(null);
     const [styleVersion, setStyleVersion] = useState(0);
-    const [styleManager, setStyleManager] = useState<StyleManager | null>(null);
+    const [storage, setStorage] = useState<Storage | null>(null);
     const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -53,29 +52,29 @@ export function RoadStationMap() {
         fetchStations();
     }, []);
 
-    // Build the StyleManager whenever the auth state changes. RemoteStorage hydrates
+    // Build the Storage whenever the auth state changes. RemoteStorage hydrates
     // asynchronously when signed in; MemoryStorage resolves immediately.
     useEffect(() => {
         let cancelled = false;
-        setStyleManager((previous) => {
-            if (previous?.storage instanceof RemoteStorage) {
-                void previous.storage.flush();
+        setStorage((previous) => {
+            if (previous instanceof RemoteStorage) {
+                void previous.flush();
             }
             return null;
         });
         setLoadError(null);
 
-        createStyleManager({
+        createStorage({
             authState: auth,
             getIdToken: () => authManager.getState().idToken,
         })
-            .then((manager) => {
+            .then((newStorage) => {
                 if (cancelled) return;
-                setStyleManager(manager);
+                setStorage(newStorage);
             })
             .catch((error) => {
                 if (cancelled) return;
-                console.error('Failed to create StyleManager:', error);
+                console.error('Failed to create storage:', error);
                 setLoadError(error instanceof Error ? error.message : String(error));
             });
 
@@ -86,10 +85,10 @@ export function RoadStationMap() {
 
     // Drop stored visits for stations that no longer exist once both are ready.
     useEffect(() => {
-        if (!styleManager || !stations) return;
-        reconcileVisits(styleManager.storage, stations);
+        if (!storage || !stations) return;
+        reconcileVisits(storage, stations);
         setStyleVersion((v) => v + 1);
-    }, [styleManager, stations]);
+    }, [storage, stations]);
 
     useEffect(() => {
         if (!map) return;
@@ -108,7 +107,7 @@ export function RoadStationMap() {
     return (
         <>
             <div ref={mapContainerRef} className="map-canvas" />
-            {!styleManager && !loadError && (
+            {!storage && !loadError && (
                 <div className="loading-overlay">訪問履歴を読み込み中...</div>
             )}
             {loadError && (
@@ -116,19 +115,19 @@ export function RoadStationMap() {
                     訪問履歴の読み込みに失敗しました: {loadError}
                 </div>
             )}
-            {styleManager && (
+            {storage && (
                 <>
                     <Markers
                         map={map}
                         selectedFeature={feature}
                         onFeatureSelect={setFeature}
-                        styleManager={styleManager}
+                        storage={storage}
                         stations={stations}
                         onStyleChange={() => setStyleVersion((v) => v + 1)}
                     />
                     <ShareButton map={map} />
                     <StationCounter
-                        styleManager={styleManager}
+                        storage={storage}
                         stations={stations}
                         styleVersion={styleVersion}
                         map={map}

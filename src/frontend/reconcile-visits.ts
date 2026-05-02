@@ -1,4 +1,4 @@
-import { Storage } from './storage/types';
+import type { Storage } from './storage';
 import { StationsGeoJSON } from './types/geojson';
 
 /**

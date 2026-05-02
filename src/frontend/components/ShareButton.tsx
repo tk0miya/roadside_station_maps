@@ -1,7 +1,7 @@
 import Clipboard from 'clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useAuthManager } from '../auth/auth-context';
-import { SharesApiClient } from '../storage/shares-api-client';
+import { SharesApiClient } from '../storage';
 
 // Build the shareable URL for the given share id
 function buildShareURL(shareId: string): string {

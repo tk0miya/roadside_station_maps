@@ -1,23 +1,24 @@
 import { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MARKER_ICONS } from '../marker-icons';
-import { STYLE_COUNT, StyleManager } from '../style-manager';
+import type { Storage } from '../storage';
+import { entries, STYLE_COUNT } from '../style';
 import { StationsGeoJSON } from '../types/geojson';
 
 interface StationCounterProps {
-    styleManager: StyleManager;
+    storage: Storage;
     stations: StationsGeoJSON | null;
     styleVersion: number;
     map: google.maps.Map | null;
 }
 
-function countByStyle(styleManager: StyleManager, totalStations: number): Record<number, number> {
+function countByStyle(storage: Storage, totalStations: number): Record<number, number> {
     const counts: Record<number, number> = {};
     for (let i = 0; i < STYLE_COUNT; i++) {
         counts[i] = 0;
     }
 
-    for (const [, styleId] of styleManager.entries()) {
+    for (const [, styleId] of entries(storage)) {
         counts[styleId]++;
     }
 
@@ -28,7 +29,7 @@ function countByStyle(styleManager: StyleManager, totalStations: number): Record
     return counts;
 }
 
-export function StationCounter({ styleManager, stations, styleVersion: _styleVersion, map }: StationCounterProps) {
+export function StationCounter({ storage, stations, styleVersion: _styleVersion, map }: StationCounterProps) {
     const contentElementRef = useRef<HTMLElement | null>(null);
     const contentRootRef = useRef<any>(null);
 
@@ -49,7 +50,7 @@ export function StationCounter({ styleManager, stations, styleVersion: _styleVer
         if (!contentRootRef.current || !stations) return;
 
         const totalStations = stations.features.length;
-        const counts = countByStyle(styleManager, totalStations);
+        const counts = countByStyle(storage, totalStations);
 
         // Render React content
         contentRootRef.current.render(
@@ -62,7 +63,7 @@ export function StationCounter({ styleManager, stations, styleVersion: _styleVer
                 ))}
             </div>
         );
-    }, [stations, _styleVersion, styleManager]);
+    }, [stations, _styleVersion, storage]);
 
     return null; // This component doesn't render anything directly
 }

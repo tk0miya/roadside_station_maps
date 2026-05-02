@@ -97,14 +97,6 @@ export const createMockStations = (count: number, startId: number = 18786) => ({
     }))
 });
 
-// Create mock StyleManager
-export const createMockStyleManager = (entries: Array<[string, number]> = []) => ({
-    entries: vi.fn().mockReturnValue(entries),
-    getStyle: vi.fn(),
-    changeStyle: vi.fn(),
-    resetStyle: vi.fn(),
-} as any);
-
 // Setup Google Maps API mock
 export const setupGoogleMapsMock = () => {
     (global as any).google = {

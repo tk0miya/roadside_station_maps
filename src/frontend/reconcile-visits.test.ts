@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { reconcileVisits } from './reconcile-visits';
-import { MemoryStorage } from './storage/memory-storage';
+import { MemoryStorage } from './storage';
 import { createMockStations } from '../test-utils/test-utils';
 
 describe('reconcileVisits', () => {
