@@ -1,7 +1,6 @@
 import Clipboard from 'clipboard';
 import { useEffect, useRef, useState } from 'react';
-import { getAuthManagerInstance } from '../auth/auth-manager';
-import { useAuth } from '../auth/use-auth';
+import { useAuthManager } from '../auth/auth-context';
 import { SharesApiClient } from '../storage/shares-api-client';
 
 // Build the shareable URL for the given share id
@@ -34,13 +33,13 @@ interface ShareButtonProps {
 }
 
 export function ShareButton(props: ShareButtonProps) {
-    const auth = useAuth();
+    const authManager = useAuthManager();
     const [lastCopiedAt, setLastCopiedAt] = useState<number | null>(null);
     const [shareId, setShareId] = useState<string | null>(null);
     const shareIdRef = useRef<string | null>(null);
 
     // Sharing is only available to signed-in users.
-    const isSignedIn = auth.user !== null;
+    const isSignedIn = authManager.getState().user !== null;
 
     useEffect(() => {
         shareIdRef.current = shareId;
@@ -54,7 +53,7 @@ export function ShareButton(props: ShareButtonProps) {
         }
 
         let cancelled = false;
-        const client = new SharesApiClient({ getIdToken: () => getAuthManagerInstance().getState().idToken });
+        const client = new SharesApiClient({ getIdToken: () => authManager.getState().idToken });
         client
             .create()
             .then((id) => {
@@ -69,7 +68,7 @@ export function ShareButton(props: ShareButtonProps) {
         return () => {
             cancelled = true;
         };
-    }, [isSignedIn]);
+    }, [isSignedIn, authManager]);
 
     useEffect(() => {
         if (!props.map || !isSignedIn) return;

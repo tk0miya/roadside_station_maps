@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getAuthManagerInstance } from '../auth/auth-manager';
-import { useAuth } from '../auth/use-auth';
+import { useAuthManager } from '../auth/auth-context';
 import { RemoteStorage } from '../storage/remote-storage';
 import { type StyleManager, createStyleManager } from '../style-manager';
 import { StationsGeoJSON } from '../types/geojson';
@@ -17,7 +16,8 @@ const getCurrentPosition = (): Promise<GeolocationPosition> => {
 };
 
 export function RoadStationMap() {
-    const auth = useAuth();
+    const authManager = useAuthManager();
+    const auth = authManager.getState();
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
@@ -66,7 +66,7 @@ export function RoadStationMap() {
 
         createStyleManager({
             authState: auth,
-            getIdToken: () => getAuthManagerInstance().getState().idToken,
+            getIdToken: () => authManager.getState().idToken,
             onSyncError: (error) => {
                 console.error('Failed to sync visit:', error);
             },
@@ -84,7 +84,7 @@ export function RoadStationMap() {
         return () => {
             cancelled = true;
         };
-    }, [auth.idToken]);
+    }, [auth.idToken, authManager]);
 
     // Apply the station list to the StyleManager once both are ready.
     useEffect(() => {

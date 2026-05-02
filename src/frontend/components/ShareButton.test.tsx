@@ -20,12 +20,8 @@ const mockAuth = vi.hoisted(() => ({
     state: { user: null, idToken: null } as AuthState,
 }));
 
-vi.mock('../auth/use-auth', () => ({
-    useAuth: () => mockAuth.state,
-}));
-
-vi.mock('../auth/auth-manager', () => ({
-    getAuthManagerInstance: () => ({ getState: () => mockAuth.state }),
+vi.mock('../auth/auth-context', () => ({
+    useAuthManager: () => ({ getState: () => mockAuth.state }),
 }));
 
 Object.defineProperty(global, 'google', {

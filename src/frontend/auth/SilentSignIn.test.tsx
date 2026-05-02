@@ -3,11 +3,8 @@
  */
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-    getAuthManagerInstance,
-    ID_TOKEN_STORAGE_KEY,
-    resetAuthManagerInstanceForTests,
-} from './auth-manager';
+import { AuthProvider } from './auth-context';
+import { AuthManager, ID_TOKEN_STORAGE_KEY } from './auth-manager';
 import { GOOGLE_CLIENT_ID } from '../config';
 
 interface OneTapOptions {
@@ -46,15 +43,19 @@ function validToken(overrides: Record<string, unknown> = {}): string {
     });
 }
 
+function renderWithAuth(ui: React.ReactElement) {
+    const manager = new AuthManager(GOOGLE_CLIENT_ID);
+    return { manager, ...render(<AuthProvider manager={manager}>{ui}</AuthProvider>) };
+}
+
 describe('SilentSignIn', () => {
     beforeEach(() => {
         window.localStorage.clear();
-        resetAuthManagerInstanceForTests();
         lastOneTapOptions = null;
     });
 
     it('is disabled for first-time visitors with no prior session', () => {
-        render(<SilentSignIn />);
+        renderWithAuth(<SilentSignIn />);
 
         expect(lastOneTapOptions?.disabled).toBe(true);
         expect(lastOneTapOptions?.auto_select).toBe(true);
@@ -63,7 +64,7 @@ describe('SilentSignIn', () => {
     it('is disabled while the user is already signed in', () => {
         window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken());
 
-        render(<SilentSignIn />);
+        renderWithAuth(<SilentSignIn />);
 
         expect(lastOneTapOptions?.disabled).toBe(true);
     });
@@ -71,7 +72,7 @@ describe('SilentSignIn', () => {
     it('is enabled when an expired token is found in storage', () => {
         window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
 
-        render(<SilentSignIn />);
+        renderWithAuth(<SilentSignIn />);
 
         expect(lastOneTapOptions?.disabled).toBe(false);
     });
@@ -79,9 +80,9 @@ describe('SilentSignIn', () => {
     it('forwards a successfully returned credential to AuthManager.handleCredential', () => {
         window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
 
-        render(<SilentSignIn />);
+        const { manager } = renderWithAuth(<SilentSignIn />);
 
-        const handleCredential = vi.spyOn(getAuthManagerInstance(), 'handleCredential');
+        const handleCredential = vi.spyOn(manager, 'handleCredential');
         const newToken = validToken({ sub: 'user-2' });
 
         lastOneTapOptions?.onSuccess({ credential: newToken });

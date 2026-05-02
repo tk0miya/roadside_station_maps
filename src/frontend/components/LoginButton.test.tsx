@@ -4,11 +4,8 @@
  */
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-    getAuthManagerInstance,
-    ID_TOKEN_STORAGE_KEY,
-    resetAuthManagerInstanceForTests,
-} from '../auth/auth-manager';
+import { AuthProvider } from '../auth/auth-context';
+import { AuthManager, ID_TOKEN_STORAGE_KEY } from '../auth/auth-manager';
 import { GOOGLE_CLIENT_ID } from '../config';
 import { createMockMap, setupGoogleMapsMock } from '../../test-utils/test-utils';
 
@@ -33,18 +30,22 @@ function buildIdToken(payload: Record<string, unknown>): string {
     return `${header}.${body}.sig`;
 }
 
+function renderWithAuth(ui: React.ReactElement) {
+    const manager = new AuthManager(GOOGLE_CLIENT_ID);
+    return { manager, ...render(<AuthProvider manager={manager}>{ui}</AuthProvider>) };
+}
+
 describe('LoginButton', () => {
     beforeEach(() => {
         setupGoogleMapsMock();
         window.localStorage.clear();
-        resetAuthManagerInstanceForTests();
         lastGoogleLoginProps = null;
     });
 
     it('mounts the GoogleLogin button into a TOP_RIGHT map control when logged out', () => {
         const mockMap = createMockMap();
 
-        render(<LoginButton map={mockMap} />);
+        renderWithAuth(<LoginButton map={mockMap} />);
 
         const pushMock = mockMap.controls[3].push as unknown as ReturnType<typeof vi.fn>;
         expect(pushMock).toHaveBeenCalledTimes(1);
@@ -53,7 +54,7 @@ describe('LoginButton', () => {
     });
 
     it('does not mount controls when map is null', () => {
-        const { container } = render(<LoginButton map={null} />);
+        const { container } = renderWithAuth(<LoginButton map={null} />);
 
         expect(container.firstChild).toBeNull();
     });
@@ -68,16 +69,16 @@ describe('LoginButton', () => {
         window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
 
         const mockMap = createMockMap();
-        render(<LoginButton map={mockMap} />);
+        renderWithAuth(<LoginButton map={mockMap} />);
 
         expect(mockMap.controls[3].push).not.toHaveBeenCalled();
     });
 
     it('forwards the credential to AuthManager.handleCredential on success', () => {
         const mockMap = createMockMap();
-        render(<LoginButton map={mockMap} />);
+        const { manager } = renderWithAuth(<LoginButton map={mockMap} />);
 
-        const handleCredential = vi.spyOn(getAuthManagerInstance(), 'handleCredential');
+        const handleCredential = vi.spyOn(manager, 'handleCredential');
         const token = buildIdToken({
             sub: 'user-1',
             iss: 'https://accounts.google.com',
