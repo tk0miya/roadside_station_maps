@@ -47,8 +47,73 @@ describe('AuthManager', () => {
         expect(manager.getState().user).toEqual({ sub: 'user-42' });
     });
 
+    it('accepts the bare-host issuer', () => {
+        const token = validToken({ iss: 'accounts.google.com' });
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
+
+        const manager = new AuthManager(CLIENT_ID);
+
+        expect(manager.getState().user).toEqual({ sub: 'user-1' });
+    });
+
+    it('accepts an audience array that includes the client id', () => {
+        const token = validToken({ aud: ['other', CLIENT_ID] });
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
+
+        const manager = new AuthManager(CLIENT_ID);
+
+        expect(manager.getState().user).toEqual({ sub: 'user-1' });
+    });
+
     it('clears invalid tokens from storage on construction', () => {
         localStorage.setItem(ID_TOKEN_STORAGE_KEY, 'not-a-jwt');
+
+        const manager = new AuthManager(CLIENT_ID);
+
+        expect(manager.getState().user).toBeNull();
+        expect(localStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
+    });
+
+    it('clears tokens with a mismatched issuer', () => {
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ iss: 'https://evil.example' }));
+
+        const manager = new AuthManager(CLIENT_ID);
+
+        expect(manager.getState().user).toBeNull();
+        expect(localStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
+    });
+
+    it('clears tokens with a mismatched audience', () => {
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ aud: 'other-client' }));
+
+        const manager = new AuthManager(CLIENT_ID);
+
+        expect(manager.getState().user).toBeNull();
+        expect(localStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
+    });
+
+    it('clears expired tokens', () => {
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+
+        const manager = new AuthManager(CLIENT_ID);
+
+        expect(manager.getState().user).toBeNull();
+        expect(localStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
+    });
+
+    it('clears tokens that are missing exp', () => {
+        const token = buildIdToken({ sub: 'x', iss: 'https://accounts.google.com', aud: CLIENT_ID });
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
+
+        const manager = new AuthManager(CLIENT_ID);
+
+        expect(manager.getState().user).toBeNull();
+        expect(localStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
+    });
+
+    it('clears tokens that are missing sub', () => {
+        const token = buildIdToken({ iss: 'https://accounts.google.com', aud: CLIENT_ID, exp: 9999999999 });
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
 
         const manager = new AuthManager(CLIENT_ID);
 
