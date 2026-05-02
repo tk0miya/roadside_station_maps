@@ -1,6 +1,6 @@
 import { decodeJwt } from 'jose';
 import type { AuthState, AuthUser } from '@shared/auth-types';
-import { GOOGLE_CLIENT_ID } from './config';
+import { GOOGLE_CLIENT_ID } from '../config';
 
 export const ID_TOKEN_STORAGE_KEY = 'auth:idToken';
 

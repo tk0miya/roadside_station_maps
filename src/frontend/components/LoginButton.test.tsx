@@ -8,7 +8,7 @@ import {
     ID_TOKEN_STORAGE_KEY,
     resetAuthManagerInstanceForTests,
 } from '../auth/auth-manager';
-import { GOOGLE_CLIENT_ID } from '../auth/config';
+import { GOOGLE_CLIENT_ID } from '../config';
 import { createMockMap, setupGoogleMapsMock } from '../../test-utils/test-utils';
 
 let lastGoogleLoginProps: { onSuccess?: (response: { credential?: string }) => void } | null = null;
