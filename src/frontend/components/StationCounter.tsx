@@ -24,7 +24,7 @@ export function StationCounter({ styleManager, stations, styleVersion: _styleVer
         contentRootRef.current = createRoot(contentElementRef.current);
 
         // Add to map controls
-        map.controls[google.maps.ControlPosition.TOP_RIGHT].push(contentElementRef.current);
+        map.controls[google.maps.ControlPosition.RIGHT_TOP].push(contentElementRef.current);
     }, [map]);
 
     useEffect(() => {
