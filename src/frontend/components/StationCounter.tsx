@@ -36,13 +36,27 @@ export function StationCounter({ styleManager, stations, styleVersion: _styleVer
         if (!map) return;
 
         // Create counter container
-        contentElementRef.current = document.createElement('div');
-        contentElementRef.current.className = 'station-counter';
+        const element = document.createElement('div');
+        element.className = 'station-counter';
+        contentElementRef.current = element;
 
-        contentRootRef.current = createRoot(contentElementRef.current);
+        const root = createRoot(element);
+        contentRootRef.current = root;
 
         // Add to map controls
-        map.controls[google.maps.ControlPosition.RIGHT_TOP].push(contentElementRef.current);
+        const controls = map.controls[google.maps.ControlPosition.RIGHT_TOP];
+        controls.push(element);
+
+        return () => {
+            const index = controls.getArray().indexOf(element);
+            if (index >= 0) {
+                controls.removeAt(index);
+            }
+            // Defer unmount to avoid synchronous unmount during React render
+            setTimeout(() => root.unmount(), 0);
+            contentElementRef.current = null;
+            contentRootRef.current = null;
+        };
     }, [map]);
 
     useEffect(() => {
