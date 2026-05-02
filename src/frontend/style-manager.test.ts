@@ -132,53 +132,24 @@ describe('StyleManager', () => {
         });
     });
 
-    describe('countByStyle', () => {
-        it('should return all stations as style 0 when no styles are stored', () => {
+    describe('entries', () => {
+        it('should return an empty array when no styles are stored', () => {
             const storage = new MemoryStorage();
             const styleManager = new StyleManager(storage);
 
-            const counts = styleManager.countByStyle(100);
-
-            expect(counts).toEqual({ 0: 100, 1: 0, 2: 0, 3: 0, 4: 0 });
+            expect(styleManager.entries()).toEqual([]);
         });
 
-        it('should count stored styles correctly', () => {
+        it('should return [stationId, styleId] pairs for stored styles', () => {
             const storage = new MemoryStorage();
-            storage.setItem('001', '1');  // blue
-            storage.setItem('002', '1');  // blue
-            storage.setItem('003', '2');  // purple
-            storage.setItem('004', '4');  // green
+            storage.setItem('001', '1');
+            storage.setItem('002', '4');
             const styleManager = new StyleManager(storage);
 
-            const counts = styleManager.countByStyle(100);
-
-            expect(counts).toEqual({ 0: 96, 1: 2, 2: 1, 3: 0, 4: 1 });
-        });
-
-        it('should calculate style 0 count correctly', () => {
-            const storage = new MemoryStorage();
-            storage.setItem('001', '2');  // purple stored
-            storage.setItem('002', '3');  // yellow stored
-            const styleManager = new StyleManager(storage);
-
-            const counts = styleManager.countByStyle(10);
-
-            expect(counts).toEqual({ 0: 8, 1: 0, 2: 1, 3: 1, 4: 0 });
-        });
-
-        it('should handle mixed storage scenarios', () => {
-            const storage = new MemoryStorage();
-            storage.setItem('station1', '0');
-            storage.setItem('station2', '1');
-            storage.setItem('station3', '2');
-            storage.setItem('station4', '3');
-            storage.setItem('station5', '4');
-            storage.setItem('station6', '1');
-            const styleManager = new StyleManager(storage);
-
-            const counts = styleManager.countByStyle(20);
-
-            expect(counts).toEqual({ 0: 15, 1: 2, 2: 1, 3: 1, 4: 1 });
+            expect(styleManager.entries().sort()).toEqual([
+                ['001', 1],
+                ['002', 4],
+            ]);
         });
     });
 

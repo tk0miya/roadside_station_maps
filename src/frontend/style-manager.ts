@@ -43,23 +43,8 @@ export class StyleManager {
         return 0;
     }
 
-    countByStyle(totalStations: number): Record<number, number> {
-        const counts: Record<number, number> = {};
-        for (let i = 0; i < STYLE_COUNT; i++) {
-            counts[i] = 0;
-        }
-
-        const stationIds = this.storage.listItems();
-        stationIds.forEach(stationId => {
-            const styleId = this.getStyle(stationId);
-            counts[styleId]++;
-        });
-
-        // StyleId 0 = total stations - assigned stations
-        const assignedCount = Object.values(counts).reduce((sum, count) => sum + count, 0) - counts[0];
-        counts[0] = totalStations - assignedCount;
-
-        return counts;
+    entries(): Array<[string, number]> {
+        return this.storage.listItems().map((stationId) => [stationId, this.getStyle(stationId)]);
     }
 }
 
