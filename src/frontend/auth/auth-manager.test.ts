@@ -1,5 +1,6 @@
 /**
  * @vitest-environment jsdom
+ * @vitest-environment-options { "url": "http://localhost" }
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthManager, ID_TOKEN_STORAGE_KEY } from './auth-manager';
