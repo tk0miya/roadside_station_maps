@@ -3,7 +3,7 @@ import { MemoryStorage } from './storage/memory-storage';
 import { RemoteStorage } from './storage/remote-storage';
 import { SharesApiClient } from './storage/shares-api-client';
 import { Storage } from './storage/types';
-import { VisitsApiClient, type VisitsApiError } from './storage/visits-api-client';
+import { VisitsApiClient } from './storage/visits-api-client';
 import { RoadStation } from './road-station';
 import type { AuthState } from '@shared/auth-types';
 
@@ -51,7 +51,6 @@ export class StyleManager {
 export interface CreateStyleManagerOptions {
     authState: AuthState;
     getIdToken: () => string | null;
-    onSyncError?: (error: VisitsApiError | Error, stationId: string) => void;
 }
 
 /**
@@ -76,10 +75,7 @@ export async function createStyleManager(options: CreateStyleManagerOptions): Pr
 
     if (options.authState.idToken) {
         const client = new VisitsApiClient({ getIdToken: options.getIdToken });
-        const storage = await RemoteStorage.create({
-            client,
-            onSyncError: options.onSyncError,
-        });
+        const storage = await RemoteStorage.create({ client });
 
         return new StyleManager(storage);
     }

@@ -101,23 +101,24 @@ describe('RemoteStorage', () => {
         expect(client.put).toHaveBeenCalledWith('222', 4);
     });
 
-    it('reports sync errors via the onSyncError callback without throwing', async () => {
+    it('logs sync errors to console without throwing', async () => {
         const client = createClient();
-        client.put.mockRejectedValueOnce(new VisitsApiError('boom', 500));
-        const onSyncError = vi.fn();
+        const apiError = new VisitsApiError('boom', 500);
+        client.put.mockRejectedValueOnce(apiError);
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
         const storage = await RemoteStorage.create({
             client: client as unknown as VisitsApiClient,
             debounceMs: 0,
-            onSyncError,
         });
 
         storage.setItem('111', '1');
         await storage.flush();
 
-        expect(onSyncError).toHaveBeenCalledTimes(1);
-        const [error, stationId] = onSyncError.mock.calls[0];
-        expect(error).toBeInstanceOf(VisitsApiError);
-        expect(stationId).toBe('111');
+        expect(consoleError).toHaveBeenCalledTimes(1);
+        expect(consoleError).toHaveBeenCalledWith('Failed to sync visit:', apiError, {
+            stationId: '111',
+        });
+        consoleError.mockRestore();
     });
 
     it('removeItem on a station with no cache entry does not call the API', async () => {
