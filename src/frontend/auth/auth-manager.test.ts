@@ -144,6 +144,38 @@ describe('AuthManager', () => {
         expect(localStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBeNull();
     });
 
+    it('reports no previous session for empty storage', () => {
+        const manager = new AuthManager(CLIENT_ID);
+
+        expect(manager.hadPreviousSession).toBe(false);
+    });
+
+    it('reports a previous session when a valid token is rehydrated', () => {
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken());
+
+        const manager = new AuthManager(CLIENT_ID);
+
+        expect(manager.hadPreviousSession).toBe(true);
+    });
+
+    it('reports a previous session when an expired token is found in storage', () => {
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+
+        const manager = new AuthManager(CLIENT_ID);
+
+        expect(manager.getState().user).toBeNull();
+        expect(manager.hadPreviousSession).toBe(true);
+    });
+
+    it('reports a previous session after a successful handleCredential call', () => {
+        const manager = new AuthManager(CLIENT_ID);
+        expect(manager.hadPreviousSession).toBe(false);
+
+        manager.handleCredential(validToken());
+
+        expect(manager.hadPreviousSession).toBe(true);
+    });
+
     it('allows unsubscribing listeners', () => {
         const manager = new AuthManager(CLIENT_ID);
 
