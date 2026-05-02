@@ -68,9 +68,6 @@ export function RoadStationMap() {
         createStyleManager({
             authState: auth,
             getIdToken: () => authManager.getState().idToken,
-            onSyncError: (error) => {
-                console.error('Failed to sync visit:', error);
-            },
         })
             .then((manager) => {
                 if (cancelled) return;

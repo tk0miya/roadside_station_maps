@@ -1,5 +1,5 @@
 import type { Storage } from './types';
-import { VisitsApiClient, VisitsApiError } from './visits-api-client';
+import { VisitsApiClient } from './visits-api-client';
 
 const DEFAULT_DEBOUNCE_MS = 400;
 
@@ -8,7 +8,6 @@ type PendingOp = { kind: 'put'; styleId: number } | { kind: 'delete' };
 export interface RemoteStorageOptions {
     client: VisitsApiClient;
     debounceMs?: number;
-    onSyncError?: (error: VisitsApiError | Error, stationId: string) => void;
     setTimeoutImpl?: typeof setTimeout;
     clearTimeoutImpl?: typeof clearTimeout;
 }
@@ -27,14 +26,12 @@ export class RemoteStorage implements Storage {
     private readonly timers = new Map<string, ReturnType<typeof setTimeout>>();
     private readonly client: VisitsApiClient;
     private readonly debounceMs: number;
-    private readonly onSyncError: (error: VisitsApiError | Error, stationId: string) => void;
     private readonly setTimeoutImpl: typeof setTimeout;
     private readonly clearTimeoutImpl: typeof clearTimeout;
 
     private constructor(options: RemoteStorageOptions) {
         this.client = options.client;
         this.debounceMs = options.debounceMs ?? DEFAULT_DEBOUNCE_MS;
-        this.onSyncError = options.onSyncError ?? (() => {});
         this.setTimeoutImpl = options.setTimeoutImpl ?? setTimeout;
         this.clearTimeoutImpl = options.clearTimeoutImpl ?? clearTimeout;
     }
@@ -118,9 +115,7 @@ export class RemoteStorage implements Storage {
                 await this.client.delete(stationId);
             }
         } catch (error) {
-            const normalized =
-                error instanceof Error ? error : new Error(`Sync failed for station ${stationId}`);
-            this.onSyncError(normalized, stationId);
+            console.error('Failed to sync visit:', error, { stationId });
         }
     }
 }
