@@ -4,7 +4,7 @@ import { useAuth } from '../auth/use-auth';
 import { RemoteStorage } from '../storage/remote-storage';
 import { type StyleManager, createStyleManager } from '../style-manager';
 import { StationsGeoJSON } from '../types/geojson';
-import { ClipboardButton } from './ClipboardButton';
+import { ShareButton } from './ShareButton';
 import { InfoWindow } from './InfoWindow';
 import { LoginButton } from './LoginButton';
 import { Markers } from './Markers';
@@ -128,7 +128,7 @@ export function RoadStationMap() {
                         stations={stations}
                         onStyleChange={() => setStyleVersion((v) => v + 1)}
                     />
-                    <ClipboardButton map={map} />
+                    <ShareButton map={map} />
                     <StationCounter
                         styleManager={styleManager}
                         stations={stations}
