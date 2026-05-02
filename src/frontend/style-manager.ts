@@ -1,6 +1,5 @@
 import queryString from 'query-string';
 import { API_BASE_URL } from './config';
-import { LocalStorage } from './storage/local-storage';
 import { MemoryStorage } from './storage/memory-storage';
 import { RemoteStorage } from './storage/remote-storage';
 import { SharesApiClient } from './storage/shares-api-client';
@@ -100,7 +99,7 @@ export interface CreateStyleManagerOptions {
  *
  * - `?share=<id>` -> MemoryStorage hydrated from the shares API
  * - signed-in user -> RemoteStorage backed by the Workers + D1 API
- * - otherwise      -> LocalStorage (guest mode, identical to legacy behavior)
+ * - otherwise      -> MemoryStorage (guest mode, data lives only in memory)
  */
 export async function createStyleManager(options: CreateStyleManagerOptions): Promise<StyleManager> {
     const queries = queryString.parse(location.search);
@@ -132,5 +131,5 @@ export async function createStyleManager(options: CreateStyleManagerOptions): Pr
         return new StyleManager(storage);
     }
 
-    return new StyleManager(new LocalStorage());
+    return new StyleManager(new MemoryStorage());
 }
