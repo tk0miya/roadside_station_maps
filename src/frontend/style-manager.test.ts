@@ -2,10 +2,12 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { StyleManager, getStyleManagerInstance } from './style-manager';
+import { StyleManager, createStyleManager, getStyleManagerInstance } from './style-manager';
 import { QueryStorage } from './storage/query-storage';
 import { LocalStorage } from './storage/local-storage';
+import { RemoteStorage } from './storage/remote-storage';
 import { createMockStation, createMockStations } from '../test-utils/test-utils';
+import type { AuthState } from './auth/types';
 
 
 describe('StyleManager', () => {
@@ -343,5 +345,77 @@ describe('getStyleManagerInstance', () => {
         const instance = getStyleManagerInstance();
         expect(instance).toBeInstanceOf(StyleManager);
         expect(instance.storage).toBeInstanceOf(QueryStorage);
+    });
+});
+
+describe('createStyleManager', () => {
+    let originalLocation: Location;
+    const guestAuth: AuthState = { user: null, idToken: null };
+    const signedInAuth: AuthState = { user: { sub: 'user-1' }, idToken: 'token-abc' };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        originalLocation = window.location;
+        Object.defineProperty(window, 'location', {
+            value: { ...originalLocation, search: '' },
+            writable: true,
+        });
+    });
+
+    afterEach(() => {
+        Object.defineProperty(window, 'location', { value: originalLocation, writable: true });
+    });
+
+    it('returns a LocalStorage-backed StyleManager for guests', async () => {
+        const manager = await createStyleManager({
+            authState: guestAuth,
+            getIdToken: () => null,
+        });
+        expect(manager.storage).toBeInstanceOf(LocalStorage);
+    });
+
+    it('returns a QueryStorage-backed StyleManager when mode=shared overrides auth', async () => {
+        Object.defineProperty(window, 'location', {
+            value: { ...originalLocation, search: '?mode=shared&c1=AAAA' },
+            writable: true,
+        });
+
+        const manager = await createStyleManager({
+            authState: signedInAuth,
+            getIdToken: () => 'token-abc',
+        });
+
+        expect(manager.storage).toBeInstanceOf(QueryStorage);
+    });
+
+    it('returns a RemoteStorage-backed StyleManager hydrated from the API for signed-in users', async () => {
+        const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+            new Response(
+                JSON.stringify({
+                    visits: [{ stationId: '111', styleId: 2, updatedAt: 1000 }],
+                }),
+                { status: 200, headers: { 'Content-Type': 'application/json' } }
+            )
+        );
+
+        try {
+            const manager = await createStyleManager({
+                authState: signedInAuth,
+                getIdToken: () => 'token-abc',
+                apiBaseUrl: 'https://api.example.com',
+            });
+
+            expect(manager.storage).toBeInstanceOf(RemoteStorage);
+            expect(manager.storage.getItem('111')).toBe('2');
+            expect(fetchSpy).toHaveBeenCalledWith(
+                'https://api.example.com/api/visits',
+                expect.objectContaining({
+                    method: 'GET',
+                    headers: expect.objectContaining({ Authorization: 'Bearer token-abc' }),
+                })
+            );
+        } finally {
+            fetchSpy.mockRestore();
+        }
     });
 });

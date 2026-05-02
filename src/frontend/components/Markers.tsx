@@ -15,29 +15,46 @@ interface MarkersProps {
 
 export function Markers(props: MarkersProps) {
     const selectedFeatureRef = useRef<google.maps.Data.Feature | null>(null);
+    const styleManagerRef = useRef<StyleManager>(props.styleManager);
 
     useEffect(() => {
         selectedFeatureRef.current = props.selectedFeature;
     }, [props.selectedFeature]);
 
+    // Keep handlers and the data-layer style callback bound to the latest StyleManager
+    // so login/logout transitions immediately switch storage backends without remounting.
+    useEffect(() => {
+        styleManagerRef.current = props.styleManager;
+        if (!props.map) return;
+        props.map.data.setStyle((feature: google.maps.Data.Feature) => {
+            const station = createRoadStation(feature);
+            return styleManagerRef.current.getStyle(station);
+        });
+    }, [props.map, props.styleManager]);
+
     useEffect(() => {
         if (!props.map || !props.stations) return;
 
-        // Set up markers
         props.map.data.addGeoJson(props.stations);
-        props.map.data.addListener('click', onMarkerClick);
-        props.map.data.addListener('dblclick', onMarkerDoubleClick);
-        props.map.data.addListener('rightclick', onMarkerRightClick);
+        const clickListener = props.map.data.addListener('click', onMarkerClick);
+        const doubleClickListener = props.map.data.addListener('dblclick', onMarkerDoubleClick);
+        const rightClickListener = props.map.data.addListener('rightclick', onMarkerRightClick);
         props.map.data.setStyle((feature: google.maps.Data.Feature) => {
             const station = createRoadStation(feature);
-            return props.styleManager.getStyle(station);
+            return styleManagerRef.current.getStyle(station);
         });
+
+        return () => {
+            clickListener.remove();
+            doubleClickListener.remove();
+            rightClickListener.remove();
+        };
     }, [props.map, props.stations]);
 
     const onMarkerClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map && selectedFeatureRef.current === event.feature) {
             const station = createRoadStation(event.feature);
-            const newStyle = props.styleManager.changeStyle(station);
+            const newStyle = styleManagerRef.current.changeStyle(station);
             props.map.data.overrideStyle(event.feature, newStyle);
             props.onStyleChange();
         } else {
@@ -48,7 +65,7 @@ export function Markers(props: MarkersProps) {
     const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map) {
             const station = createRoadStation(event.feature);
-            const newStyle = props.styleManager.changeStyle(station);
+            const newStyle = styleManagerRef.current.changeStyle(station);
             props.map.data.overrideStyle(event.feature, newStyle);
             props.onStyleChange();
         }
@@ -57,7 +74,7 @@ export function Markers(props: MarkersProps) {
     const onMarkerRightClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map) {
             const station = createRoadStation(event.feature);
-            const resetStyle = props.styleManager.resetStyle(station);
+            const resetStyle = styleManagerRef.current.resetStyle(station);
             props.map.data.overrideStyle(event.feature, resetStyle);
             props.onFeatureSelect(null);
             props.onStyleChange();
@@ -65,4 +82,4 @@ export function Markers(props: MarkersProps) {
     };
 
     return null; // This component doesn't render anything directly
-};
+}
