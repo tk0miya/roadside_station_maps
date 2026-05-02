@@ -32,10 +32,16 @@ jobs:
       - name: Build bundle
         run: npm run build
 
+      - name: Stage Pages content
+        run: |
+          mkdir -p _site
+          cp -r html _site/
+          cp -r data _site/
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: html
+          path: _site
 
   deploy:
     needs: build
