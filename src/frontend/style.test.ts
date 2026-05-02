@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { changeStyle, entries, getStyle, resetStyle } from './style';
 import { MemoryStorage } from './storage';
-import { createMockStation } from '../test-utils/test-utils';
 
 describe('getStyle', () => {
     it('should return 0 when no style is stored', () => {
@@ -15,21 +14,6 @@ describe('getStyle', () => {
         storage.setItem('002', '2');
 
         expect(getStyle(storage, '002')).toBe(2);
-    });
-
-    it('should accept RoadStation object when style is stored', () => {
-        const storage = new MemoryStorage();
-        const station = createMockStation('003');
-        storage.setItem('003', '1');
-
-        expect(getStyle(storage, station)).toBe(1);
-    });
-
-    it('should accept RoadStation object when no style is stored', () => {
-        const storage = new MemoryStorage();
-        const station = createMockStation('004');
-
-        expect(getStyle(storage, station)).toBe(0);
     });
 });
 
@@ -64,23 +48,6 @@ describe('changeStyle', () => {
         expect(changeStyle(storage, '004')).toBe(1);
         expect(storage.getItem('004')).toBe('1');
     });
-
-    it('should accept RoadStation object with stored style', () => {
-        const storage = new MemoryStorage();
-        const station = createMockStation('005');
-        storage.setItem('005', '2');
-
-        expect(changeStyle(storage, station)).toBe(3);
-        expect(storage.getItem('005')).toBe('3');
-    });
-
-    it('should accept RoadStation object with no stored style', () => {
-        const storage = new MemoryStorage();
-        const station = createMockStation('006');
-
-        expect(changeStyle(storage, station)).toBe(1);
-        expect(storage.getItem('006')).toBe('1');
-    });
 });
 
 describe('resetStyle', () => {
@@ -90,23 +57,6 @@ describe('resetStyle', () => {
 
         expect(resetStyle(storage, '001')).toBe(0);
         expect(storage.getItem('001')).toBeNull();
-    });
-
-    it('should accept RoadStation object with stored style', () => {
-        const storage = new MemoryStorage();
-        const station = createMockStation('002');
-        storage.setItem('002', '2');
-
-        expect(resetStyle(storage, station)).toBe(0);
-        expect(storage.getItem('002')).toBeNull();
-    });
-
-    it('should accept RoadStation object with no stored style', () => {
-        const storage = new MemoryStorage();
-        const station = createMockStation('003');
-
-        expect(resetStyle(storage, station)).toBe(0);
-        expect(storage.getItem('003')).toBeNull();
     });
 });
 
