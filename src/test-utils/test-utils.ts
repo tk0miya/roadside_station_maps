@@ -36,22 +36,6 @@ export const createMockMap = () => {
     } as unknown as google.maps.Map;
 };
 
-// Create mock RoadStation
-export const createMockStation = (stationId: string, overrides: Record<string, string> = {}) => {
-    const defaultProperties = {
-        stationId,
-        internalId: `${stationId}`,
-        name: `Station ${stationId}`,
-        address: `Address ${stationId}`,
-        hours: '9:00-17:00',
-        uri: `https://example.com/station-${stationId}`,
-        mapcode: '123 456*78',
-        prefId: '01',
-    };
-
-    return { ...defaultProperties, ...overrides };
-};
-
 // Create mock Google Maps Data Feature
 export const createMockFeature = (stationId: string, overrides: Record<string, string> = {}) => {
     const defaultProperties: Record<string, string> = {

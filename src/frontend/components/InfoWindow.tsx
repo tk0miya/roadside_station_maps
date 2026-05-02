@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createRoadStation } from '../road-station';
-
 export interface InfoWindowProps {
     selectedFeature: google.maps.Data.Feature | null;
     map: google.maps.Map | null;
@@ -23,16 +21,20 @@ export function InfoWindow(props: InfoWindowProps) {
     useEffect(() => {
         if (infoWindowRef.current && contentElementRef.current && contentRootRef.current) {
             if (props.selectedFeature) {
-                // Update content
-                const station = createRoadStation(props.selectedFeature);
+                const feature = props.selectedFeature;
+                const name = feature.getProperty('name') as string;
+                const uri = feature.getProperty('uri') as string;
+                const hours = feature.getProperty('hours') as string;
+                const address = feature.getProperty('address') as string;
+                const mapcode = feature.getProperty('mapcode') as string;
                 contentRootRef.current.render(
                     <div>
                         <div>
-                            <a href={station.uri} target="_blank">{station.name}</a>
+                            <a href={uri} target="_blank">{name}</a>
                         </div>
-                        <div>営業時間：{station.hours}</div>
-                        <div>住所：{station.address}</div>
-                        <div>マップコード：{station.mapcode}</div>
+                        <div>営業時間：{hours}</div>
+                        <div>住所：{address}</div>
+                        <div>マップコード：{mapcode}</div>
                     </div>
                 );
 
