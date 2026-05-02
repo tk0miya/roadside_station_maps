@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
+import { API_BASE_URL } from '../config';
 import { VisitsApiClient, VisitsApiError } from './visits-api-client';
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -18,10 +19,7 @@ describe('VisitsApiClient', () => {
 
     beforeEach(() => {
         fetchMock = vi.spyOn(globalThis, 'fetch');
-        client = new VisitsApiClient({
-            baseUrl: 'https://api.example.com/',
-            getIdToken: () => 'test-token',
-        });
+        client = new VisitsApiClient({ getIdToken: () => 'test-token' });
     });
 
     afterEach(() => {
@@ -39,7 +37,7 @@ describe('VisitsApiClient', () => {
 
         expect(visits).toEqual([{ stationId: '123', styleId: 1, updatedAt: 1000 }]);
         expect(fetchMock).toHaveBeenCalledWith(
-            'https://api.example.com/api/visits',
+            `${API_BASE_URL}/api/visits`,
             expect.objectContaining({
                 method: 'GET',
                 headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
@@ -53,7 +51,7 @@ describe('VisitsApiClient', () => {
         await client.put('123', 2);
 
         expect(fetchMock).toHaveBeenCalledWith(
-            'https://api.example.com/api/visits/123',
+            `${API_BASE_URL}/api/visits/123`,
             expect.objectContaining({
                 method: 'PUT',
                 body: JSON.stringify({ styleId: 2 }),
@@ -71,7 +69,7 @@ describe('VisitsApiClient', () => {
         await client.delete('123');
 
         expect(fetchMock).toHaveBeenCalledWith(
-            'https://api.example.com/api/visits/123',
+            `${API_BASE_URL}/api/visits/123`,
             expect.objectContaining({
                 method: 'DELETE',
                 headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
@@ -80,10 +78,7 @@ describe('VisitsApiClient', () => {
     });
 
     it('throws VisitsApiError without calling fetch when ID token is missing', async () => {
-        const noTokenClient = new VisitsApiClient({
-            baseUrl: 'https://api.example.com',
-            getIdToken: () => null,
-        });
+        const noTokenClient = new VisitsApiClient({ getIdToken: () => null });
 
         await expect(noTokenClient.list()).rejects.toBeInstanceOf(VisitsApiError);
         expect(fetchMock).not.toHaveBeenCalled();
@@ -115,7 +110,7 @@ describe('VisitsApiClient', () => {
         await client.put('1 2/3', 1);
 
         expect(fetchMock).toHaveBeenCalledWith(
-            'https://api.example.com/api/visits/1%202%2F3',
+            `${API_BASE_URL}/api/visits/1%202%2F3`,
             expect.anything()
         );
     });

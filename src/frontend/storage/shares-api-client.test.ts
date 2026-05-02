@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
+import { API_BASE_URL } from '../config';
 import { SharesApiClient, SharesApiError } from './shares-api-client';
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -14,10 +15,7 @@ describe('SharesApiClient', () => {
 
     beforeEach(() => {
         fetchMock = vi.spyOn(globalThis, 'fetch');
-        client = new SharesApiClient({
-            baseUrl: 'https://api.example.com/',
-            getIdToken: () => 'test-token',
-        });
+        client = new SharesApiClient({ getIdToken: () => 'test-token' });
     });
 
     afterEach(() => {
@@ -31,7 +29,7 @@ describe('SharesApiClient', () => {
 
         expect(shareId).toBe('share-uuid');
         expect(fetchMock).toHaveBeenCalledWith(
-            'https://api.example.com/api/shares',
+            `${API_BASE_URL}/api/shares`,
             expect.objectContaining({
                 method: 'POST',
                 headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
@@ -40,10 +38,7 @@ describe('SharesApiClient', () => {
     });
 
     it('throws SharesApiError without calling fetch when create() has no token', async () => {
-        const noTokenClient = new SharesApiClient({
-            baseUrl: 'https://api.example.com',
-            getIdToken: () => null,
-        });
+        const noTokenClient = new SharesApiClient({ getIdToken: () => null });
 
         await expect(noTokenClient.create()).rejects.toBeInstanceOf(SharesApiError);
         expect(fetchMock).not.toHaveBeenCalled();
@@ -66,7 +61,7 @@ describe('SharesApiClient', () => {
             { stationId: '222', styleId: 4, updatedAt: 2000 },
         ]);
         expect(fetchMock).toHaveBeenCalledWith(
-            'https://api.example.com/shares/share-uuid',
+            `${API_BASE_URL}/shares/share-uuid`,
             expect.objectContaining({ method: 'GET' })
         );
         const init = fetchMock.mock.calls[0][1] as RequestInit;
@@ -79,7 +74,7 @@ describe('SharesApiClient', () => {
         await client.get('a/b c');
 
         expect(fetchMock).toHaveBeenCalledWith(
-            'https://api.example.com/shares/a%2Fb%20c',
+            `${API_BASE_URL}/shares/a%2Fb%20c`,
             expect.anything()
         );
     });

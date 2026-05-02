@@ -1,7 +1,7 @@
 import type { CreateShareResponse, GetShareResponse, VisitRecord } from '@shared/api-types';
+import { API_BASE_URL } from '../config';
 
 export interface SharesApiClientOptions {
-    baseUrl: string;
     getIdToken: () => string | null;
 }
 
@@ -16,11 +16,9 @@ export class SharesApiError extends Error {
 }
 
 export class SharesApiClient {
-    private readonly baseUrl: string;
     private readonly getIdToken: () => string | null;
 
     constructor(options: SharesApiClientOptions) {
-        this.baseUrl = options.baseUrl.replace(/\/$/, '');
         this.getIdToken = options.getIdToken;
     }
 
@@ -30,7 +28,7 @@ export class SharesApiClient {
             throw new SharesApiError('Missing ID token; user must be signed in');
         }
 
-        const response = await fetch(`${this.baseUrl}/api/shares`, {
+        const response = await fetch(`${API_BASE_URL}/api/shares`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -43,7 +41,7 @@ export class SharesApiClient {
     }
 
     async get(shareId: string): Promise<VisitRecord[]> {
-        const response = await fetch(`${this.baseUrl}/shares/${encodeURIComponent(shareId)}`, {
+        const response = await fetch(`${API_BASE_URL}/shares/${encodeURIComponent(shareId)}`, {
             method: 'GET',
         });
 

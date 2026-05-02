@@ -1,5 +1,4 @@
 import queryString from 'query-string';
-import { API_BASE_URL } from './config';
 import { MemoryStorage } from './storage/memory-storage';
 import { RemoteStorage } from './storage/remote-storage';
 import { SharesApiClient } from './storage/shares-api-client';
@@ -90,7 +89,6 @@ export class StyleManager {
 export interface CreateStyleManagerOptions {
     authState: AuthState;
     getIdToken: () => string | null;
-    apiBaseUrl?: string;
     onSyncError?: (error: VisitsApiError | Error, stationId: string) => void;
 }
 
@@ -103,13 +101,9 @@ export interface CreateStyleManagerOptions {
  */
 export async function createStyleManager(options: CreateStyleManagerOptions): Promise<StyleManager> {
     const queries = queryString.parse(location.search);
-    const baseUrl = options.apiBaseUrl ?? API_BASE_URL;
 
     if (typeof queries.share === 'string' && queries.share.length > 0) {
-        const sharesClient = new SharesApiClient({
-            baseUrl,
-            getIdToken: options.getIdToken,
-        });
+        const sharesClient = new SharesApiClient({ getIdToken: options.getIdToken });
         const visits = await sharesClient.get(queries.share);
         const entries: Array<[string, string]> = visits.map((visit) => [
             visit.stationId,
@@ -119,10 +113,7 @@ export async function createStyleManager(options: CreateStyleManagerOptions): Pr
     }
 
     if (options.authState.idToken) {
-        const client = new VisitsApiClient({
-            baseUrl,
-            getIdToken: options.getIdToken,
-        });
+        const client = new VisitsApiClient({ getIdToken: options.getIdToken });
         const storage = await RemoteStorage.create({
             client,
             onSyncError: options.onSyncError,

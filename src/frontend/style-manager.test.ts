@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { API_BASE_URL } from './config';
 import { StyleManager, createStyleManager } from './style-manager';
 import { MemoryStorage } from './storage/memory-storage';
 import { RemoteStorage } from './storage/remote-storage';
@@ -299,14 +300,13 @@ describe('createStyleManager', () => {
             const manager = await createStyleManager({
                 authState: signedInAuth,
                 getIdToken: () => 'token-abc',
-                apiBaseUrl: 'https://api.example.com',
             });
 
             expect(manager.storage).toBeInstanceOf(MemoryStorage);
             expect(manager.storage.getItem('111')).toBe('1');
             expect(manager.storage.getItem('222')).toBe('4');
             expect(fetchSpy).toHaveBeenCalledWith(
-                'https://api.example.com/shares/abc-123',
+                `${API_BASE_URL}/shares/abc-123`,
                 expect.objectContaining({ method: 'GET' })
             );
         } finally {
@@ -328,13 +328,12 @@ describe('createStyleManager', () => {
             const manager = await createStyleManager({
                 authState: signedInAuth,
                 getIdToken: () => 'token-abc',
-                apiBaseUrl: 'https://api.example.com',
             });
 
             expect(manager.storage).toBeInstanceOf(RemoteStorage);
             expect(manager.storage.getItem('111')).toBe('2');
             expect(fetchSpy).toHaveBeenCalledWith(
-                'https://api.example.com/api/visits',
+                `${API_BASE_URL}/api/visits`,
                 expect.objectContaining({
                     method: 'GET',
                     headers: expect.objectContaining({ Authorization: 'Bearer token-abc' }),
