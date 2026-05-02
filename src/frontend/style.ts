@@ -1,15 +1,9 @@
-import { RoadStation } from './road-station';
 import type { Storage } from './storage';
 
 export const STYLE_COUNT = 5;
 const MAX_STYLE_ID = STYLE_COUNT - 1;
 
-function getStationId(station: RoadStation | string): string {
-    return typeof station === 'string' ? station : station.stationId;
-}
-
-export function getStyle(storage: Storage, station: RoadStation | string): number {
-    const stationId = getStationId(station);
+export function getStyle(storage: Storage, stationId: string): number {
     const styleId = storage.getItem(stationId);
     if (styleId) {
         return parseInt(styleId);
@@ -17,8 +11,7 @@ export function getStyle(storage: Storage, station: RoadStation | string): numbe
     return 0;
 }
 
-export function changeStyle(storage: Storage, station: RoadStation | string): number {
-    const stationId = getStationId(station);
+export function changeStyle(storage: Storage, stationId: string): number {
     const current = getStyle(storage, stationId);
     if (current >= MAX_STYLE_ID) {
         return resetStyle(storage, stationId);
@@ -28,8 +21,7 @@ export function changeStyle(storage: Storage, station: RoadStation | string): nu
     return next;
 }
 
-export function resetStyle(storage: Storage, station: RoadStation | string): number {
-    const stationId = getStationId(station);
+export function resetStyle(storage: Storage, stationId: string): number {
     storage.removeItem(stationId);
     return 0;
 }

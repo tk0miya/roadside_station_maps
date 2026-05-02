@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 
-import { createRoadStation } from '../road-station';
 import { MARKER_ICONS } from '../marker-icons';
 import type { Storage } from '../storage';
 import { changeStyle, getStyle, resetStyle } from '../style';
@@ -33,8 +32,8 @@ export function Markers(props: MarkersProps) {
         storageRef.current = props.storage;
         if (!props.map) return;
         props.map.data.setStyle((feature: google.maps.Data.Feature) => {
-            const station = createRoadStation(feature);
-            return styleOptionsFor(getStyle(storageRef.current, station));
+            const stationId = feature.getProperty('stationId') as string;
+            return styleOptionsFor(getStyle(storageRef.current, stationId));
         });
     }, [props.map, props.storage]);
 
@@ -46,8 +45,8 @@ export function Markers(props: MarkersProps) {
         const doubleClickListener = props.map.data.addListener('dblclick', onMarkerDoubleClick);
         const rightClickListener = props.map.data.addListener('rightclick', onMarkerRightClick);
         props.map.data.setStyle((feature: google.maps.Data.Feature) => {
-            const station = createRoadStation(feature);
-            return styleOptionsFor(getStyle(storageRef.current, station));
+            const stationId = feature.getProperty('stationId') as string;
+            return styleOptionsFor(getStyle(storageRef.current, stationId));
         });
 
         return () => {
@@ -59,8 +58,8 @@ export function Markers(props: MarkersProps) {
 
     const onMarkerClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map && selectedFeatureRef.current === event.feature) {
-            const station = createRoadStation(event.feature);
-            const newStyleId = changeStyle(storageRef.current, station);
+            const stationId = event.feature.getProperty('stationId') as string;
+            const newStyleId = changeStyle(storageRef.current, stationId);
             props.map.data.overrideStyle(event.feature, styleOptionsFor(newStyleId));
             props.onStyleChange();
         } else {
@@ -70,8 +69,8 @@ export function Markers(props: MarkersProps) {
 
     const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map) {
-            const station = createRoadStation(event.feature);
-            const newStyleId = changeStyle(storageRef.current, station);
+            const stationId = event.feature.getProperty('stationId') as string;
+            const newStyleId = changeStyle(storageRef.current, stationId);
             props.map.data.overrideStyle(event.feature, styleOptionsFor(newStyleId));
             props.onStyleChange();
         }
@@ -79,8 +78,8 @@ export function Markers(props: MarkersProps) {
 
     const onMarkerRightClick = (event: google.maps.Data.MouseEvent) => {
         if (props.map) {
-            const station = createRoadStation(event.feature);
-            const newStyleId = resetStyle(storageRef.current, station);
+            const stationId = event.feature.getProperty('stationId') as string;
+            const newStyleId = resetStyle(storageRef.current, stationId);
             props.map.data.overrideStyle(event.feature, styleOptionsFor(newStyleId));
             props.onFeatureSelect(null);
             props.onStyleChange();
