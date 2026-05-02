@@ -4,7 +4,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { StyleManager, createStyleManager } from './style-manager';
 import { MemoryStorage } from './storage/memory-storage';
-import { LocalStorage } from './storage/local-storage';
 import { RemoteStorage } from './storage/remote-storage';
 import { createMockStation, createMockStations } from '../test-utils/test-utils';
 import type { AuthState } from '@shared/auth-types';
@@ -209,12 +208,8 @@ describe('StyleManager', () => {
     });
 
     describe('setStations', () => {
-        beforeEach(() => {
-            localStorage.clear();
-        });
-
-        it('should remove stored entries for stations not present in the GeoJSON (LocalStorage)', () => {
-            const storage = new LocalStorage();
+        it('should remove stored entries for stations not present in the GeoJSON', () => {
+            const storage = new MemoryStorage();
             storage.setItem('18786', '1');  // exists in mock stations
             storage.setItem('99999', '2');  // does not exist
             const styleManager = new StyleManager(storage);
@@ -227,7 +222,7 @@ describe('StyleManager', () => {
         });
 
         it('should keep all stored entries when every stationId exists in the GeoJSON', () => {
-            const storage = new LocalStorage();
+            const storage = new MemoryStorage();
             storage.setItem('18786', '1');
             storage.setItem('18787', '2');
             const styleManager = new StyleManager(storage);
@@ -239,8 +234,8 @@ describe('StyleManager', () => {
             expect(storage.getItem('18787')).toBe('2');
         });
 
-        it('should reflect cleanup in countByStyle (LocalStorage)', () => {
-            const storage = new LocalStorage();
+        it('should reflect cleanup in countByStyle', () => {
+            const storage = new MemoryStorage();
             storage.setItem('18786', '1');  // valid
             storage.setItem('99999', '2');  // invalid (removed station)
             const styleManager = new StyleManager(storage);
@@ -273,12 +268,13 @@ describe('createStyleManager', () => {
         Object.defineProperty(window, 'location', { value: originalLocation, writable: true });
     });
 
-    it('returns a LocalStorage-backed StyleManager for guests', async () => {
+    it('returns an empty MemoryStorage-backed StyleManager for guests', async () => {
         const manager = await createStyleManager({
             authState: guestAuth,
             getIdToken: () => null,
         });
-        expect(manager.storage).toBeInstanceOf(LocalStorage);
+        expect(manager.storage).toBeInstanceOf(MemoryStorage);
+        expect(manager.storage.listItems()).toEqual([]);
     });
 
     it('returns a MemoryStorage-backed StyleManager hydrated from the shares API when share is set', async () => {

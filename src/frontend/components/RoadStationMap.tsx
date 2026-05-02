@@ -53,7 +53,7 @@ export function RoadStationMap() {
     }, []);
 
     // Build the StyleManager whenever the auth state changes. RemoteStorage hydrates
-    // asynchronously when signed in; LocalStorage / MemoryStorage resolve immediately.
+    // asynchronously when signed in; MemoryStorage resolves immediately.
     useEffect(() => {
         let cancelled = false;
         setStyleManager((previous) => {
