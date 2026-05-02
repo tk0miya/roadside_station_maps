@@ -1,14 +1,12 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
-import { ClipboardButton } from './ClipboardButton';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { AuthState } from '@shared/auth-types';
 import { createMockMap } from '../../test-utils/test-utils';
-import { StyleManager } from '../style-manager';
-import { QueryStorage } from '../storage/query-storage';
+import { ClipboardButton } from './ClipboardButton';
 
-// Mock modules
 vi.mock('clipboard', () => ({
     default: vi.fn(function () {
         return {
@@ -18,8 +16,18 @@ vi.mock('clipboard', () => ({
     }),
 }));
 
+const mockAuth = vi.hoisted(() => ({
+    state: { user: null, idToken: null } as AuthState,
+}));
 
-// Mock global objects
+vi.mock('../auth/use-auth', () => ({
+    useAuth: () => mockAuth.state,
+}));
+
+vi.mock('../auth/auth-manager', () => ({
+    getAuthManagerInstance: () => ({ getState: () => mockAuth.state }),
+}));
+
 Object.defineProperty(global, 'google', {
     value: {
         maps: {
@@ -37,9 +45,9 @@ describe('ClipboardButton', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        mockAuth.state = { user: null, idToken: null };
         originalLocation = window.location;
 
-        // Mock location
         Object.defineProperty(window, 'location', {
             value: {
                 ...originalLocation,
@@ -57,27 +65,41 @@ describe('ClipboardButton', () => {
         });
     });
 
-    it('should return null (no visual rendering)', () => {
-        const storage = new QueryStorage();
-        const styleManager = new StyleManager(storage);
-        const { container } = render(<ClipboardButton map={null} styleManager={styleManager} />);
+    it('renders nothing visible', () => {
+        const { container } = render(<ClipboardButton map={null} />);
         expect(container.firstChild).toBeNull();
     });
 
-    it('should add clipboard button to map controls when map and styleManager are provided', () => {
+    it('does not add a control when the user is signed out', () => {
         const mockMap = createMockMap();
-        const storage = new QueryStorage();
-        const styleManager = new StyleManager(storage);
-        
-        render(<ClipboardButton map={mockMap} styleManager={styleManager} />);
 
-        // Should add button to TOP_LEFT controls
-        expect(mockMap.controls[1].push).toHaveBeenCalledTimes(1);
-        
-        // Check the element that was pushed
-        const pushCall = (mockMap.controls[1].push as any).mock.calls[0];
-        const buttonElement = pushCall[0] as HTMLElement;
-        expect(buttonElement.className).toBe('clipboard');
-        expect(buttonElement.innerText).toBe('シェア');
+        render(<ClipboardButton map={mockMap} />);
+
+        expect(mockMap.controls[1].push).not.toHaveBeenCalled();
+    });
+
+    it('adds the share button when the user is signed in', async () => {
+        mockAuth.state = { user: { sub: 'user-1' }, idToken: 'token-abc' };
+        const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+            new Response(JSON.stringify({ shareId: 'share-uuid' }), {
+                status: 201,
+                headers: { 'Content-Type': 'application/json' },
+            })
+        );
+
+        try {
+            const mockMap = createMockMap();
+
+            render(<ClipboardButton map={mockMap} />);
+
+            expect(mockMap.controls[1].push).toHaveBeenCalledTimes(1);
+
+            const pushCall = (mockMap.controls[1].push as any).mock.calls[0];
+            const buttonElement = pushCall[0] as HTMLElement;
+            expect(buttonElement.className).toBe('clipboard');
+            expect(buttonElement.innerText).toBe('シェア');
+        } finally {
+            fetchSpy.mockRestore();
+        }
     });
 });

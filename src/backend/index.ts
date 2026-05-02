@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { AppEnv } from './env';
+import { sharesAuthedRouter, sharesPublicRouter } from './handlers/shares';
 import { visitsRouter } from './handlers/visits';
 import { requireAuth } from './middleware/auth';
 import { corsMiddleware } from './middleware/cors';
@@ -10,8 +11,11 @@ app.use('*', corsMiddleware());
 
 app.get('/health', (c) => c.json({ status: 'ok' }));
 
+app.route('/shares', sharesPublicRouter);
+
 app.use('/api/*', requireAuth());
 app.route('/api/visits', visitsRouter);
+app.route('/api/shares', sharesAuthedRouter);
 
 app.onError((error, c) => {
     console.error(error);

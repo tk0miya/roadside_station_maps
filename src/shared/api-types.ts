@@ -12,6 +12,21 @@ export interface PutVisitRequest {
     styleId: number;
 }
 
+export interface BulkPutVisitsRequest {
+    visits: Array<{
+        stationId: string;
+        styleId: number;
+    }>;
+}
+
 export interface ApiErrorResponse {
     error: string;
+}
+
+export interface CreateShareResponse {
+    shareId: string;
+}
+
+export interface GetShareResponse {
+    visits: VisitRecord[];
 }
