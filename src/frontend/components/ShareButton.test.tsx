@@ -5,7 +5,7 @@ import { render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthState } from '@shared/auth-types';
 import { createMockMap } from '../../test-utils/test-utils';
-import { ClipboardButton } from './ClipboardButton';
+import { ShareButton } from './ShareButton';
 
 vi.mock('clipboard', () => ({
     default: vi.fn(function () {
@@ -40,7 +40,7 @@ Object.defineProperty(global, 'google', {
     writable: true,
 });
 
-describe('ClipboardButton', () => {
+describe('ShareButton', () => {
     let originalLocation: Location;
 
     beforeEach(() => {
@@ -66,14 +66,14 @@ describe('ClipboardButton', () => {
     });
 
     it('renders nothing visible', () => {
-        const { container } = render(<ClipboardButton map={null} />);
+        const { container } = render(<ShareButton map={null} />);
         expect(container.firstChild).toBeNull();
     });
 
     it('does not add a control when the user is signed out', () => {
         const mockMap = createMockMap();
 
-        render(<ClipboardButton map={mockMap} />);
+        render(<ShareButton map={mockMap} />);
 
         expect(mockMap.controls[1].push).not.toHaveBeenCalled();
     });
@@ -90,13 +90,13 @@ describe('ClipboardButton', () => {
         try {
             const mockMap = createMockMap();
 
-            render(<ClipboardButton map={mockMap} />);
+            render(<ShareButton map={mockMap} />);
 
             expect(mockMap.controls[1].push).toHaveBeenCalledTimes(1);
 
             const pushCall = (mockMap.controls[1].push as any).mock.calls[0];
             const buttonElement = pushCall[0] as HTMLElement;
-            expect(buttonElement.className).toBe('clipboard');
+            expect(buttonElement.className).toBe('share');
             expect(buttonElement.innerText).toBe('シェア');
         } finally {
             fetchSpy.mockRestore();

@@ -30,11 +30,11 @@ async function fadeOut(element: HTMLElement, delay: number): Promise<void> {
     });
 }
 
-interface ClipboardButtonProps {
+interface ShareButtonProps {
     map: google.maps.Map | null;
 }
 
-export function ClipboardButton(props: ClipboardButtonProps) {
+export function ShareButton(props: ShareButtonProps) {
     const auth = useAuth();
     const [lastCopiedAt, setLastCopiedAt] = useState<number | null>(null);
     const [shareId, setShareId] = useState<string | null>(null);
@@ -78,9 +78,9 @@ export function ClipboardButton(props: ClipboardButtonProps) {
     useEffect(() => {
         if (!props.map || !isSignedIn) return;
 
-        // Create clipboard button
+        // Create share button
         const div = document.createElement('div');
-        div.className = 'clipboard';
+        div.className = 'share';
         div.innerText = 'シェア';
 
         // Initialize clipboard functionality with direct element reference
@@ -118,7 +118,7 @@ export function ClipboardButton(props: ClipboardButtonProps) {
 
             const topControls = props.map.controls[google.maps.ControlPosition.TOP_CENTER];
             const messageDiv = document.createElement('div');
-            messageDiv.className = 'clipboard-message';
+            messageDiv.className = 'share-message';
             messageDiv.innerText = 'クリップボードにコピーしました。';
 
             topControls.push(messageDiv);
