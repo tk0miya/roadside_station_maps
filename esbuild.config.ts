@@ -1,4 +1,5 @@
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
 // Common configuration
@@ -18,7 +19,7 @@ const config: esbuild.BuildOptions = {
     sourcemap: true,
     minify: true,
     alias: {
-        '@shared': path.resolve(__dirname, 'src/shared'),
+        '@shared': path.resolve(import.meta.dirname, 'src/shared'),
     },
     define: {
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
@@ -58,7 +59,7 @@ const serve = (): Promise<esbuild.ServeResult> => {
 export { build, watch, serve, config };
 
 // CLI handling
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const args = process.argv.slice(2);
     
     if (args.includes('--watch')) {
