@@ -6,7 +6,7 @@
 // they can live in source. Update PRODUCTION_API after running
 // `wrangler deploy` to point at the actual *.workers.dev (or custom)
 // hostname for this Worker.
-const PRODUCTION_API = 'https://roadside-station-maps-api.workers.dev';
+const PRODUCTION_API = 'https://roadside-station-maps-api-production.i-tkomiya.workers.dev';
 const DEVELOPMENT_API = 'http://localhost:8787';
 
 const isDevelopmentHost =
