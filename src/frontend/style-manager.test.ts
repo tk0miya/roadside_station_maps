@@ -6,7 +6,7 @@ import { API_BASE_URL } from './config';
 import { StyleManager, createStyleManager } from './style-manager';
 import { MemoryStorage } from './storage/memory-storage';
 import { RemoteStorage } from './storage/remote-storage';
-import { createMockStation, createMockStations } from '../test-utils/test-utils';
+import { createMockStation } from '../test-utils/test-utils';
 import type { AuthState } from '@shared/auth-types';
 
 
@@ -179,47 +179,6 @@ describe('StyleManager', () => {
             const counts = styleManager.countByStyle(20);
 
             expect(counts).toEqual({ 0: 15, 1: 2, 2: 1, 3: 1, 4: 1 });
-        });
-    });
-
-    describe('setStations', () => {
-        it('should remove stored entries for stations not present in the GeoJSON', () => {
-            const storage = new MemoryStorage();
-            storage.setItem('18786', '1');  // exists in mock stations
-            storage.setItem('99999', '2');  // does not exist
-            const styleManager = new StyleManager(storage);
-
-            const mockStations = createMockStations(3);
-            styleManager.setStations(mockStations);
-
-            expect(storage.getItem('18786')).toBe('1');
-            expect(storage.getItem('99999')).toBeNull();
-        });
-
-        it('should keep all stored entries when every stationId exists in the GeoJSON', () => {
-            const storage = new MemoryStorage();
-            storage.setItem('18786', '1');
-            storage.setItem('18787', '2');
-            const styleManager = new StyleManager(storage);
-
-            const mockStations = createMockStations(3);
-            styleManager.setStations(mockStations);
-
-            expect(storage.getItem('18786')).toBe('1');
-            expect(storage.getItem('18787')).toBe('2');
-        });
-
-        it('should reflect cleanup in countByStyle', () => {
-            const storage = new MemoryStorage();
-            storage.setItem('18786', '1');  // valid
-            storage.setItem('99999', '2');  // invalid (removed station)
-            const styleManager = new StyleManager(storage);
-
-            const mockStations = createMockStations(3);
-            styleManager.setStations(mockStations);
-
-            const counts = styleManager.countByStyle(3);
-            expect(counts).toEqual({ 0: 2, 1: 1, 2: 0, 3: 0, 4: 0 });
         });
     });
 

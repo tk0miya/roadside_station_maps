@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuthManager } from '../auth/auth-context';
+import { reconcileVisits } from '../reconcile-visits';
 import { RemoteStorage } from '../storage/remote-storage';
 import { type StyleManager, createStyleManager } from '../style-manager';
 import { StationsGeoJSON } from '../types/geojson';
@@ -86,10 +87,10 @@ export function RoadStationMap() {
         };
     }, [auth.idToken, authManager]);
 
-    // Apply the station list to the StyleManager once both are ready.
+    // Drop stored visits for stations that no longer exist once both are ready.
     useEffect(() => {
         if (!styleManager || !stations) return;
-        styleManager.setStations(stations);
+        reconcileVisits(styleManager.storage, stations);
         setStyleVersion((v) => v + 1);
     }, [styleManager, stations]);
 
