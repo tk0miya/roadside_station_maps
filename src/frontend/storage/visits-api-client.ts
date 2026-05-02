@@ -1,7 +1,7 @@
 import type { ListVisitsResponse, PutVisitRequest, VisitRecord } from '@shared/api-types';
+import { API_BASE_URL } from '../config';
 
 export interface VisitsApiClientOptions {
-    baseUrl: string;
     getIdToken: () => string | null;
 }
 
@@ -16,11 +16,9 @@ export class VisitsApiError extends Error {
 }
 
 export class VisitsApiClient {
-    private readonly baseUrl: string;
     private readonly getIdToken: () => string | null;
 
     constructor(options: VisitsApiClientOptions) {
-        this.baseUrl = options.baseUrl.replace(/\/$/, '');
         this.getIdToken = options.getIdToken;
     }
 
@@ -49,7 +47,7 @@ export class VisitsApiClient {
             throw new VisitsApiError('Missing ID token; user must be signed in');
         }
 
-        const response = await fetch(`${this.baseUrl}${path}`, {
+        const response = await fetch(`${API_BASE_URL}${path}`, {
             ...init,
             headers: {
                 ...(init.headers ?? {}),

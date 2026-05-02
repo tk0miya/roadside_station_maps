@@ -2,7 +2,6 @@ import Clipboard from 'clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { getAuthManagerInstance } from '../auth/auth-manager';
 import { useAuth } from '../auth/use-auth';
-import { API_BASE_URL } from '../config';
 import { SharesApiClient } from '../storage/shares-api-client';
 
 // Build the shareable URL for the given share id
@@ -55,10 +54,7 @@ export function ShareButton(props: ShareButtonProps) {
         }
 
         let cancelled = false;
-        const client = new SharesApiClient({
-            baseUrl: API_BASE_URL,
-            getIdToken: () => getAuthManagerInstance().getState().idToken,
-        });
+        const client = new SharesApiClient({ getIdToken: () => getAuthManagerInstance().getState().idToken });
         client
             .create()
             .then((id) => {
