@@ -1,6 +1,7 @@
 {
     "name": "roadside_station_maps",
     "version": "0.1.0",
+    "type": "module",
     "files": [
         "data",
         "html"
@@ -26,7 +27,8 @@
         "generate:geojson": "npx tsx src/scripts/generate-geojson.ts",
         "generate:stations": "npx tsx src/scripts/generate-stationlist.ts",
         "generate:all": "npm run generate:stations && npm run generate:geojson",
-        "test": "vitest"
+        "test": "vitest",
+        "ci": "npm run lint && npm run typecheck && npm test"
     },
     "dependencies": {
         "@react-oauth/google": "^0.13.5",
