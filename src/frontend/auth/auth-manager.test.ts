@@ -2,7 +2,8 @@
  * @vitest-environment jsdom
  * @vitest-environment-options { "url": "http://localhost" }
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
+import { API_BASE_URL } from '../config';
 import {
     ACCESS_TOKEN_STORAGE_KEY,
     AuthManager,
@@ -47,17 +48,20 @@ function jsonResponse(body: unknown, status = 200): Response {
     });
 }
 
-function makeFetch() {
-    return vi.fn() as unknown as typeof fetch & { mock: { calls: unknown[][] } };
-}
-
 describe('AuthManager', () => {
+    let fetchMock: MockInstance<typeof fetch>;
+
     beforeEach(() => {
         localStorage.clear();
+        fetchMock = vi.spyOn(globalThis, 'fetch');
+    });
+
+    afterEach(() => {
+        fetchMock.mockRestore();
     });
 
     it('starts logged out with empty storage', () => {
-        const manager = new AuthManager({ fetchImpl: makeFetch() });
+        const manager = new AuthManager();
 
         expect(manager.getState()).toEqual({ user: null, accessToken: null });
         expect(manager.getRefreshToken()).toBeNull();
@@ -69,7 +73,7 @@ describe('AuthManager', () => {
         localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, access);
         localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refresh);
 
-        const manager = new AuthManager({ fetchImpl: makeFetch() });
+        const manager = new AuthManager();
 
         expect(manager.getState()).toEqual({
             user: { sub: 'user-42' },
@@ -84,7 +88,7 @@ describe('AuthManager', () => {
         localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, expired);
         localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refresh);
 
-        const manager = new AuthManager({ fetchImpl: makeFetch() });
+        const manager = new AuthManager();
 
         expect(manager.getState().user).toEqual({ sub: 'user-3' });
         expect(manager.getState().accessToken).toBeNull();
@@ -94,7 +98,7 @@ describe('AuthManager', () => {
     it('drops a stray access token if no refresh token is stored', () => {
         localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, freshAccessToken());
 
-        const manager = new AuthManager({ fetchImpl: makeFetch() });
+        const manager = new AuthManager();
 
         expect(manager.getState()).toEqual({ user: null, accessToken: null });
         expect(localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY)).toBeNull();
@@ -103,7 +107,7 @@ describe('AuthManager', () => {
     it('removes the legacy id_token storage key on startup', () => {
         localStorage.setItem(LEGACY_ID_TOKEN_STORAGE_KEY, 'legacy-token');
 
-        new AuthManager({ fetchImpl: makeFetch() });
+        new AuthManager();
 
         expect(localStorage.getItem(LEGACY_ID_TOKEN_STORAGE_KEY)).toBeNull();
     });
@@ -111,20 +115,17 @@ describe('AuthManager', () => {
     it('login posts the auth code and persists the returned tokens', async () => {
         const access = freshAccessToken('user-5');
         const refresh = refreshToken('user-5');
-        const fetchImpl = vi.fn().mockResolvedValue(
+        fetchMock.mockResolvedValueOnce(
             jsonResponse({ accessToken: access, refreshToken: refresh, user: { sub: 'user-5' } })
         );
-        const manager = new AuthManager({
-            fetchImpl: fetchImpl as unknown as typeof fetch,
-            apiBaseUrl: 'https://api.example',
-        });
+        const manager = new AuthManager();
         const listener = vi.fn();
         manager.subscribe(listener);
 
         await manager.login('auth-code-123');
 
-        expect(fetchImpl).toHaveBeenCalledWith(
-            'https://api.example/auth/login',
+        expect(fetchMock).toHaveBeenCalledWith(
+            `${API_BASE_URL}/auth/login`,
             expect.objectContaining({
                 method: 'POST',
                 body: JSON.stringify({ code: 'auth-code-123' }),
@@ -137,8 +138,8 @@ describe('AuthManager', () => {
     });
 
     it('login throws and does not persist when the server responds with an error', async () => {
-        const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ error: 'bad code' }, 401));
-        const manager = new AuthManager({ fetchImpl: fetchImpl as unknown as typeof fetch });
+        fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'bad code' }, 401));
+        const manager = new AuthManager();
 
         await expect(manager.login('x')).rejects.toThrow('bad code');
         expect(localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY)).toBeNull();
@@ -150,17 +151,14 @@ describe('AuthManager', () => {
         localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken('user-9'));
 
         const newAccess = freshAccessToken('user-9');
-        const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ accessToken: newAccess }));
-        const manager = new AuthManager({
-            fetchImpl: fetchImpl as unknown as typeof fetch,
-            apiBaseUrl: 'https://api.example',
-        });
+        fetchMock.mockResolvedValueOnce(jsonResponse({ accessToken: newAccess }));
+        const manager = new AuthManager();
 
         const result = await manager.refresh();
 
         expect(result).toBe(newAccess);
-        expect(fetchImpl).toHaveBeenCalledWith(
-            'https://api.example/auth/refresh',
+        expect(fetchMock).toHaveBeenCalledWith(
+            `${API_BASE_URL}/auth/refresh`,
             expect.objectContaining({ method: 'POST' })
         );
         expect(manager.getState()).toEqual({ user: { sub: 'user-9' }, accessToken: newAccess });
@@ -170,8 +168,8 @@ describe('AuthManager', () => {
     it('coalesces concurrent refresh calls into a single network request', async () => {
         localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken());
         const newAccess = freshAccessToken();
-        const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ accessToken: newAccess }));
-        const manager = new AuthManager({ fetchImpl: fetchImpl as unknown as typeof fetch });
+        fetchMock.mockResolvedValue(jsonResponse({ accessToken: newAccess }));
+        const manager = new AuthManager();
 
         const [a, b, c] = await Promise.all([
             manager.refresh(),
@@ -179,7 +177,7 @@ describe('AuthManager', () => {
             manager.refresh(),
         ]);
 
-        expect(fetchImpl).toHaveBeenCalledTimes(1);
+        expect(fetchMock).toHaveBeenCalledTimes(1);
         expect(a).toBe(newAccess);
         expect(b).toBe(newAccess);
         expect(c).toBe(newAccess);
@@ -189,8 +187,8 @@ describe('AuthManager', () => {
         localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, freshAccessToken());
         localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken());
 
-        const fetchImpl = vi.fn().mockRejectedValue(new Error('offline'));
-        const manager = new AuthManager({ fetchImpl: fetchImpl as unknown as typeof fetch });
+        fetchMock.mockRejectedValueOnce(new Error('offline'));
+        const manager = new AuthManager();
 
         const result = await manager.refresh();
         expect(result).toBeNull();
@@ -201,8 +199,8 @@ describe('AuthManager', () => {
         localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, expiredAccessToken());
         localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken());
 
-        const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ error: 'expired' }, 401));
-        const manager = new AuthManager({ fetchImpl: fetchImpl as unknown as typeof fetch });
+        fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'expired' }, 401));
+        const manager = new AuthManager();
 
         const result = await manager.refresh();
         expect(result).toBeNull();
@@ -211,24 +209,22 @@ describe('AuthManager', () => {
     });
 
     it('refresh does nothing without a refresh token', async () => {
-        const fetchImpl = vi.fn();
-        const manager = new AuthManager({ fetchImpl: fetchImpl as unknown as typeof fetch });
+        const manager = new AuthManager();
 
         const result = await manager.refresh();
         expect(result).toBeNull();
-        expect(fetchImpl).not.toHaveBeenCalled();
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it('ensureFreshAccessToken is a no-op when access token has plenty of life left', async () => {
         localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, freshAccessToken());
         localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken());
 
-        const fetchImpl = vi.fn();
-        const manager = new AuthManager({ fetchImpl: fetchImpl as unknown as typeof fetch });
+        const manager = new AuthManager();
 
         await manager.ensureFreshAccessToken();
 
-        expect(fetchImpl).not.toHaveBeenCalled();
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it('ensureFreshAccessToken refreshes when the access token is expired', async () => {
@@ -236,24 +232,24 @@ describe('AuthManager', () => {
         localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken());
 
         const newAccess = freshAccessToken();
-        const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ accessToken: newAccess }));
-        const manager = new AuthManager({ fetchImpl: fetchImpl as unknown as typeof fetch });
+        fetchMock.mockResolvedValueOnce(jsonResponse({ accessToken: newAccess }));
+        const manager = new AuthManager();
 
         await manager.ensureFreshAccessToken();
 
-        expect(fetchImpl).toHaveBeenCalledTimes(1);
+        expect(fetchMock).toHaveBeenCalledTimes(1);
         expect(manager.getState().accessToken).toBe(newAccess);
     });
 
     it('subscribers can unsubscribe', async () => {
-        const fetchImpl = vi.fn().mockResolvedValue(
+        fetchMock.mockResolvedValueOnce(
             jsonResponse({
                 accessToken: freshAccessToken(),
                 refreshToken: refreshToken(),
                 user: { sub: 'user-1' },
             })
         );
-        const manager = new AuthManager({ fetchImpl: fetchImpl as unknown as typeof fetch });
+        const manager = new AuthManager();
 
         const listener = vi.fn();
         const unsubscribe = manager.subscribe(listener);

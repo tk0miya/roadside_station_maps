@@ -46,7 +46,7 @@ function buildJwt(payload: Record<string, unknown>): string {
 }
 
 function renderWithAuth(ui: React.ReactElement, manager?: AuthManager) {
-    const m = manager ?? new AuthManager({ fetchImpl: vi.fn() as unknown as typeof fetch });
+    const m = manager ?? new AuthManager();
     return { manager: m, ...render(<AuthProvider manager={m}>{ui}</AuthProvider>) };
 }
 
@@ -104,29 +104,33 @@ describe('LoginButton', () => {
     });
 
     it('forwards the auth code to AuthManager.login on success', async () => {
-        const mockMap = createMockMap();
-        const manager = new AuthManager({
-            fetchImpl: vi.fn().mockResolvedValue(
-                new Response(
-                    JSON.stringify({
-                        accessToken: buildJwt({
-                            sub: 'user-1',
-                            sid: 'sid-1',
-                            exp: 9999999999,
-                            aud: 'api',
-                        }),
-                        refreshToken: buildJwt({ sub: 'user-1', sid: 'sid-1', aud: 'refresh' }),
-                        user: { sub: 'user-1' },
+        const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+            new Response(
+                JSON.stringify({
+                    accessToken: buildJwt({
+                        sub: 'user-1',
+                        sid: 'sid-1',
+                        exp: 9999999999,
+                        aud: 'api',
                     }),
-                    { status: 200, headers: { 'Content-Type': 'application/json' } }
-                )
-            ) as unknown as typeof fetch,
-        });
-        const loginSpy = vi.spyOn(manager, 'login');
-        renderWithAuth(<LoginButton map={mockMap} />, manager);
+                    refreshToken: buildJwt({ sub: 'user-1', sid: 'sid-1', aud: 'refresh' }),
+                    user: { sub: 'user-1' },
+                }),
+                { status: 200, headers: { 'Content-Type': 'application/json' } }
+            )
+        );
 
-        await lastUseGoogleLoginConfig?.onSuccess?.({ code: 'auth-code-xyz' });
+        try {
+            const mockMap = createMockMap();
+            const manager = new AuthManager();
+            const loginSpy = vi.spyOn(manager, 'login');
+            renderWithAuth(<LoginButton map={mockMap} />, manager);
 
-        expect(loginSpy).toHaveBeenCalledWith('auth-code-xyz');
+            await lastUseGoogleLoginConfig?.onSuccess?.({ code: 'auth-code-xyz' });
+
+            expect(loginSpy).toHaveBeenCalledWith('auth-code-xyz');
+        } finally {
+            fetchSpy.mockRestore();
+        }
     });
 });

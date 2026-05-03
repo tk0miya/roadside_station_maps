@@ -21,22 +21,13 @@ const ACCESS_TOKEN_REFRESH_LEEWAY_SECONDS = 60;
 
 type Listener = (state: AuthState) => void;
 
-export interface AuthManagerOptions {
-    fetchImpl?: typeof fetch;
-    apiBaseUrl?: string;
-}
-
 export class AuthManager {
     private state: AuthState = { user: null, accessToken: null };
     private refreshTokenValue: string | null = null;
     private listeners: Set<Listener> = new Set();
     private refreshPromise: Promise<string | null> | null = null;
-    private readonly fetchImpl: typeof fetch;
-    private readonly apiBaseUrl: string;
 
-    constructor(options: AuthManagerOptions = {}) {
-        this.fetchImpl = options.fetchImpl ?? ((...args) => fetch(...args));
-        this.apiBaseUrl = options.apiBaseUrl ?? API_BASE_URL;
+    constructor() {
         this.rehydrateFromStorage();
     }
 
@@ -61,7 +52,7 @@ export class AuthManager {
 
     async login(code: string): Promise<void> {
         const body: AuthLoginRequest = { code };
-        const response = await this.fetchImpl(`${this.apiBaseUrl}/auth/login`, {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
@@ -108,7 +99,7 @@ export class AuthManager {
         const body: AuthRefreshRequest = { refreshToken };
         let response: Response;
         try {
-            response = await this.fetchImpl(`${this.apiBaseUrl}/auth/refresh`, {
+            response = await fetch(`${API_BASE_URL}/auth/refresh`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
