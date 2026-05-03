@@ -8,6 +8,7 @@ import { ShareButton } from './ShareButton';
 import { InfoWindow } from './InfoWindow';
 import { LoginButton } from './LoginButton';
 import { Markers } from './Markers';
+import { RouteButton } from './RouteButton';
 import { StationCounter } from './StationCounter';
 
 const getCurrentPosition = (): Promise<GeolocationPosition> => {
@@ -23,6 +24,7 @@ export function RoadStationMap() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
+    const [multiSelected, setMultiSelected] = useState<google.maps.Data.Feature[]>([]);
     const [stations, setStations] = useState<StationsGeoJSON | null>(null);
     const [styleVersion, setStyleVersion] = useState(0);
     const [storage, setStorage] = useState<Storage | null>(null);
@@ -82,7 +84,10 @@ export function RoadStationMap() {
     useEffect(() => {
         if (!map) return;
 
-        map.addListener('click', () => setFeature(null));
+        map.addListener('click', () => {
+            setFeature(null);
+            setMultiSelected([]);
+        });
         getCurrentPosition().then(onLocationDetected);
     }, [map]);
 
@@ -110,6 +115,8 @@ export function RoadStationMap() {
                         map={map}
                         selectedFeature={feature}
                         onFeatureSelect={setFeature}
+                        multiSelected={multiSelected}
+                        onMultiSelectChange={setMultiSelected}
                         storage={storage}
                         stations={stations}
                         onStyleChange={() => setStyleVersion((v) => v + 1)}
@@ -123,7 +130,11 @@ export function RoadStationMap() {
                     />
                 </>
             )}
-            <InfoWindow selectedFeature={feature} map={map} />
+            <RouteButton map={map} multiSelected={multiSelected} />
+            <InfoWindow
+                selectedFeature={multiSelected.length > 0 ? null : feature}
+                map={map}
+            />
             <LoginButton map={map} />
         </>
     );
