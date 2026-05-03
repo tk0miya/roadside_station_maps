@@ -23,8 +23,6 @@ const mockAuth = vi.hoisted(() => ({
 vi.mock('../auth/auth-context', () => ({
     useAuthManager: () => ({
         getState: () => mockAuth.state,
-        updateSessionToken: vi.fn(),
-        clearSession: vi.fn(),
     }),
 }));
 

@@ -1,12 +1,8 @@
 import type { ListVisitsResponse, PutVisitRequest, VisitRecord } from '@shared/api-types';
 import { API_BASE_URL } from '../config';
 
-export const SESSION_TOKEN_HEADER = 'X-Session-Token';
-
 export interface VisitsApiClientOptions {
     getSessionToken: () => string | null;
-    onSessionRefreshed?: (token: string) => void;
-    onUnauthorized?: () => void;
 }
 
 export class VisitsApiError extends Error {
@@ -21,13 +17,9 @@ export class VisitsApiError extends Error {
 
 export class VisitsApiClient {
     private readonly getSessionToken: () => string | null;
-    private readonly onSessionRefreshed?: (token: string) => void;
-    private readonly onUnauthorized?: () => void;
 
     constructor(options: VisitsApiClientOptions) {
         this.getSessionToken = options.getSessionToken;
-        this.onSessionRefreshed = options.onSessionRefreshed;
-        this.onUnauthorized = options.onUnauthorized;
     }
 
     async list(): Promise<VisitRecord[]> {
@@ -62,15 +54,6 @@ export class VisitsApiClient {
                 Authorization: `Bearer ${token}`,
             },
         });
-
-        const refreshed = response.headers.get(SESSION_TOKEN_HEADER);
-        if (refreshed) {
-            this.onSessionRefreshed?.(refreshed);
-        }
-
-        if (response.status === 401) {
-            this.onUnauthorized?.();
-        }
 
         if (!response.ok) {
             const message = await safeReadError(response);
