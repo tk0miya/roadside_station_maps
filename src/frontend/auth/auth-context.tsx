@@ -17,10 +17,13 @@ export function useAuthManager(): AuthManager {
     if (!manager) {
         throw new Error('useAuthManager must be used within an AuthProvider');
     }
-    // Subscribe to state changes so consumers re-render on login/logout.
+    // Subscribe to manager notifications so consumers re-render on login/logout
+    // or when other observable fields (e.g. silentSignInSettled) change. The
+    // snapshot is a version counter that increments on every notify so
+    // useSyncExternalStore can detect changes regardless of which field moved.
     useSyncExternalStore(
         (callback) => manager.subscribe(callback),
-        () => manager.getState()
+        () => manager.getRevision()
     );
     return manager;
 }

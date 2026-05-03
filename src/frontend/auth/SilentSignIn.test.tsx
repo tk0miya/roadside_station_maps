@@ -7,8 +7,16 @@ import { AuthProvider } from './auth-context';
 import { AuthManager, ID_TOKEN_STORAGE_KEY } from './auth-manager';
 import { GOOGLE_CLIENT_ID } from '../config';
 
+interface PromptMomentNotification {
+    isNotDisplayed: () => boolean;
+    isSkippedMoment: () => boolean;
+    isDismissedMoment: () => boolean;
+}
+
 interface OneTapOptions {
     onSuccess: (response: { credential?: string }) => void;
+    onError?: () => void;
+    promptMomentNotification?: (notification: PromptMomentNotification) => void;
     auto_select?: boolean;
     disabled?: boolean;
 }
@@ -88,5 +96,57 @@ describe('SilentSignIn', () => {
         lastOneTapOptions?.onSuccess({ credential: newToken });
 
         expect(handleCredential).toHaveBeenCalledWith(newToken);
+    });
+
+    it('marks silent sign-in settled after a successful response', () => {
+        window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+
+        const { manager } = renderWithAuth(<SilentSignIn />);
+        expect(manager.silentSignInSettled).toBe(false);
+
+        lastOneTapOptions?.onSuccess({ credential: validToken({ sub: 'user-2' }) });
+
+        expect(manager.silentSignInSettled).toBe(true);
+    });
+
+    it('marks silent sign-in settled when the prompt is not displayed', () => {
+        window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+
+        const { manager } = renderWithAuth(<SilentSignIn />);
+        expect(manager.silentSignInSettled).toBe(false);
+
+        lastOneTapOptions?.promptMomentNotification?.({
+            isNotDisplayed: () => true,
+            isSkippedMoment: () => false,
+            isDismissedMoment: () => false,
+        });
+
+        expect(manager.silentSignInSettled).toBe(true);
+    });
+
+    it('marks silent sign-in settled when the prompt is dismissed', () => {
+        window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+
+        const { manager } = renderWithAuth(<SilentSignIn />);
+        expect(manager.silentSignInSettled).toBe(false);
+
+        lastOneTapOptions?.promptMomentNotification?.({
+            isNotDisplayed: () => false,
+            isSkippedMoment: () => false,
+            isDismissedMoment: () => true,
+        });
+
+        expect(manager.silentSignInSettled).toBe(true);
+    });
+
+    it('marks silent sign-in settled on error', () => {
+        window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+
+        const { manager } = renderWithAuth(<SilentSignIn />);
+        expect(manager.silentSignInSettled).toBe(false);
+
+        lastOneTapOptions?.onError?.();
+
+        expect(manager.silentSignInSettled).toBe(true);
     });
 });

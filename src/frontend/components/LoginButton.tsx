@@ -12,6 +12,11 @@ export function LoginButton({ map }: LoginButtonProps) {
     const [container, setContainer] = useState<HTMLDivElement | null>(null);
     const authManager = useAuthManager();
     const { user } = authManager.getState();
+    // Wait for SilentSignIn to finish before rendering <GoogleLogin>.
+    // GoogleLogin internally calls google.accounts.id.initialize() without
+    // auto_select, which would otherwise overwrite SilentSignIn's
+    // auto_select=true configuration and prevent silent re-authentication.
+    const waitingForSilentSignIn = !authManager.silentSignInSettled;
 
     useEffect(() => {
         if (!map) return;
@@ -33,7 +38,7 @@ export function LoginButton({ map }: LoginButtonProps) {
         }
     }, [map, user]);
 
-    if (!container || user) return null;
+    if (!container || user || waitingForSilentSignIn) return null;
 
     return createPortal(
         <GoogleLogin

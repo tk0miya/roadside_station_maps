@@ -177,6 +177,63 @@ describe('AuthManager', () => {
         expect(manager.hadPreviousSession).toBe(true);
     });
 
+    it('marks silent sign-in settled immediately when there is no previous session', () => {
+        const manager = new AuthManager(CLIENT_ID);
+
+        expect(manager.silentSignInSettled).toBe(true);
+    });
+
+    it('starts with silent sign-in unsettled when an expired token is rehydrated', () => {
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+
+        const manager = new AuthManager(CLIENT_ID);
+
+        expect(manager.silentSignInSettled).toBe(false);
+    });
+
+    it('marks silent sign-in settled and notifies listeners on markSilentSignInSettled', () => {
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+        const manager = new AuthManager(CLIENT_ID);
+        const listener = vi.fn();
+        manager.subscribe(listener);
+
+        manager.markSilentSignInSettled();
+
+        expect(manager.silentSignInSettled).toBe(true);
+        expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not re-notify when markSilentSignInSettled is called twice', () => {
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+        const manager = new AuthManager(CLIENT_ID);
+        const listener = vi.fn();
+        manager.subscribe(listener);
+
+        manager.markSilentSignInSettled();
+        manager.markSilentSignInSettled();
+
+        expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('marks silent sign-in settled when handleCredential succeeds', () => {
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+        const manager = new AuthManager(CLIENT_ID);
+        expect(manager.silentSignInSettled).toBe(false);
+
+        manager.handleCredential(validToken());
+
+        expect(manager.silentSignInSettled).toBe(true);
+    });
+
+    it('increments revision on each notify so subscribers can detect changes', () => {
+        const manager = new AuthManager(CLIENT_ID);
+        const initial = manager.getRevision();
+
+        manager.handleCredential(validToken());
+
+        expect(manager.getRevision()).toBeGreaterThan(initial);
+    });
+
     it('allows unsubscribing listeners', () => {
         const manager = new AuthManager(CLIENT_ID);
 
