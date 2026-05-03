@@ -42,7 +42,7 @@ export function RoadStationMap() {
     useEffect(() => {
         fetchStations()
             .then(setStations)
-            .catch((error) => console.error('Error fetching stations:', error));
+            .catch((error) => setLoadError(error instanceof Error ? error.message : String(error)));
     }, []);
 
     // Build the Storage whenever the auth state changes. RemoteStorage hydrates
@@ -65,7 +65,6 @@ export function RoadStationMap() {
             })
             .catch((error) => {
                 if (cancelled) return;
-                console.error('Failed to create storage:', error);
                 setLoadError(error instanceof Error ? error.message : String(error));
             });
 
