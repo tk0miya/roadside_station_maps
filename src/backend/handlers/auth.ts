@@ -2,24 +2,14 @@ import { Hono, type Context } from 'hono';
 import type {
     AuthLoginRequest,
     AuthLoginResponse,
-    AuthLogoutRequest,
     AuthRefreshRequest,
     AuthRefreshResponse,
 } from '@shared/auth-types';
-import {
-    createSession,
-    getActiveSession,
-    revokeSession,
-    touchSession,
-} from '../db/sessions';
+import { createSession, deleteSession, getSession, touchSession } from '../db/sessions';
 import { getUserGoogleRefreshToken, upsertUser } from '../db/users';
 import type { AppEnv } from '../env';
 import { GoogleAuthError, exchangeAuthorizationCode, isGoogleRefreshTokenValid } from '../auth/google';
-import {
-    signAccessToken,
-    signRefreshToken,
-    verifyRefreshToken,
-} from '../auth/tokens';
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../auth/tokens';
 
 // A session is considered valid as long as it is used at least once every
 // IDLE_REFRESH_LIMIT_SECONDS. Aligned with our "365 day idle revocation" rule.
@@ -82,21 +72,21 @@ authRouter.post('/refresh', async (c) => {
         return c.json({ error: 'Invalid refresh token' }, 401);
     }
 
-    const session = await getActiveSession(c.env.DB, claims.sid);
-    if (!session || session.userId !== claims.sub || session.revokedAt !== null) {
+    const session = await getSession(c.env.DB, claims.sid);
+    if (!session || session.userId !== claims.sub) {
         return c.json({ error: 'Session is no longer valid' }, 401);
     }
 
     const now = nowSeconds();
     if (now - session.lastUsedAt > IDLE_REFRESH_LIMIT_SECONDS) {
-        await revokeSession(c.env.DB, claims.sid, now);
+        await deleteSession(c.env.DB, claims.sid);
         return c.json({ error: 'Session expired due to inactivity' }, 401);
     }
 
     // Confirm the user has not revoked our access on the Google side.
     const googleRefreshToken = await getUserGoogleRefreshToken(c.env.DB, claims.sub);
     if (!googleRefreshToken) {
-        await revokeSession(c.env.DB, claims.sid, now);
+        await deleteSession(c.env.DB, claims.sid);
         return c.json({ error: 'No Google refresh token on file' }, 401);
     }
     let googleStillValid: boolean;
@@ -107,12 +97,12 @@ authRouter.post('/refresh', async (c) => {
             googleRefreshToken
         );
     } catch (error) {
-        // Network or transient Google error: do not revoke; surface 5xx so the
-        // client retries later.
+        // Network or transient Google error: do not delete the session, surface
+        // 5xx so the client retries later.
         return c.json({ error: errorMessage(error) }, 502);
     }
     if (!googleStillValid) {
-        await revokeSession(c.env.DB, claims.sid, now);
+        await deleteSession(c.env.DB, claims.sid);
         return c.json({ error: 'Google access has been revoked' }, 401);
     }
 
@@ -126,21 +116,6 @@ authRouter.post('/refresh', async (c) => {
 
     const response: AuthRefreshResponse = { accessToken };
     return c.json(response);
-});
-
-authRouter.post('/logout', async (c) => {
-    const body = await readJson<AuthLogoutRequest>(c);
-    if (!body || typeof body.refreshToken !== 'string' || body.refreshToken.length === 0) {
-        return c.body(null, 204);
-    }
-
-    try {
-        const claims = await verifyRefreshToken(c.env.SESSION_JWT_SECRET, body.refreshToken);
-        await revokeSession(c.env.DB, claims.sid, nowSeconds());
-    } catch {
-        // Already invalid - nothing to revoke.
-    }
-    return c.body(null, 204);
 });
 
 async function readJson<T>(c: Context<AppEnv>): Promise<T | null> {

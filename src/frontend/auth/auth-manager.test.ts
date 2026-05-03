@@ -219,30 +219,6 @@ describe('AuthManager', () => {
         expect(fetchImpl).not.toHaveBeenCalled();
     });
 
-    it('logout clears local tokens and posts to /auth/logout', async () => {
-        const refresh = refreshToken();
-        localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, freshAccessToken());
-        localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refresh);
-
-        const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
-        const manager = new AuthManager({
-            fetchImpl: fetchImpl as unknown as typeof fetch,
-            apiBaseUrl: 'https://api.example',
-        });
-
-        await manager.logout();
-
-        expect(manager.getState()).toEqual({ user: null, accessToken: null });
-        expect(localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY)).toBeNull();
-        expect(fetchImpl).toHaveBeenCalledWith(
-            'https://api.example/auth/logout',
-            expect.objectContaining({
-                method: 'POST',
-                body: JSON.stringify({ refreshToken: refresh }),
-            })
-        );
-    });
-
     it('ensureFreshAccessToken is a no-op when access token has plenty of life left', async () => {
         localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, freshAccessToken());
         localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken());

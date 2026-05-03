@@ -2,7 +2,6 @@ import { decodeJwt } from 'jose';
 import type {
     AuthLoginRequest,
     AuthLoginResponse,
-    AuthLogoutRequest,
     AuthRefreshRequest,
     AuthRefreshResponse,
     AuthState,
@@ -73,23 +72,6 @@ export class AuthManager {
         const json = (await response.json()) as AuthLoginResponse;
         this.persistTokens(json.accessToken, json.refreshToken);
         this.setState({ user: json.user, accessToken: json.accessToken });
-    }
-
-    async logout(): Promise<void> {
-        const refreshToken = this.refreshTokenValue;
-        this.clearTokens();
-        this.setState({ user: null, accessToken: null });
-        if (!refreshToken) return;
-        const body: AuthLogoutRequest = { refreshToken };
-        try {
-            await this.fetchImpl(`${this.apiBaseUrl}/auth/logout`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-            });
-        } catch {
-            // Server-side revocation is best-effort; the client is already logged out.
-        }
     }
 
     /**
