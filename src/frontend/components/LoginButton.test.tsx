@@ -2,12 +2,11 @@
  * @vitest-environment jsdom
  * @vitest-environment-options { "url": "http://localhost" }
  */
-import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AuthProvider } from '../auth/auth-context';
-import { AuthManager, ID_TOKEN_STORAGE_KEY } from '../auth/auth-manager';
+import { ID_TOKEN_STORAGE_KEY } from '../auth/auth-manager';
 import { GOOGLE_CLIENT_ID } from '../config';
-import { createMockMap, setupGoogleMapsMock } from '@test-utils/test-utils';
+import { renderWithAuth } from '@test-utils/auth';
+import { buildIdToken, createMockMap, setupGoogleMapsMock } from '@test-utils/test-utils';
 
 let lastGoogleLoginProps: { onSuccess?: (response: { credential?: string }) => void } | null = null;
 
@@ -19,21 +18,6 @@ vi.mock('@react-oauth/google', () => ({
 }));
 
 import { LoginButton } from './LoginButton';
-
-function base64UrlEncode(input: string): string {
-    return Buffer.from(input, 'utf8').toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
-}
-
-function buildIdToken(payload: Record<string, unknown>): string {
-    const header = base64UrlEncode(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-    const body = base64UrlEncode(JSON.stringify(payload));
-    return `${header}.${body}.sig`;
-}
-
-function renderWithAuth(ui: React.ReactElement) {
-    const manager = new AuthManager(GOOGLE_CLIENT_ID);
-    return { manager, ...render(<AuthProvider manager={manager}>{ui}</AuthProvider>) };
-}
 
 describe('LoginButton', () => {
     beforeEach(() => {
@@ -60,12 +44,7 @@ describe('LoginButton', () => {
     });
 
     it('does not push the control when already signed in', () => {
-        const token = buildIdToken({
-            sub: 'user-1',
-            iss: 'https://accounts.google.com',
-            aud: GOOGLE_CLIENT_ID,
-            exp: 9999999999,
-        });
+        const token = buildIdToken(GOOGLE_CLIENT_ID);
         window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
 
         const mockMap = createMockMap();
@@ -79,12 +58,7 @@ describe('LoginButton', () => {
         const { manager } = renderWithAuth(<LoginButton map={mockMap} />);
 
         const handleCredential = vi.spyOn(manager, 'handleCredential');
-        const token = buildIdToken({
-            sub: 'user-1',
-            iss: 'https://accounts.google.com',
-            aud: GOOGLE_CLIENT_ID,
-            exp: 9999999999,
-        });
+        const token = buildIdToken(GOOGLE_CLIENT_ID);
 
         lastGoogleLoginProps?.onSuccess?.({ credential: token });
 

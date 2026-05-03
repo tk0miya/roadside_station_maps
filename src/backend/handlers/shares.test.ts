@@ -1,6 +1,5 @@
-import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AppEnv } from '../env';
+import { buildTestApp, TEST_ENV } from '@test-utils/backend';
 import { sharesAuthedRouter, sharesPublicRouter } from './shares';
 
 vi.mock('../db/shares', () => ({
@@ -15,27 +14,11 @@ vi.mock('../db/visits', () => ({
 import * as sharesDb from '../db/shares';
 import * as visitsDb from '../db/visits';
 
-const TEST_ENV = {
-    DB: {} as unknown as AppEnv['Bindings']['DB'],
-    GOOGLE_CLIENT_ID: 'test-client',
-    ALLOWED_ORIGINS: 'http://localhost:8081',
-};
+const buildAuthedApp = (user: { sub: string } = { sub: 'user-1' }) =>
+    buildTestApp((app) => app.route('/shares', sharesAuthedRouter), user);
 
-function buildAuthedApp(user: { sub: string } = { sub: 'user-1' }): Hono<AppEnv> {
-    const app = new Hono<AppEnv>();
-    app.use('*', async (c, next) => {
-        c.set('user', user);
-        await next();
-    });
-    app.route('/shares', sharesAuthedRouter);
-    return app;
-}
-
-function buildPublicApp(): Hono<AppEnv> {
-    const app = new Hono<AppEnv>();
-    app.route('/shares', sharesPublicRouter);
-    return app;
-}
+const buildPublicApp = () =>
+    buildTestApp((app) => app.route('/shares', sharesPublicRouter), null);
 
 describe('shares handlers', () => {
     beforeEach(() => {

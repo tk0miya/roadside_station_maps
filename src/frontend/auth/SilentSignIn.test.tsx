@@ -1,10 +1,10 @@
 /**
  * @vitest-environment jsdom
  */
-import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AuthProvider } from './auth-context';
-import { AuthManager, ID_TOKEN_STORAGE_KEY } from './auth-manager';
+import { renderWithAuth } from '@test-utils/auth';
+import { buildIdToken } from '@test-utils/test-utils';
+import { ID_TOKEN_STORAGE_KEY } from './auth-manager';
 import { GOOGLE_CLIENT_ID } from '../config';
 
 interface OneTapOptions {
@@ -23,31 +23,6 @@ vi.mock('@react-oauth/google', () => ({
 
 import { SilentSignIn } from './SilentSignIn';
 
-function base64UrlEncode(input: string): string {
-    return Buffer.from(input, 'utf8').toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
-}
-
-function buildIdToken(payload: Record<string, unknown>): string {
-    const header = base64UrlEncode(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-    const body = base64UrlEncode(JSON.stringify(payload));
-    return `${header}.${body}.sig`;
-}
-
-function validToken(overrides: Record<string, unknown> = {}): string {
-    return buildIdToken({
-        sub: 'user-1',
-        iss: 'https://accounts.google.com',
-        aud: GOOGLE_CLIENT_ID,
-        exp: 9999999999,
-        ...overrides,
-    });
-}
-
-function renderWithAuth(ui: React.ReactElement) {
-    const manager = new AuthManager(GOOGLE_CLIENT_ID);
-    return { manager, ...render(<AuthProvider manager={manager}>{ui}</AuthProvider>) };
-}
-
 describe('SilentSignIn', () => {
     beforeEach(() => {
         window.localStorage.clear();
@@ -62,7 +37,7 @@ describe('SilentSignIn', () => {
     });
 
     it('is disabled while the user is already signed in', () => {
-        window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken());
+        window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, buildIdToken(GOOGLE_CLIENT_ID));
 
         renderWithAuth(<SilentSignIn />);
 
@@ -70,7 +45,7 @@ describe('SilentSignIn', () => {
     });
 
     it('is enabled when an expired token is found in storage', () => {
-        window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+        window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, buildIdToken(GOOGLE_CLIENT_ID, { exp: 1000 }));
 
         renderWithAuth(<SilentSignIn />);
 
@@ -78,12 +53,12 @@ describe('SilentSignIn', () => {
     });
 
     it('forwards a successfully returned credential to AuthManager.handleCredential', () => {
-        window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+        window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, buildIdToken(GOOGLE_CLIENT_ID, { exp: 1000 }));
 
         const { manager } = renderWithAuth(<SilentSignIn />);
 
         const handleCredential = vi.spyOn(manager, 'handleCredential');
-        const newToken = validToken({ sub: 'user-2' });
+        const newToken = buildIdToken(GOOGLE_CLIENT_ID, { sub: 'user-2' });
 
         lastOneTapOptions?.onSuccess({ credential: newToken });
 

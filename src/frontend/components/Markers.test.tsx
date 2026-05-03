@@ -4,23 +4,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { Markers } from './Markers';
-import { createMockFeature, createMockStations } from '@test-utils/test-utils';
+import { createMockFeature, createMockMapData, createMockStations } from '@test-utils/test-utils';
 import { MemoryStorage } from '../storage/memory-storage';
-
-const createMockMapData = () => {
-    let features: google.maps.Data.Feature[] = [];
-    return {
-        addGeoJson: vi.fn(),
-        addListener: vi.fn(() => ({ remove: vi.fn() })),
-        setStyle: vi.fn(),
-        overrideStyle: vi.fn(),
-        forEach: vi.fn((cb: (f: google.maps.Data.Feature) => void) => features.forEach(cb)),
-        remove: vi.fn((f: google.maps.Data.Feature) => {
-            features = features.filter((x) => x !== f);
-        }),
-        _setFeatures: (fs: google.maps.Data.Feature[]) => { features = fs; },
-    };
-};
 
 describe('Markers', () => {
     let mockMapData: ReturnType<typeof createMockMapData>;
