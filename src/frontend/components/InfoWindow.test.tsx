@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { InfoWindow } from './InfoWindow';
-import { createMockFeature } from '../../test-utils/test-utils';
+import { createMockFeature } from '@test-utils/test-utils';
 
 // Mock Google Maps API
 const mockInfoWindow = {

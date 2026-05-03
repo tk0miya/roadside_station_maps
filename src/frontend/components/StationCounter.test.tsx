@@ -9,7 +9,7 @@ import {
     createMockStations,
     createMockMap,
     setupGoogleMapsMock,
-} from '../../test-utils/test-utils';
+} from '@test-utils/test-utils';
 
 const getCounts = (element: HTMLElement): number[] =>
     Array.from(element.querySelectorAll('.station-counter-style span')).map((span) =>
