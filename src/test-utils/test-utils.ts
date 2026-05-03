@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 
 
-// Create mock Google Maps instance with controls
+// Create mock Google Maps instance with controls and Data layer
 export const createMockMap = () => {
     const topLeftControls: HTMLElement[] = [];
     const topCenterControls: HTMLElement[] = [];
@@ -31,15 +31,8 @@ export const createMockMap = () => {
         },
     };
 
-    return {
-        controls,
-    } as unknown as google.maps.Map;
-};
-
-// Create mock Google Maps Data layer for managing GeoJSON features
-export const createMockMapData = () => {
     let features: google.maps.Data.Feature[] = [];
-    return {
+    const data = {
         addGeoJson: vi.fn(),
         addListener: vi.fn(() => ({ remove: vi.fn() })),
         setStyle: vi.fn(),
@@ -52,6 +45,11 @@ export const createMockMapData = () => {
             features = fs;
         },
     };
+
+    return {
+        controls,
+        data,
+    } as unknown as google.maps.Map & { data: typeof data };
 };
 
 // Create mock Google Maps Data Feature
