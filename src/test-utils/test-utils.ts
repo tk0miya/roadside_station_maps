@@ -36,6 +36,24 @@ export const createMockMap = () => {
     } as unknown as google.maps.Map;
 };
 
+// Create mock Google Maps Data layer for managing GeoJSON features
+export const createMockMapData = () => {
+    let features: google.maps.Data.Feature[] = [];
+    return {
+        addGeoJson: vi.fn(),
+        addListener: vi.fn(() => ({ remove: vi.fn() })),
+        setStyle: vi.fn(),
+        overrideStyle: vi.fn(),
+        forEach: vi.fn((cb: (f: google.maps.Data.Feature) => void) => features.forEach(cb)),
+        remove: vi.fn((f: google.maps.Data.Feature) => {
+            features = features.filter((x) => x !== f);
+        }),
+        _setFeatures: (fs: google.maps.Data.Feature[]) => {
+            features = fs;
+        },
+    };
+};
+
 // Create mock Google Maps Data Feature
 export const createMockFeature = (stationId: string, overrides: Record<string, string> = {}) => {
     const defaultProperties: Record<string, string> = {
@@ -93,4 +111,41 @@ export const setupGoogleMapsMock = () => {
             }
         }
     };
+};
+
+// Build a JSON Response for fetch mocks
+export const jsonResponse = (body: unknown, status = 200): Response =>
+    new Response(JSON.stringify(body), {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+    });
+
+// Build an empty-body Response for fetch mocks
+export const emptyResponse = (status = 204): Response => new Response(null, { status });
+
+// Base64URL encode a UTF-8 string (used for fake JWT segments)
+const base64UrlEncode = (input: string): string =>
+    Buffer.from(input, 'utf8')
+        .toString('base64')
+        .replace(/=+$/, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+
+// Build an unsigned Google ID token. Defaults to a valid set of claims for
+// the given audience; pass overrides (including `undefined` to omit a claim)
+// to construct invalid variants.
+export const buildIdToken = (
+    audience: string,
+    overrides: Record<string, unknown> = {}
+): string => {
+    const payload = {
+        sub: 'user-1',
+        iss: 'https://accounts.google.com',
+        aud: audience,
+        exp: 9999999999,
+        ...overrides,
+    };
+    const header = base64UrlEncode(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+    const body = base64UrlEncode(JSON.stringify(payload));
+    return `${header}.${body}.sig`;
 };

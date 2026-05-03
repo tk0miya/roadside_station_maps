@@ -1,17 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
+import { emptyResponse, jsonResponse } from '@test-utils/test-utils';
 import { API_BASE_URL } from '../config';
 import { VisitsApiClient, VisitsApiError } from './visits-api-client';
-
-function jsonResponse(body: unknown, status = 200): Response {
-    return new Response(JSON.stringify(body), {
-        status,
-        headers: { 'Content-Type': 'application/json' },
-    });
-}
-
-function emptyResponse(status = 204): Response {
-    return new Response(null, { status });
-}
 
 describe('VisitsApiClient', () => {
     let fetchMock: MockInstance<typeof fetch>;

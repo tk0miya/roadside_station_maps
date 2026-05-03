@@ -17,7 +17,8 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@shared/*": ["./src/shared/*"]
+      "@shared/*": ["./src/shared/*"],
+      "@test-utils/*": ["./src/test-utils/*"]
     },
     "types": ["@cloudflare/workers-types", "node"]
   },

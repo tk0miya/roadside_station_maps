@@ -1,6 +1,5 @@
-import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AppEnv } from '../env';
+import { buildTestApp, TEST_ENV } from '@test-utils/backend';
 import { visitsRouter } from './visits';
 
 vi.mock('../db/visits', () => ({
@@ -11,21 +10,8 @@ vi.mock('../db/visits', () => ({
 
 import * as visitsDb from '../db/visits';
 
-const TEST_ENV = {
-    DB: {} as unknown as AppEnv['Bindings']['DB'],
-    GOOGLE_CLIENT_ID: 'test-client',
-    ALLOWED_ORIGINS: 'http://localhost:8081',
-};
-
-function buildApp(user: { sub: string } = { sub: 'user-1' }): Hono<AppEnv> {
-    const app = new Hono<AppEnv>();
-    app.use('*', async (c, next) => {
-        c.set('user', user);
-        await next();
-    });
-    app.route('/visits', visitsRouter);
-    return app;
-}
+const buildApp = (user: { sub: string } = { sub: 'user-1' }) =>
+    buildTestApp((app) => app.route('/visits', visitsRouter), user);
 
 describe('visits handlers', () => {
     beforeEach(() => {

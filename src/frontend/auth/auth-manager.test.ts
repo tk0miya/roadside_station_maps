@@ -3,29 +3,10 @@
  * @vitest-environment-options { "url": "http://localhost" }
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { buildIdToken } from '@test-utils/test-utils';
 import { AuthManager, ID_TOKEN_STORAGE_KEY } from './auth-manager';
 
-function base64UrlEncode(input: string): string {
-    return Buffer.from(input, 'utf8').toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
-}
-
-function buildIdToken(payload: Record<string, unknown>): string {
-    const header = base64UrlEncode(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-    const body = base64UrlEncode(JSON.stringify(payload));
-    return `${header}.${body}.sig`;
-}
-
 const CLIENT_ID = 'test-client-id';
-
-function validToken(overrides: Record<string, unknown> = {}): string {
-    return buildIdToken({
-        sub: 'user-1',
-        iss: 'https://accounts.google.com',
-        aud: CLIENT_ID,
-        exp: 9999999999,
-        ...overrides,
-    });
-}
 
 describe('AuthManager', () => {
     beforeEach(() => {
@@ -39,7 +20,7 @@ describe('AuthManager', () => {
     });
 
     it('rehydrates from storage when a valid token is present', () => {
-        const token = validToken({ sub: 'user-42' });
+        const token = buildIdToken(CLIENT_ID, { sub: 'user-42' });
         localStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
 
         const manager = new AuthManager(CLIENT_ID);
@@ -49,7 +30,7 @@ describe('AuthManager', () => {
     });
 
     it('accepts the bare-host issuer', () => {
-        const token = validToken({ iss: 'accounts.google.com' });
+        const token = buildIdToken(CLIENT_ID, { iss: 'accounts.google.com' });
         localStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
 
         const manager = new AuthManager(CLIENT_ID);
@@ -58,7 +39,7 @@ describe('AuthManager', () => {
     });
 
     it('accepts an audience array that includes the client id', () => {
-        const token = validToken({ aud: ['other', CLIENT_ID] });
+        const token = buildIdToken(CLIENT_ID, { aud: ['other', CLIENT_ID] });
         localStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
 
         const manager = new AuthManager(CLIENT_ID);
@@ -76,7 +57,7 @@ describe('AuthManager', () => {
     });
 
     it('clears tokens with a mismatched issuer', () => {
-        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ iss: 'https://evil.example' }));
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, buildIdToken(CLIENT_ID, { iss: 'https://evil.example' }));
 
         const manager = new AuthManager(CLIENT_ID);
 
@@ -85,7 +66,7 @@ describe('AuthManager', () => {
     });
 
     it('clears tokens with a mismatched audience', () => {
-        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ aud: 'other-client' }));
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, buildIdToken(CLIENT_ID, { aud: 'other-client' }));
 
         const manager = new AuthManager(CLIENT_ID);
 
@@ -94,7 +75,7 @@ describe('AuthManager', () => {
     });
 
     it('clears expired tokens', () => {
-        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, buildIdToken(CLIENT_ID, { exp: 1000 }));
 
         const manager = new AuthManager(CLIENT_ID);
 
@@ -103,7 +84,7 @@ describe('AuthManager', () => {
     });
 
     it('clears tokens that are missing exp', () => {
-        const token = buildIdToken({ sub: 'x', iss: 'https://accounts.google.com', aud: CLIENT_ID });
+        const token = buildIdToken(CLIENT_ID, { sub: 'x', exp: undefined });
         localStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
 
         const manager = new AuthManager(CLIENT_ID);
@@ -113,7 +94,7 @@ describe('AuthManager', () => {
     });
 
     it('clears tokens that are missing sub', () => {
-        const token = buildIdToken({ iss: 'https://accounts.google.com', aud: CLIENT_ID, exp: 9999999999 });
+        const token = buildIdToken(CLIENT_ID, { sub: undefined });
         localStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
 
         const manager = new AuthManager(CLIENT_ID);
@@ -128,7 +109,7 @@ describe('AuthManager', () => {
         const listener = vi.fn();
         manager.subscribe(listener);
 
-        const token = validToken({ sub: 'user-42' });
+        const token = buildIdToken(CLIENT_ID, { sub: 'user-42' });
         manager.handleCredential(token);
 
         expect(localStorage.getItem(ID_TOKEN_STORAGE_KEY)).toBe(token);
@@ -152,7 +133,7 @@ describe('AuthManager', () => {
     });
 
     it('reports a previous session when a valid token is rehydrated', () => {
-        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken());
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, buildIdToken(CLIENT_ID));
 
         const manager = new AuthManager(CLIENT_ID);
 
@@ -160,7 +141,7 @@ describe('AuthManager', () => {
     });
 
     it('reports a previous session when an expired token is found in storage', () => {
-        localStorage.setItem(ID_TOKEN_STORAGE_KEY, validToken({ exp: 1000 }));
+        localStorage.setItem(ID_TOKEN_STORAGE_KEY, buildIdToken(CLIENT_ID, { exp: 1000 }));
 
         const manager = new AuthManager(CLIENT_ID);
 
@@ -172,7 +153,7 @@ describe('AuthManager', () => {
         const manager = new AuthManager(CLIENT_ID);
         expect(manager.hadPreviousSession).toBe(false);
 
-        manager.handleCredential(validToken());
+        manager.handleCredential(buildIdToken(CLIENT_ID));
 
         expect(manager.hadPreviousSession).toBe(true);
     });
@@ -184,7 +165,7 @@ describe('AuthManager', () => {
         const unsubscribe = manager.subscribe(listener);
         unsubscribe();
 
-        manager.handleCredential(validToken());
+        manager.handleCredential(buildIdToken(CLIENT_ID));
 
         expect(listener).not.toHaveBeenCalled();
     });
