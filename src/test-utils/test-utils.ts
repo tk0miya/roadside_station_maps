@@ -32,9 +32,19 @@ export const createMockMap = () => {
     };
 
     let features: google.maps.Data.Feature[] = [];
+    const listeners: Record<string, ((event: unknown) => void)[]> = {};
     const data = {
         addGeoJson: vi.fn(),
-        addListener: vi.fn(() => ({ remove: vi.fn() })),
+        addListener: vi.fn((eventName: string, cb: (event: unknown) => void) => {
+            const list = listeners[eventName] ?? [];
+            list.push(cb);
+            listeners[eventName] = list;
+            return {
+                remove: vi.fn(() => {
+                    listeners[eventName] = (listeners[eventName] ?? []).filter((c) => c !== cb);
+                }),
+            };
+        }),
         setStyle: vi.fn(),
         overrideStyle: vi.fn(),
         forEach: vi.fn((cb: (f: google.maps.Data.Feature) => void) => features.forEach(cb)),
@@ -43,6 +53,11 @@ export const createMockMap = () => {
         }),
         _setFeatures: (fs: google.maps.Data.Feature[]) => {
             features = fs;
+        },
+        _emit: (eventName: string, event: unknown) => {
+            for (const cb of listeners[eventName] ?? []) {
+                cb(event);
+            }
         },
     };
 
@@ -106,7 +121,13 @@ export const setupGoogleMapsMock = () => {
                 TOP_CENTER: 2,
                 TOP_RIGHT: 3,
                 RIGHT_TOP: 7
-            }
+            },
+            Size: class {
+                constructor(public width: number, public height: number) {}
+            },
+            Point: class {
+                constructor(public x: number, public y: number) {}
+            },
         }
     };
 };

@@ -27,6 +27,25 @@ div.share:hover {
     background-color: rgb(235, 235, 235);
 }
 
+div.route-button {
+    margin-top: 10px;
+    padding: 0 17px;
+    height: 40px;
+    line-height: 40px;
+    cursor: pointer;
+    background-color: #1a73e8;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;
+    font-family: Roboto, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    border-radius: 2px;
+}
+
+div.route-button:hover {
+    background-color: #1558b8;
+}
+
 div.share-message {
     margin-top: 10px;
     padding: 8px;
