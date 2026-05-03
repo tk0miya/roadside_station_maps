@@ -6,12 +6,9 @@ import { API_BASE_URL } from '../config';
 import { createStorage } from './factory';
 import { MemoryStorage } from './memory-storage';
 import { RemoteStorage } from './remote-storage';
-import type { AuthState } from '@shared/auth-types';
 
 describe('createStorage', () => {
     let originalLocation: Location;
-    const guestAuth: AuthState = { user: null, idToken: null };
-    const signedInAuth: AuthState = { user: { sub: 'user-1' }, idToken: 'token-abc' };
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -27,10 +24,7 @@ describe('createStorage', () => {
     });
 
     it('returns an empty MemoryStorage for guests', async () => {
-        const storage = await createStorage({
-            authState: guestAuth,
-            getIdToken: () => null,
-        });
+        const storage = await createStorage({ getIdToken: () => null });
         expect(storage).toBeInstanceOf(MemoryStorage);
         expect(storage.listItems()).toEqual([]);
     });
@@ -54,10 +48,7 @@ describe('createStorage', () => {
         );
 
         try {
-            const storage = await createStorage({
-                authState: signedInAuth,
-                getIdToken: () => 'token-abc',
-            });
+            const storage = await createStorage({ getIdToken: () => 'token-abc' });
 
             expect(storage).toBeInstanceOf(MemoryStorage);
             expect(storage.getItem('111')).toBe('1');
@@ -82,10 +73,7 @@ describe('createStorage', () => {
         );
 
         try {
-            const storage = await createStorage({
-                authState: signedInAuth,
-                getIdToken: () => 'token-abc',
-            });
+            const storage = await createStorage({ getIdToken: () => 'token-abc' });
 
             expect(storage).toBeInstanceOf(RemoteStorage);
             expect(storage.getItem('111')).toBe('2');
