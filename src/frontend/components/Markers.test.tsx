@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { Markers } from './Markers';
-import { createMockFeature, createMockStations } from '../../test-utils/test-utils';
+import { createMockFeature, createMockStations } from '@test-utils/test-utils';
 import { MemoryStorage } from '../storage/memory-storage';
 
 const createMockMapData = () => {

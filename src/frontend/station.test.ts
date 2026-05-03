@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { reconcileVisits } from './station';
 import { MemoryStorage } from './storage';
-import { createMockStations } from '../test-utils/test-utils';
+import { createMockStations } from '@test-utils/test-utils';
 
 describe('reconcileVisits', () => {
     it('removes stored entries for stations not present in the GeoJSON', () => {

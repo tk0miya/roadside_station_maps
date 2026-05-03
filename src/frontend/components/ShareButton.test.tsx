@@ -4,7 +4,7 @@
 import { render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthState } from '@shared/auth-types';
-import { createMockMap } from '../../test-utils/test-utils';
+import { createMockMap } from '@test-utils/test-utils';
 import { ShareButton } from './ShareButton';
 
 vi.mock('clipboard', () => ({
