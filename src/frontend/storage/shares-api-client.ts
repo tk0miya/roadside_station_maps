@@ -1,8 +1,11 @@
 import type { CreateShareResponse, GetShareResponse, VisitRecord } from '@shared/api-types';
 import { API_BASE_URL } from '../config';
+import { SESSION_TOKEN_HEADER } from './visits-api-client';
 
 export interface SharesApiClientOptions {
-    getIdToken: () => string | null;
+    getSessionToken: () => string | null;
+    onSessionRefreshed?: (token: string) => void;
+    onUnauthorized?: () => void;
 }
 
 export class SharesApiError extends Error {
@@ -16,22 +19,35 @@ export class SharesApiError extends Error {
 }
 
 export class SharesApiClient {
-    private readonly getIdToken: () => string | null;
+    private readonly getSessionToken: () => string | null;
+    private readonly onSessionRefreshed?: (token: string) => void;
+    private readonly onUnauthorized?: () => void;
 
     constructor(options: SharesApiClientOptions) {
-        this.getIdToken = options.getIdToken;
+        this.getSessionToken = options.getSessionToken;
+        this.onSessionRefreshed = options.onSessionRefreshed;
+        this.onUnauthorized = options.onUnauthorized;
     }
 
     async create(): Promise<string> {
-        const token = this.getIdToken();
+        const token = this.getSessionToken();
         if (!token) {
-            throw new SharesApiError('Missing ID token; user must be signed in');
+            throw new SharesApiError('Missing session token; user must be signed in');
         }
 
         const response = await fetch(`${API_BASE_URL}/api/shares`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
         });
+
+        const refreshed = response.headers.get(SESSION_TOKEN_HEADER);
+        if (refreshed) {
+            this.onSessionRefreshed?.(refreshed);
+        }
+
+        if (response.status === 401) {
+            this.onUnauthorized?.();
+        }
 
         if (!response.ok) {
             throw new SharesApiError(await readErrorMessage(response), response.status);

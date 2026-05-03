@@ -24,7 +24,7 @@ describe('createStorage', () => {
     });
 
     it('returns an empty MemoryStorage for guests', async () => {
-        const storage = await createStorage({ getIdToken: () => null });
+        const storage = await createStorage({ getSessionToken: () => null });
         expect(storage).toBeInstanceOf(MemoryStorage);
         expect(storage.listItems()).toEqual([]);
     });
@@ -48,7 +48,7 @@ describe('createStorage', () => {
         );
 
         try {
-            const storage = await createStorage({ getIdToken: () => 'token-abc' });
+            const storage = await createStorage({ getSessionToken: () => 'token-abc' });
 
             expect(storage).toBeInstanceOf(MemoryStorage);
             expect(storage.getItem('111')).toBe('1');
@@ -73,7 +73,7 @@ describe('createStorage', () => {
         );
 
         try {
-            const storage = await createStorage({ getIdToken: () => 'token-abc' });
+            const storage = await createStorage({ getSessionToken: () => 'token-abc' });
 
             expect(storage).toBeInstanceOf(RemoteStorage);
             expect(storage.getItem('111')).toBe('2');

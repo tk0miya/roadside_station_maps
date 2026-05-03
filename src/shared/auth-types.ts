@@ -5,5 +5,5 @@ export interface AuthUser {
 
 export interface AuthState {
     user: AuthUser | null;
-    idToken: string | null;
+    sessionToken: string | null;
 }
