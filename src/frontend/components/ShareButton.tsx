@@ -53,7 +53,7 @@ export function ShareButton(props: ShareButtonProps) {
         }
 
         let cancelled = false;
-        const client = new SharesApiClient({ getIdToken: () => authManager.getState().idToken });
+        const client = new SharesApiClient({ tokens: authManager });
         client
             .create()
             .then((id) => {

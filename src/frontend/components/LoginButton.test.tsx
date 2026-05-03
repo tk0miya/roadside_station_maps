@@ -2,47 +2,62 @@
  * @vitest-environment jsdom
  * @vitest-environment-options { "url": "http://localhost" }
  */
-import { render } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../auth/auth-context';
-import { AuthManager, ID_TOKEN_STORAGE_KEY } from '../auth/auth-manager';
-import { GOOGLE_CLIENT_ID } from '../config';
+import {
+    ACCESS_TOKEN_STORAGE_KEY,
+    AuthManager,
+    REFRESH_TOKEN_STORAGE_KEY,
+} from '../auth/auth-manager';
 import { createMockMap, setupGoogleMapsMock } from '../../test-utils/test-utils';
 
-let lastGoogleLoginProps: { onSuccess?: (response: { credential?: string }) => void } | null = null;
+let lastUseGoogleLoginConfig: {
+    onSuccess?: (response: { code: string }) => void;
+    onError?: (error: unknown) => void;
+} | null = null;
+let lastLoginTrigger: ReturnType<typeof vi.fn>;
 
 vi.mock('@react-oauth/google', () => ({
-    GoogleLogin: (props: { onSuccess?: (response: { credential?: string }) => void }) => {
-        lastGoogleLoginProps = props;
-        return <div data-testid="google-login" />;
+    useGoogleLogin: (config: {
+        onSuccess?: (response: { code: string }) => void;
+        onError?: (error: unknown) => void;
+    }) => {
+        lastUseGoogleLoginConfig = config;
+        lastLoginTrigger = vi.fn();
+        return lastLoginTrigger;
     },
 }));
 
 import { LoginButton } from './LoginButton';
 
 function base64UrlEncode(input: string): string {
-    return Buffer.from(input, 'utf8').toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+    return Buffer.from(input, 'utf8')
+        .toString('base64')
+        .replace(/=+$/, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
 }
 
-function buildIdToken(payload: Record<string, unknown>): string {
-    const header = base64UrlEncode(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+function buildJwt(payload: Record<string, unknown>): string {
+    const header = base64UrlEncode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
     const body = base64UrlEncode(JSON.stringify(payload));
     return `${header}.${body}.sig`;
 }
 
-function renderWithAuth(ui: React.ReactElement) {
-    const manager = new AuthManager(GOOGLE_CLIENT_ID);
-    return { manager, ...render(<AuthProvider manager={manager}>{ui}</AuthProvider>) };
+function renderWithAuth(ui: React.ReactElement, manager?: AuthManager) {
+    const m = manager ?? new AuthManager({ fetchImpl: vi.fn() as unknown as typeof fetch });
+    return { manager: m, ...render(<AuthProvider manager={m}>{ui}</AuthProvider>) };
 }
 
 describe('LoginButton', () => {
     beforeEach(() => {
         setupGoogleMapsMock();
         window.localStorage.clear();
-        lastGoogleLoginProps = null;
+        lastUseGoogleLoginConfig = null;
     });
 
-    it('mounts the GoogleLogin button into a TOP_RIGHT map control when logged out', () => {
+    it('mounts a login button into a TOP_RIGHT map control when logged out', () => {
         const mockMap = createMockMap();
 
         renderWithAuth(<LoginButton map={mockMap} />);
@@ -50,7 +65,7 @@ describe('LoginButton', () => {
         const pushMock = mockMap.controls[3].push as unknown as ReturnType<typeof vi.fn>;
         expect(pushMock).toHaveBeenCalledTimes(1);
         const pushedDiv = pushMock.mock.calls[0][0] as HTMLElement;
-        expect(pushedDiv.querySelector('[data-testid="google-login"]')).not.toBeNull();
+        expect(pushedDiv.querySelector('button.google-login-button')).not.toBeNull();
     });
 
     it('does not mount controls when map is null', () => {
@@ -60,13 +75,14 @@ describe('LoginButton', () => {
     });
 
     it('does not push the control when already signed in', () => {
-        const token = buildIdToken({
-            sub: 'user-1',
-            iss: 'https://accounts.google.com',
-            aud: GOOGLE_CLIENT_ID,
-            exp: 9999999999,
-        });
-        window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
+        window.localStorage.setItem(
+            ACCESS_TOKEN_STORAGE_KEY,
+            buildJwt({ sub: 'user-1', sid: 'sid-1', exp: 9999999999, aud: 'api' })
+        );
+        window.localStorage.setItem(
+            REFRESH_TOKEN_STORAGE_KEY,
+            buildJwt({ sub: 'user-1', sid: 'sid-1', aud: 'refresh' })
+        );
 
         const mockMap = createMockMap();
         renderWithAuth(<LoginButton map={mockMap} />);
@@ -74,20 +90,43 @@ describe('LoginButton', () => {
         expect(mockMap.controls[3].push).not.toHaveBeenCalled();
     });
 
-    it('forwards the credential to AuthManager.handleCredential on success', () => {
+    it('triggers the Google login flow on click', () => {
         const mockMap = createMockMap();
-        const { manager } = renderWithAuth(<LoginButton map={mockMap} />);
+        renderWithAuth(<LoginButton map={mockMap} />);
 
-        const handleCredential = vi.spyOn(manager, 'handleCredential');
-        const token = buildIdToken({
-            sub: 'user-1',
-            iss: 'https://accounts.google.com',
-            aud: GOOGLE_CLIENT_ID,
-            exp: 9999999999,
+        const pushMock = mockMap.controls[3].push as unknown as ReturnType<typeof vi.fn>;
+        const pushedDiv = pushMock.mock.calls[0][0] as HTMLElement;
+        const button = pushedDiv.querySelector('button.google-login-button') as HTMLButtonElement;
+
+        fireEvent.click(button);
+
+        expect(lastLoginTrigger).toHaveBeenCalled();
+    });
+
+    it('forwards the auth code to AuthManager.login on success', async () => {
+        const mockMap = createMockMap();
+        const manager = new AuthManager({
+            fetchImpl: vi.fn().mockResolvedValue(
+                new Response(
+                    JSON.stringify({
+                        accessToken: buildJwt({
+                            sub: 'user-1',
+                            sid: 'sid-1',
+                            exp: 9999999999,
+                            aud: 'api',
+                        }),
+                        refreshToken: buildJwt({ sub: 'user-1', sid: 'sid-1', aud: 'refresh' }),
+                        user: { sub: 'user-1' },
+                    }),
+                    { status: 200, headers: { 'Content-Type': 'application/json' } }
+                )
+            ) as unknown as typeof fetch,
         });
+        const loginSpy = vi.spyOn(manager, 'login');
+        renderWithAuth(<LoginButton map={mockMap} />, manager);
 
-        lastGoogleLoginProps?.onSuccess?.({ credential: token });
+        await lastUseGoogleLoginConfig?.onSuccess?.({ code: 'auth-code-xyz' });
 
-        expect(handleCredential).toHaveBeenCalledWith(token);
+        expect(loginSpy).toHaveBeenCalledWith('auth-code-xyz');
     });
 });

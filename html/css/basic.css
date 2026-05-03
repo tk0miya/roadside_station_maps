@@ -60,6 +60,23 @@ div.login-button {
     margin: 10px;
 }
 
+button.google-login-button {
+    height: 40px;
+    padding: 0 17px;
+    cursor: pointer;
+    background-color: white;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;
+    border: none;
+    border-radius: 2px;
+    font-family: Roboto, Arial, sans-serif;
+    font-size: 14px;
+    color: rgb(86, 86, 86);
+}
+
+button.google-login-button:hover {
+    background-color: rgb(235, 235, 235);
+}
+
 div.loading-overlay {
     position: absolute;
     top: 50%;

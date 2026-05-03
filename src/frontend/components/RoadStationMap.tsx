@@ -55,7 +55,10 @@ export function RoadStationMap() {
         });
         setLoadError(null);
 
-        createStorage({ getIdToken: () => authManager.getState().idToken })
+        createStorage({
+            tokens: authManager,
+            isSignedIn: () => authManager.getState().user !== null,
+        })
             .then((newStorage) => {
                 if (cancelled) return;
                 setStorage(newStorage);
@@ -69,7 +72,7 @@ export function RoadStationMap() {
         return () => {
             cancelled = true;
         };
-    }, [auth.idToken, authManager]);
+    }, [auth.user, authManager]);
 
     // Drop stored visits for stations that no longer exist once both are ready.
     useEffect(() => {

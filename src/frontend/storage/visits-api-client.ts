@@ -1,8 +1,9 @@
 import type { ListVisitsResponse, PutVisitRequest, VisitRecord } from '@shared/api-types';
+import { type AuthTokenSource, MissingAccessTokenError, fetchWithAuth } from '../auth/fetch-with-auth';
 import { API_BASE_URL } from '../config';
 
 export interface VisitsApiClientOptions {
-    getIdToken: () => string | null;
+    tokens: AuthTokenSource;
 }
 
 export class VisitsApiError extends Error {
@@ -16,10 +17,10 @@ export class VisitsApiError extends Error {
 }
 
 export class VisitsApiClient {
-    private readonly getIdToken: () => string | null;
+    private readonly tokens: AuthTokenSource;
 
     constructor(options: VisitsApiClientOptions) {
-        this.getIdToken = options.getIdToken;
+        this.tokens = options.tokens;
     }
 
     async list(): Promise<VisitRecord[]> {
@@ -42,18 +43,15 @@ export class VisitsApiClient {
     }
 
     private async request(path: string, init: RequestInit): Promise<Response> {
-        const token = this.getIdToken();
-        if (!token) {
-            throw new VisitsApiError('Missing ID token; user must be signed in');
+        let response: Response;
+        try {
+            response = await fetchWithAuth(this.tokens, `${API_BASE_URL}${path}`, init);
+        } catch (error) {
+            if (error instanceof MissingAccessTokenError) {
+                throw new VisitsApiError(error.message);
+            }
+            throw error;
         }
-
-        const response = await fetch(`${API_BASE_URL}${path}`, {
-            ...init,
-            headers: {
-                ...(init.headers ?? {}),
-                Authorization: `Bearer ${token}`,
-            },
-        });
 
         if (!response.ok) {
             const message = await safeReadError(response);

@@ -3,6 +3,10 @@ main = "src/backend/index.ts"
 compatibility_date = "2025-01-01"
 
 # Public OAuth client ID; the security gate is the configured authorized origins.
+# Secrets (set via `wrangler secret put`, NOT here):
+#   GOOGLE_CLIENT_SECRET - exchange auth code for tokens at Google
+#   SESSION_JWT_SECRET   - HMAC key for our own access/refresh JWTs
+# For local `wrangler dev`, place them in .dev.vars (git-ignored).
 [vars]
 GOOGLE_CLIENT_ID = "740963820239-n5t81ueg3b27mtcs229fk62na8bfjvva.apps.googleusercontent.com"
 ALLOWED_ORIGINS = "http://localhost:8081"

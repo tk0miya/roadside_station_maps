@@ -8,3 +8,6 @@ html/js/bundle.js
 
 # Claude Code settings
 .claude/
+
+# Local Wrangler secrets
+.dev.vars

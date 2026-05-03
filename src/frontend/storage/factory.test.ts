@@ -2,10 +2,18 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { AuthTokenSource } from '../auth/fetch-with-auth';
 import { API_BASE_URL } from '../config';
 import { createStorage } from './factory';
 import { MemoryStorage } from './memory-storage';
 import { RemoteStorage } from './remote-storage';
+
+function tokensFor(token: string | null): AuthTokenSource {
+    return {
+        getAccessToken: () => token,
+        refresh: vi.fn().mockResolvedValue(null),
+    };
+}
 
 describe('createStorage', () => {
     let originalLocation: Location;
@@ -24,7 +32,10 @@ describe('createStorage', () => {
     });
 
     it('returns an empty MemoryStorage for guests', async () => {
-        const storage = await createStorage({ getIdToken: () => null });
+        const storage = await createStorage({
+            tokens: tokensFor(null),
+            isSignedIn: () => false,
+        });
         expect(storage).toBeInstanceOf(MemoryStorage);
         expect(storage.listItems()).toEqual([]);
     });
@@ -48,7 +59,10 @@ describe('createStorage', () => {
         );
 
         try {
-            const storage = await createStorage({ getIdToken: () => 'token-abc' });
+            const storage = await createStorage({
+                tokens: tokensFor('token-abc'),
+                isSignedIn: () => true,
+            });
 
             expect(storage).toBeInstanceOf(MemoryStorage);
             expect(storage.getItem('111')).toBe('1');
@@ -73,16 +87,18 @@ describe('createStorage', () => {
         );
 
         try {
-            const storage = await createStorage({ getIdToken: () => 'token-abc' });
+            const storage = await createStorage({
+                tokens: tokensFor('token-abc'),
+                isSignedIn: () => true,
+            });
 
             expect(storage).toBeInstanceOf(RemoteStorage);
             expect(storage.getItem('111')).toBe('2');
-            expect(fetchSpy).toHaveBeenCalledWith(
-                `${API_BASE_URL}/api/visits`,
-                expect.objectContaining({
-                    method: 'GET',
-                    headers: expect.objectContaining({ Authorization: 'Bearer token-abc' }),
-                })
+            const [url, init] = fetchSpy.mock.calls[0];
+            expect(url).toBe(`${API_BASE_URL}/api/visits`);
+            expect((init as RequestInit).method).toBe('GET');
+            expect(new Headers((init as RequestInit).headers).get('Authorization')).toBe(
+                'Bearer token-abc'
             );
         } finally {
             fetchSpy.mockRestore();

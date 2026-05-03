@@ -5,5 +5,27 @@ export interface AuthUser {
 
 export interface AuthState {
     user: AuthUser | null;
-    idToken: string | null;
+    accessToken: string | null;
+}
+
+export interface AuthLoginRequest {
+    code: string;
+}
+
+export interface AuthLoginResponse {
+    accessToken: string;
+    refreshToken: string;
+    user: AuthUser;
+}
+
+export interface AuthRefreshRequest {
+    refreshToken: string;
+}
+
+export interface AuthRefreshResponse {
+    accessToken: string;
+}
+
+export interface AuthLogoutRequest {
+    refreshToken: string;
 }

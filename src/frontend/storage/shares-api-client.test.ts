@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
+import type { AuthTokenSource } from '../auth/fetch-with-auth';
 import { API_BASE_URL } from '../config';
 import { SharesApiClient, SharesApiError } from './shares-api-client';
 
@@ -9,13 +10,20 @@ function jsonResponse(body: unknown, status = 200): Response {
     });
 }
 
+function tokensFor(token: string | null): AuthTokenSource {
+    return {
+        getAccessToken: () => token,
+        refresh: vi.fn().mockResolvedValue(null),
+    };
+}
+
 describe('SharesApiClient', () => {
     let fetchMock: MockInstance<typeof fetch>;
     let client: SharesApiClient;
 
     beforeEach(() => {
         fetchMock = vi.spyOn(globalThis, 'fetch');
-        client = new SharesApiClient({ getIdToken: () => 'test-token' });
+        client = new SharesApiClient({ tokens: tokensFor('test-token') });
     });
 
     afterEach(() => {
@@ -28,17 +36,16 @@ describe('SharesApiClient', () => {
         const shareId = await client.create();
 
         expect(shareId).toBe('share-uuid');
-        expect(fetchMock).toHaveBeenCalledWith(
-            `${API_BASE_URL}/api/shares`,
-            expect.objectContaining({
-                method: 'POST',
-                headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
-            })
+        const [url, init] = fetchMock.mock.calls[0];
+        expect(url).toBe(`${API_BASE_URL}/api/shares`);
+        expect((init as RequestInit).method).toBe('POST');
+        expect(new Headers((init as RequestInit).headers).get('Authorization')).toBe(
+            'Bearer test-token'
         );
     });
 
-    it('throws SharesApiError without calling fetch when create() has no token', async () => {
-        const noTokenClient = new SharesApiClient({ getIdToken: () => null });
+    it('throws SharesApiError without calling fetch when create() has no token and cannot refresh', async () => {
+        const noTokenClient = new SharesApiClient({ tokens: tokensFor(null) });
 
         await expect(noTokenClient.create()).rejects.toBeInstanceOf(SharesApiError);
         expect(fetchMock).not.toHaveBeenCalled();

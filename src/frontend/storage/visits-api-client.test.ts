@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
+import type { AuthTokenSource } from '../auth/fetch-with-auth';
 import { API_BASE_URL } from '../config';
 import { VisitsApiClient, VisitsApiError } from './visits-api-client';
 
@@ -13,13 +14,20 @@ function emptyResponse(status = 204): Response {
     return new Response(null, { status });
 }
 
+function tokensFor(token: string | null): AuthTokenSource {
+    return {
+        getAccessToken: () => token,
+        refresh: vi.fn().mockResolvedValue(null),
+    };
+}
+
 describe('VisitsApiClient', () => {
     let fetchMock: MockInstance<typeof fetch>;
     let client: VisitsApiClient;
 
     beforeEach(() => {
         fetchMock = vi.spyOn(globalThis, 'fetch');
-        client = new VisitsApiClient({ getIdToken: () => 'test-token' });
+        client = new VisitsApiClient({ tokens: tokensFor('test-token') });
     });
 
     afterEach(() => {
@@ -38,11 +46,11 @@ describe('VisitsApiClient', () => {
         expect(visits).toEqual([{ stationId: '123', styleId: 1, updatedAt: 1000 }]);
         expect(fetchMock).toHaveBeenCalledWith(
             `${API_BASE_URL}/api/visits`,
-            expect.objectContaining({
-                method: 'GET',
-                headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
-            })
+            expect.objectContaining({ method: 'GET' })
         );
+        const init = fetchMock.mock.calls[0][1] as RequestInit;
+        const headers = new Headers(init.headers);
+        expect(headers.get('Authorization')).toBe('Bearer test-token');
     });
 
     it('PUTs a single visit with JSON body', async () => {
@@ -50,17 +58,13 @@ describe('VisitsApiClient', () => {
 
         await client.put('123', 2);
 
-        expect(fetchMock).toHaveBeenCalledWith(
-            `${API_BASE_URL}/api/visits/123`,
-            expect.objectContaining({
-                method: 'PUT',
-                body: JSON.stringify({ styleId: 2 }),
-                headers: expect.objectContaining({
-                    Authorization: 'Bearer test-token',
-                    'Content-Type': 'application/json',
-                }),
-            })
-        );
+        const [url, init] = fetchMock.mock.calls[0];
+        expect(url).toBe(`${API_BASE_URL}/api/visits/123`);
+        expect((init as RequestInit).method).toBe('PUT');
+        expect((init as RequestInit).body).toBe(JSON.stringify({ styleId: 2 }));
+        const headers = new Headers((init as RequestInit).headers);
+        expect(headers.get('Authorization')).toBe('Bearer test-token');
+        expect(headers.get('Content-Type')).toBe('application/json');
     });
 
     it('DELETEs a visit', async () => {
@@ -70,18 +74,35 @@ describe('VisitsApiClient', () => {
 
         expect(fetchMock).toHaveBeenCalledWith(
             `${API_BASE_URL}/api/visits/123`,
-            expect.objectContaining({
-                method: 'DELETE',
-                headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
-            })
+            expect.objectContaining({ method: 'DELETE' })
         );
     });
 
-    it('throws VisitsApiError without calling fetch when ID token is missing', async () => {
-        const noTokenClient = new VisitsApiClient({ getIdToken: () => null });
+    it('throws VisitsApiError without calling fetch when access token is missing and refresh fails', async () => {
+        const noTokenClient = new VisitsApiClient({ tokens: tokensFor(null) });
 
         await expect(noTokenClient.list()).rejects.toBeInstanceOf(VisitsApiError);
         expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('refreshes once and retries on 401', async () => {
+        const refresh = vi.fn().mockResolvedValueOnce('new-token');
+        const tokens: AuthTokenSource = {
+            getAccessToken: () => 'old-token',
+            refresh,
+        };
+        const retryingClient = new VisitsApiClient({ tokens });
+
+        fetchMock
+            .mockResolvedValueOnce(jsonResponse({ error: 'expired' }, 401))
+            .mockResolvedValueOnce(jsonResponse({ visits: [] }));
+
+        await retryingClient.list();
+
+        expect(refresh).toHaveBeenCalledTimes(1);
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        const second = fetchMock.mock.calls[1][1] as RequestInit;
+        expect(new Headers(second.headers).get('Authorization')).toBe('Bearer new-token');
     });
 
     it('throws VisitsApiError including the server-provided error message', async () => {

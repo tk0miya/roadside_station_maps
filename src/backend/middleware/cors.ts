@@ -10,7 +10,7 @@ export const corsMiddleware = (): MiddlewareHandler<AppEnv> => {
 
         const handler = cors({
             origin: (origin) => (allowed.includes(origin) ? origin : null),
-            allowMethods: ['GET', 'PUT', 'DELETE', 'OPTIONS'],
+            allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
             allowHeaders: ['Authorization', 'Content-Type'],
             maxAge: 86400,
         });

@@ -1,34 +1,56 @@
 import { decodeJwt } from 'jose';
-import type { AuthState, AuthUser } from '@shared/auth-types';
+import type {
+    AuthLoginRequest,
+    AuthLoginResponse,
+    AuthLogoutRequest,
+    AuthRefreshRequest,
+    AuthRefreshResponse,
+    AuthState,
+    AuthUser,
+} from '@shared/auth-types';
+import { API_BASE_URL } from '../config';
 
-export const ID_TOKEN_STORAGE_KEY = 'auth:idToken';
+export const ACCESS_TOKEN_STORAGE_KEY = 'auth:accessToken';
+export const REFRESH_TOKEN_STORAGE_KEY = 'auth:refreshToken';
+// Legacy key from the previous Google id_token implementation; cleared at
+// startup so stale tokens never linger.
+const LEGACY_ID_TOKEN_STORAGE_KEY = 'auth:idToken';
 
-const GOOGLE_ISSUERS = ['https://accounts.google.com', 'accounts.google.com'];
+// If the access token has fewer seconds than this until exp, refresh proactively
+// when the tab regains visibility (or when callers ask for a fresh token).
+const ACCESS_TOKEN_REFRESH_LEEWAY_SECONDS = 60;
 
 type Listener = (state: AuthState) => void;
 
+export interface AuthManagerOptions {
+    fetchImpl?: typeof fetch;
+    apiBaseUrl?: string;
+}
+
 export class AuthManager {
-    private state: AuthState = { user: null, idToken: null };
+    private state: AuthState = { user: null, accessToken: null };
+    private refreshTokenValue: string | null = null;
     private listeners: Set<Listener> = new Set();
-    // True if the user was authenticated in this session or had a (possibly
-    // expired) token in storage at startup. Used to gate silent re-login
-    // attempts so brand-new visitors are not prompted unexpectedly.
-    hadPreviousSession = false;
+    private refreshPromise: Promise<string | null> | null = null;
+    private readonly fetchImpl: typeof fetch;
+    private readonly apiBaseUrl: string;
 
-    constructor(private readonly clientId: string) {
+    constructor(options: AuthManagerOptions = {}) {
+        this.fetchImpl = options.fetchImpl ?? ((...args) => fetch(...args));
+        this.apiBaseUrl = options.apiBaseUrl ?? API_BASE_URL;
         this.rehydrateFromStorage();
-    }
-
-    handleCredential(idToken: string): void {
-        const user = this.verifyIdToken(idToken);
-        if (!user) return;
-        localStorage.setItem(ID_TOKEN_STORAGE_KEY, idToken);
-        this.hadPreviousSession = true;
-        this.setState({ user, idToken });
     }
 
     getState(): AuthState {
         return this.state;
+    }
+
+    getAccessToken(): string | null {
+        return this.state.accessToken;
+    }
+
+    getRefreshToken(): string | null {
+        return this.refreshTokenValue;
     }
 
     subscribe(listener: Listener): () => void {
@@ -38,41 +60,144 @@ export class AuthManager {
         };
     }
 
-    private rehydrateFromStorage(): void {
-        const stored = localStorage.getItem(ID_TOKEN_STORAGE_KEY);
-        if (!stored) return;
+    async login(code: string): Promise<void> {
+        const body: AuthLoginRequest = { code };
+        const response = await this.fetchImpl(`${this.apiBaseUrl}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        if (!response.ok) {
+            throw new Error(await readError(response, 'Login failed'));
+        }
+        const json = (await response.json()) as AuthLoginResponse;
+        this.persistTokens(json.accessToken, json.refreshToken);
+        this.setState({ user: json.user, accessToken: json.accessToken });
+    }
 
-        this.hadPreviousSession = true;
-
-        const user = this.verifyIdToken(stored);
-        if (user) {
-            this.state = { user, idToken: stored };
-        } else {
-            localStorage.removeItem(ID_TOKEN_STORAGE_KEY);
+    async logout(): Promise<void> {
+        const refreshToken = this.refreshTokenValue;
+        this.clearTokens();
+        this.setState({ user: null, accessToken: null });
+        if (!refreshToken) return;
+        const body: AuthLogoutRequest = { refreshToken };
+        try {
+            await this.fetchImpl(`${this.apiBaseUrl}/auth/logout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+        } catch {
+            // Server-side revocation is best-effort; the client is already logged out.
         }
     }
 
-    private verifyIdToken(token: string): AuthUser | null {
-        let payload: ReturnType<typeof decodeJwt>;
+    /**
+     * Refreshes the access token using the stored refresh token.
+     * Concurrent callers share a single in-flight request.
+     * Returns the new access token, or `null` if refresh is impossible.
+     */
+    async refresh(): Promise<string | null> {
+        if (this.refreshPromise) return this.refreshPromise;
+        this.refreshPromise = this.doRefresh().finally(() => {
+            this.refreshPromise = null;
+        });
+        return this.refreshPromise;
+    }
+
+    /**
+     * If the current access token is missing or near expiry, refresh it.
+     * Designed to be cheap to call repeatedly (e.g. from `visibilitychange`).
+     */
+    async ensureFreshAccessToken(): Promise<void> {
+        if (!this.refreshTokenValue) return;
+        const exp = readExpClaim(this.state.accessToken);
+        if (exp !== null) {
+            const remaining = exp - Math.floor(Date.now() / 1000);
+            if (remaining > ACCESS_TOKEN_REFRESH_LEEWAY_SECONDS) return;
+        }
+        await this.refresh();
+    }
+
+    private async doRefresh(): Promise<string | null> {
+        const refreshToken = this.refreshTokenValue;
+        if (!refreshToken) return null;
+
+        const body: AuthRefreshRequest = { refreshToken };
+        let response: Response;
         try {
-            payload = decodeJwt(token);
+            response = await this.fetchImpl(`${this.apiBaseUrl}/auth/refresh`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
         } catch {
+            // Network error: leave the user logged in, callers can retry.
             return null;
         }
-        const nowSeconds = Math.floor(Date.now() / 1000);
 
-        if (typeof payload.iss !== 'string' || !GOOGLE_ISSUERS.includes(payload.iss)) return null;
+        if (response.status === 401) {
+            this.clearTokens();
+            this.setState({ user: null, accessToken: null });
+            return null;
+        }
+        if (!response.ok) {
+            // Transient server error; keep state intact so a later retry can recover.
+            return null;
+        }
 
-        const audMatches = Array.isArray(payload.aud)
-            ? payload.aud.includes(this.clientId)
-            : payload.aud === this.clientId;
-        if (!audMatches) return null;
+        const json = (await response.json()) as AuthRefreshResponse;
+        const user = readUserFromAccessToken(json.accessToken);
+        if (!user) {
+            this.clearTokens();
+            this.setState({ user: null, accessToken: null });
+            return null;
+        }
+        this.persistAccessToken(json.accessToken);
+        this.setState({ user, accessToken: json.accessToken });
+        return json.accessToken;
+    }
 
-        if (typeof payload.exp !== 'number' || payload.exp <= nowSeconds) return null;
+    private rehydrateFromStorage(): void {
+        localStorage.removeItem(LEGACY_ID_TOKEN_STORAGE_KEY);
+        const accessToken = localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+        const refreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+        if (!refreshToken) {
+            // Without a refresh token we cannot recover; drop any stray access token.
+            if (accessToken) localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+            return;
+        }
+        this.refreshTokenValue = refreshToken;
 
-        if (typeof payload.sub !== 'string' || payload.sub.length === 0) return null;
+        if (accessToken) {
+            const user = readUserFromAccessToken(accessToken);
+            if (user && !isExpired(accessToken)) {
+                this.state = { user, accessToken };
+                return;
+            }
+            // Expired or malformed access token; keep the refresh token so we can
+            // recover on the next API call (or via ensureFreshAccessToken).
+            const fallbackUser = user ?? readUserFromAccessToken(accessToken);
+            if (fallbackUser) {
+                this.state = { user: fallbackUser, accessToken: null };
+            }
+        }
+    }
 
-        return { sub: payload.sub };
+    private persistTokens(accessToken: string, refreshToken: string): void {
+        this.refreshTokenValue = refreshToken;
+        localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, accessToken);
+        localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken);
+    }
+
+    private persistAccessToken(accessToken: string): void {
+        localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, accessToken);
+    }
+
+    private clearTokens(): void {
+        this.refreshTokenValue = null;
+        localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+        localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
     }
 
     private setState(next: AuthState): void {
@@ -81,4 +206,42 @@ export class AuthManager {
             listener(next);
         }
     }
+}
+
+function readUserFromAccessToken(token: string): AuthUser | null {
+    try {
+        const payload = decodeJwt(token);
+        if (typeof payload.sub === 'string' && payload.sub.length > 0) {
+            return { sub: payload.sub };
+        }
+    } catch {
+        // fall through
+    }
+    return null;
+}
+
+function readExpClaim(token: string | null): number | null {
+    if (!token) return null;
+    try {
+        const payload = decodeJwt(token);
+        return typeof payload.exp === 'number' ? payload.exp : null;
+    } catch {
+        return null;
+    }
+}
+
+function isExpired(token: string): boolean {
+    const exp = readExpClaim(token);
+    if (exp === null) return true;
+    return exp <= Math.floor(Date.now() / 1000);
+}
+
+async function readError(response: Response, fallback: string): Promise<string> {
+    try {
+        const body = (await response.json()) as { error?: string };
+        if (body && typeof body.error === 'string') return body.error;
+    } catch {
+        // ignore
+    }
+    return fallback;
 }

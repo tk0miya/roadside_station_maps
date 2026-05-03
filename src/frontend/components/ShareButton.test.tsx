@@ -17,11 +17,15 @@ vi.mock('clipboard', () => ({
 }));
 
 const mockAuth = vi.hoisted(() => ({
-    state: { user: null, idToken: null } as AuthState,
+    state: { user: null, accessToken: null } as AuthState,
 }));
 
 vi.mock('../auth/auth-context', () => ({
-    useAuthManager: () => ({ getState: () => mockAuth.state }),
+    useAuthManager: () => ({
+        getState: () => mockAuth.state,
+        getAccessToken: () => mockAuth.state.accessToken,
+        refresh: vi.fn().mockResolvedValue(null),
+    }),
 }));
 
 Object.defineProperty(global, 'google', {
@@ -41,7 +45,7 @@ describe('ShareButton', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        mockAuth.state = { user: null, idToken: null };
+        mockAuth.state = { user: null, accessToken: null };
         originalLocation = window.location;
 
         Object.defineProperty(window, 'location', {
@@ -75,7 +79,7 @@ describe('ShareButton', () => {
     });
 
     it('adds the share button when the user is signed in', async () => {
-        mockAuth.state = { user: { sub: 'user-1' }, idToken: 'token-abc' };
+        mockAuth.state = { user: { sub: 'user-1' }, accessToken: 'token-abc' };
         const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
             new Response(JSON.stringify({ shareId: 'share-uuid' }), {
                 status: 201,

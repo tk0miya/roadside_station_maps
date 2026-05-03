@@ -1,8 +1,9 @@
 import type { CreateShareResponse, GetShareResponse, VisitRecord } from '@shared/api-types';
+import { type AuthTokenSource, MissingAccessTokenError, fetchWithAuth } from '../auth/fetch-with-auth';
 import { API_BASE_URL } from '../config';
 
 export interface SharesApiClientOptions {
-    getIdToken: () => string | null;
+    tokens: AuthTokenSource;
 }
 
 export class SharesApiError extends Error {
@@ -16,22 +17,24 @@ export class SharesApiError extends Error {
 }
 
 export class SharesApiClient {
-    private readonly getIdToken: () => string | null;
+    private readonly tokens: AuthTokenSource;
 
     constructor(options: SharesApiClientOptions) {
-        this.getIdToken = options.getIdToken;
+        this.tokens = options.tokens;
     }
 
     async create(): Promise<string> {
-        const token = this.getIdToken();
-        if (!token) {
-            throw new SharesApiError('Missing ID token; user must be signed in');
+        let response: Response;
+        try {
+            response = await fetchWithAuth(this.tokens, `${API_BASE_URL}/api/shares`, {
+                method: 'POST',
+            });
+        } catch (error) {
+            if (error instanceof MissingAccessTokenError) {
+                throw new SharesApiError(error.message);
+            }
+            throw error;
         }
-
-        const response = await fetch(`${API_BASE_URL}/api/shares`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
-        });
 
         if (!response.ok) {
             throw new SharesApiError(await readErrorMessage(response), response.status);

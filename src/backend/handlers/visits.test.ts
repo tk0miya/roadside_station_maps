@@ -14,6 +14,8 @@ import * as visitsDb from '../db/visits';
 const TEST_ENV = {
     DB: {} as unknown as AppEnv['Bindings']['DB'],
     GOOGLE_CLIENT_ID: 'test-client',
+    GOOGLE_CLIENT_SECRET: 'test-secret',
+    SESSION_JWT_SECRET: 'test-session-secret',
     ALLOWED_ORIGINS: 'http://localhost:8081',
 };
 

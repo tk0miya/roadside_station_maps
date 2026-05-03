@@ -1,4 +1,4 @@
-import { GoogleLogin } from '@react-oauth/google';
+import { useGoogleLogin } from '@react-oauth/google';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuthManager } from '../auth/auth-context';
@@ -12,6 +12,21 @@ export function LoginButton({ map }: LoginButtonProps) {
     const [container, setContainer] = useState<HTMLDivElement | null>(null);
     const authManager = useAuthManager();
     const { user } = authManager.getState();
+
+    const login = useGoogleLogin({
+        flow: 'auth-code',
+        // Refresh tokens are only issued for the offline access type. The popup
+        // flow defaults to using `redirect_uri=postmessage` which the backend
+        // mirrors when exchanging the code.
+        onSuccess: (response) => {
+            void authManager.login(response.code).catch((error) => {
+                console.error('Login failed:', error);
+            });
+        },
+        onError: (error) => {
+            console.error('Google login error:', error);
+        },
+    });
 
     useEffect(() => {
         if (!map) return;
@@ -36,13 +51,9 @@ export function LoginButton({ map }: LoginButtonProps) {
     if (!container || user) return null;
 
     return createPortal(
-        <GoogleLogin
-            onSuccess={(response) => {
-                if (response.credential) {
-                    authManager.handleCredential(response.credential);
-                }
-            }}
-        />,
+        <button type="button" className="google-login-button" onClick={() => login()}>
+            Google でログイン
+        </button>,
         container
     );
 }
