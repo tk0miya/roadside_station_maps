@@ -3,7 +3,7 @@
  * @vitest-environment-options { "url": "http://localhost" }
  */
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
-import { buildSessionToken, jsonResponse } from '@test-utils/test-utils';
+import { buildSessionToken, emptyResponse, jsonResponse } from '@test-utils/test-utils';
 import { API_BASE_URL } from '../config';
 import { AuthManager, AuthManagerError, SESSION_TOKEN_STORAGE_KEY } from './auth-manager';
 
@@ -159,6 +159,92 @@ describe('AuthManager', () => {
 
         it('exposes a typed error class', () => {
             expect(new AuthManagerError('boom').name).toBe('AuthManagerError');
+        });
+    });
+
+    describe('refreshSession', () => {
+        let fetchMock: MockInstance<typeof fetch>;
+
+        beforeEach(() => {
+            fetchMock = vi.spyOn(globalThis, 'fetch');
+        });
+
+        afterEach(() => {
+            fetchMock.mockRestore();
+        });
+
+        it('does nothing when no session token is stored', async () => {
+            const manager = new AuthManager();
+
+            await manager.refreshSession();
+
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+
+        it('sends the current session token as a bearer credential', async () => {
+            const token = buildSessionToken({ sub: 'user-1' });
+            localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
+            fetchMock.mockResolvedValueOnce(emptyResponse(204));
+
+            const manager = new AuthManager();
+            await manager.refreshSession();
+
+            expect(fetchMock).toHaveBeenCalledWith(
+                `${API_BASE_URL}/sessions/refresh`,
+                expect.objectContaining({
+                    method: 'POST',
+                    headers: expect.objectContaining({ Authorization: `Bearer ${token}` }),
+                })
+            );
+        });
+
+        it('keeps the existing token when the backend replies 204', async () => {
+            const token = buildSessionToken({ sub: 'user-1' });
+            localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
+            fetchMock.mockResolvedValueOnce(emptyResponse(204));
+
+            const manager = new AuthManager();
+            await manager.refreshSession();
+
+            expect(manager.getState().sessionToken).toBe(token);
+        });
+
+        it('replaces the token when the backend issues a fresh one', async () => {
+            const oldToken = buildSessionToken({ sub: 'user-1', exp: 2000000000 });
+            localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, oldToken);
+            const newToken = buildSessionToken({ sub: 'user-1', exp: 2999999999 });
+            fetchMock.mockResolvedValueOnce(
+                jsonResponse({ sessionToken: newToken, expiresAt: 2999999999 })
+            );
+
+            const manager = new AuthManager();
+            await manager.refreshSession();
+
+            expect(manager.getState().sessionToken).toBe(newToken);
+            expect(localStorage.getItem(SESSION_TOKEN_STORAGE_KEY)).toBe(newToken);
+        });
+
+        it('clears the session when the backend replies 401', async () => {
+            const token = buildSessionToken({ sub: 'user-1' });
+            localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
+            fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'unauthorized' }, 401));
+
+            const manager = new AuthManager();
+            await manager.refreshSession();
+
+            expect(manager.getState()).toEqual({ user: null, sessionToken: null });
+            expect(localStorage.getItem(SESSION_TOKEN_STORAGE_KEY)).toBeNull();
+        });
+
+        it('keeps the existing token when fetch throws (network error)', async () => {
+            const token = buildSessionToken({ sub: 'user-1' });
+            localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
+            fetchMock.mockRejectedValueOnce(new Error('network down'));
+
+            const manager = new AuthManager();
+            await manager.refreshSession();
+
+            expect(manager.getState().sessionToken).toBe(token);
         });
     });
 });
