@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 
 import { MARKER_ICONS, numberedMarkerIcon } from '../marker-icons';
 import type { Storage } from '../storage';
-import { changeStyle, getStyle, resetStyle } from '../style';
+import * as style from '../style';
+import { getStyle } from '../style';
 import { StationsGeoJSON } from '../types/geojson';
 
 // Google Maps directions support at most 10 stops (origin + destination
@@ -79,6 +80,85 @@ const isModifierPressed = (event: google.maps.Data.MouseEvent): boolean => {
     return Boolean(domEvent && (domEvent.metaKey || domEvent.ctrlKey));
 };
 
+// Cycle the stored style id for the feature's station and re-apply the
+// resulting icon to the map's data layer.
+export function changeStyle(
+    map: google.maps.Map,
+    feature: google.maps.Data.Feature,
+    storage: Storage,
+): void {
+    const stationId = feature.getProperty('stationId') as string;
+    const newStyleId = style.changeStyle(storage, stationId);
+    map.data.overrideStyle(feature, styleOptionsFor(newStyleId));
+}
+
+// Clear the stored style id for the feature's station and restore the
+// default icon on the map's data layer.
+export function resetStyle(
+    map: google.maps.Map,
+    feature: google.maps.Data.Feature,
+    storage: Storage,
+): void {
+    const stationId = feature.getProperty('stationId') as string;
+    const newStyleId = style.resetStyle(storage, stationId);
+    map.data.overrideStyle(feature, styleOptionsFor(newStyleId));
+}
+
+interface MarkerHandlers {
+    onMarkerClick: (event: google.maps.Data.MouseEvent) => void;
+    onMarkerDoubleClick: (event: google.maps.Data.MouseEvent) => void;
+    onMarkerRightClick: (event: google.maps.Data.MouseEvent) => void;
+}
+
+// Load the road-station GeoJSON onto the map's data layer, wire click /
+// dblclick / rightclick listeners, and install the storage-driven style
+// callback. Returns a cleanup that detaches the listeners and removes
+// every feature.
+export function loadRoadStations(
+    map: google.maps.Map,
+    stations: StationsGeoJSON,
+    storage: Storage,
+    handlers: MarkerHandlers,
+): () => void {
+    map.data.addGeoJson(stations);
+    const clickListener = map.data.addListener('click', handlers.onMarkerClick);
+    const doubleClickListener = map.data.addListener('dblclick', handlers.onMarkerDoubleClick);
+    const rightClickListener = map.data.addListener('rightclick', handlers.onMarkerRightClick);
+    map.data.setStyle((feature: google.maps.Data.Feature) => {
+        const stationId = feature.getProperty('stationId') as string;
+        return styleOptionsFor(getStyle(storage, stationId));
+    });
+
+    return () => {
+        clickListener.remove();
+        doubleClickListener.remove();
+        rightClickListener.remove();
+        const features: google.maps.Data.Feature[] = [];
+        map.data.forEach((f) => features.push(f));
+        features.forEach((f) => map.data.remove(f));
+    };
+}
+
+// Diff `previous` against `next` and reapply icons on the data layer:
+// features no longer selected fall back to their storage-driven icon, while
+// features in `next` receive a 1-based numbered icon matching their position.
+export function applyMultiSelection(
+    map: google.maps.Map,
+    previous: google.maps.Data.Feature[],
+    next: google.maps.Data.Feature[],
+    storage: Storage,
+): void {
+    for (const feature of previous) {
+        if (!next.includes(feature)) {
+            const stationId = feature.getProperty('stationId') as string;
+            map.data.overrideStyle(feature, styleOptionsFor(getStyle(storage, stationId)));
+        }
+    }
+    next.forEach((feature, index) => {
+        map.data.overrideStyle(feature, { icon: numberedMarkerIcon(index + 1) });
+    });
+}
+
 interface MarkersProps {
     map: google.maps.Map | null;
     selectedFeature: google.maps.Data.Feature | null;
@@ -114,45 +194,22 @@ export function Markers(props: MarkersProps) {
 
     useEffect(() => {
         if (!props.map || !props.stations) return;
-
-        props.map.data.addGeoJson(props.stations);
-        const clickListener = props.map.data.addListener('click', onMarkerClick);
-        const doubleClickListener = props.map.data.addListener('dblclick', onMarkerDoubleClick);
-        const rightClickListener = props.map.data.addListener('rightclick', onMarkerRightClick);
-        props.map.data.setStyle((feature: google.maps.Data.Feature) => {
-            const stationId = feature.getProperty('stationId') as string;
-            return styleOptionsFor(getStyle(storageRef.current, stationId));
+        return loadRoadStations(props.map, props.stations, storageRef.current, {
+            onMarkerClick,
+            onMarkerDoubleClick,
+            onMarkerRightClick,
         });
-
-        const map = props.map;
-        return () => {
-            clickListener.remove();
-            doubleClickListener.remove();
-            rightClickListener.remove();
-            const features: google.maps.Data.Feature[] = [];
-            map.data.forEach((f) => features.push(f));
-            features.forEach((f) => map.data.remove(f));
-        };
     }, [props.map, props.stations]);
 
-    // Apply numbered icons to currently multi-selected features and restore
-    // the storage-driven icon to features that were just deselected.
     useEffect(() => {
         if (!props.map) return;
-        const previous = multiSelectedRef.current;
-        const next = props.multiSelected;
-
-        for (const feature of previous) {
-            if (!next.includes(feature)) {
-                const stationId = feature.getProperty('stationId') as string;
-                props.map.data.overrideStyle(feature, styleOptionsFor(getStyle(storageRef.current, stationId)));
-            }
-        }
-        next.forEach((feature, index) => {
-            props.map?.data.overrideStyle(feature, { icon: numberedMarkerIcon(index + 1) });
-        });
-
-        multiSelectedRef.current = next;
+        applyMultiSelection(
+            props.map,
+            multiSelectedRef.current,
+            props.multiSelected,
+            storageRef.current,
+        );
+        multiSelectedRef.current = props.multiSelected;
     }, [props.map, props.multiSelected]);
 
     const onMarkerClick = (event: google.maps.Data.MouseEvent) => {
@@ -173,9 +230,7 @@ export function Markers(props: MarkersProps) {
             props.onMultiSelectChange(() => multiSelected);
         }
         if (result.cycleStyleOn) {
-            const stationId = result.cycleStyleOn.getProperty('stationId') as string;
-            const newStyleId = changeStyle(storageRef.current, stationId);
-            props.map.data.overrideStyle(result.cycleStyleOn, styleOptionsFor(newStyleId));
+            changeStyle(props.map, result.cycleStyleOn, storageRef.current);
             props.onStyleChange();
         }
     };
@@ -187,9 +242,7 @@ export function Markers(props: MarkersProps) {
         if (multiSelectedRef.current.length > 0) {
             props.onMultiSelectChange(() => []);
         }
-        const stationId = event.feature.getProperty('stationId') as string;
-        const newStyleId = changeStyle(storageRef.current, stationId);
-        props.map.data.overrideStyle(event.feature, styleOptionsFor(newStyleId));
+        changeStyle(props.map, event.feature, storageRef.current);
         props.onStyleChange();
     };
 
@@ -200,9 +253,7 @@ export function Markers(props: MarkersProps) {
         if (multiSelectedRef.current.length > 0) {
             props.onMultiSelectChange(() => []);
         }
-        const stationId = event.feature.getProperty('stationId') as string;
-        const newStyleId = resetStyle(storageRef.current, stationId);
-        props.map.data.overrideStyle(event.feature, styleOptionsFor(newStyleId));
+        resetStyle(props.map, event.feature, storageRef.current);
         props.onFeatureSelect(null);
         props.onStyleChange();
     };
