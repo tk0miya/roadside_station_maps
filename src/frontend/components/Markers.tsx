@@ -49,10 +49,14 @@ export function Markers(props: MarkersProps) {
             return styleOptionsFor(getStyle(storageRef.current, stationId));
         });
 
+        const map = props.map;
         return () => {
             clickListener.remove();
             doubleClickListener.remove();
             rightClickListener.remove();
+            const features: google.maps.Data.Feature[] = [];
+            map.data.forEach((f) => features.push(f));
+            features.forEach((f) => map.data.remove(f));
         };
     }, [props.map, props.stations]);
 
