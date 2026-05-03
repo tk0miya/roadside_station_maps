@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { reconcileVisits } from './reconcile-visits';
+import { reconcileVisits } from './station';
 import { MemoryStorage } from './storage';
 import { createMockStations } from '../test-utils/test-utils';
 

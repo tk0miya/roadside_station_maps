@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuthManager } from '../auth/auth-context';
-import { reconcileVisits } from '../reconcile-visits';
+import { fetchStations, reconcileVisits } from '../station';
 import { createStorage, type Storage } from '../storage';
 import { StationsGeoJSON } from '../types/geojson';
 import { ShareButton } from './ShareButton';
@@ -40,16 +40,9 @@ export function RoadStationMap() {
 
     // Fetch stations data once
     useEffect(() => {
-        const fetchStations = async () => {
-            try {
-                const response = await fetch('../data/stations.geojson');
-                const data = await response.json();
-                setStations(data);
-            } catch (error) {
-                console.error('Error fetching stations:', error);
-            }
-        };
-        fetchStations();
+        fetchStations()
+            .then(setStations)
+            .catch((error) => console.error('Error fetching stations:', error));
     }, []);
 
     // Build the Storage whenever the auth state changes. RemoteStorage hydrates
