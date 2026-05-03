@@ -1,11 +1,8 @@
 import type { CreateShareResponse, GetShareResponse, VisitRecord } from '@shared/api-types';
 import { API_BASE_URL } from '../config';
-import { SESSION_TOKEN_HEADER } from './visits-api-client';
 
 export interface SharesApiClientOptions {
     getSessionToken: () => string | null;
-    onSessionRefreshed?: (token: string) => void;
-    onUnauthorized?: () => void;
 }
 
 export class SharesApiError extends Error {
@@ -20,13 +17,9 @@ export class SharesApiError extends Error {
 
 export class SharesApiClient {
     private readonly getSessionToken: () => string | null;
-    private readonly onSessionRefreshed?: (token: string) => void;
-    private readonly onUnauthorized?: () => void;
 
     constructor(options: SharesApiClientOptions) {
         this.getSessionToken = options.getSessionToken;
-        this.onSessionRefreshed = options.onSessionRefreshed;
-        this.onUnauthorized = options.onUnauthorized;
     }
 
     async create(): Promise<string> {
@@ -39,15 +32,6 @@ export class SharesApiClient {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
         });
-
-        const refreshed = response.headers.get(SESSION_TOKEN_HEADER);
-        if (refreshed) {
-            this.onSessionRefreshed?.(refreshed);
-        }
-
-        if (response.status === 401) {
-            this.onUnauthorized?.();
-        }
 
         if (!response.ok) {
             throw new SharesApiError(await readErrorMessage(response), response.status);

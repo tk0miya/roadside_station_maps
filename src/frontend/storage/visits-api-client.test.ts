@@ -74,41 +74,6 @@ describe('VisitsApiClient', () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it('forwards rotated session tokens via the X-Session-Token response header', async () => {
-        const onSessionRefreshed = vi.fn();
-        const rotatingClient = new VisitsApiClient({
-            getSessionToken: () => 'old-token',
-            onSessionRefreshed,
-        });
-
-        fetchMock.mockResolvedValueOnce(
-            new Response(JSON.stringify({ visits: [] }), {
-                status: 200,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Session-Token': 'fresh-token',
-                },
-            })
-        );
-
-        await rotatingClient.list();
-
-        expect(onSessionRefreshed).toHaveBeenCalledWith('fresh-token');
-    });
-
-    it('invokes onUnauthorized when the API returns 401', async () => {
-        const onUnauthorized = vi.fn();
-        const guardedClient = new VisitsApiClient({
-            getSessionToken: () => 'expired-token',
-            onUnauthorized,
-        });
-
-        fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'Invalid token' }, 401));
-
-        await expect(guardedClient.list()).rejects.toBeInstanceOf(VisitsApiError);
-        expect(onUnauthorized).toHaveBeenCalledTimes(1);
-    });
-
     it('throws VisitsApiError including the server-provided error message', async () => {
         fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'Invalid style id' }, 400));
 

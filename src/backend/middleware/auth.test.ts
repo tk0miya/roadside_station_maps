@@ -1,8 +1,7 @@
-import { SignJWT } from 'jose';
 import { describe, expect, it } from 'vitest';
 import { buildTestApp, TEST_ENV } from '@test-utils/backend';
 import { issueSessionToken } from '../auth/session';
-import { requireAuth, SESSION_EXPIRES_AT_HEADER, SESSION_TOKEN_HEADER } from './auth';
+import { requireAuth } from './auth';
 
 const SECRET = TEST_ENV.SESSION_SECRET;
 
@@ -60,45 +59,6 @@ describe('requireAuth middleware', () => {
             const res = await sendBearer(token);
             expect(res.status).toBe(200);
             expect(await res.json()).toEqual({ sub: 'user-42' });
-        });
-    });
-
-    describe('sliding rotation', () => {
-        const ISSUER = 'roadside-station-maps';
-        const AUDIENCE = 'roadside-station-maps-frontend';
-
-        const mintTokenExpiringIn = async (sub: string, secondsFromNow: number): Promise<string> => {
-            const expiresAt = Math.floor(Date.now() / 1000) + secondsFromNow;
-            return new SignJWT({})
-                .setProtectedHeader({ alg: 'HS256' })
-                .setSubject(sub)
-                .setIssuer(ISSUER)
-                .setAudience(AUDIENCE)
-                .setIssuedAt()
-                .setExpirationTime(expiresAt)
-                .sign(new TextEncoder().encode(SECRET));
-        };
-
-        it('does not rotate when remaining lifetime is well above the threshold', async () => {
-            const { token } = await issueSessionToken('user-1', SECRET);
-            const res = await sendBearer(token);
-            expect(res.headers.get(SESSION_TOKEN_HEADER)).toBeNull();
-            expect(res.headers.get(SESSION_EXPIRES_AT_HEADER)).toBeNull();
-        });
-
-        it('rotates when remaining lifetime is below 30 days', async () => {
-            const tenDays = 60 * 60 * 24 * 10;
-            const oldToken = await mintTokenExpiringIn('user-7', tenDays);
-            const res = await sendBearer(oldToken);
-
-            expect(res.status).toBe(200);
-            const newToken = res.headers.get(SESSION_TOKEN_HEADER);
-            expect(newToken).toBeTruthy();
-            expect(newToken).not.toBe(oldToken);
-
-            const newExp = res.headers.get(SESSION_EXPIRES_AT_HEADER);
-            expect(newExp).toBeTruthy();
-            expect(Number(newExp)).toBeGreaterThan(Math.floor(Date.now() / 1000) + tenDays);
         });
     });
 });

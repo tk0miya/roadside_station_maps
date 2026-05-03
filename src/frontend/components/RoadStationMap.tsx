@@ -57,11 +57,7 @@ export function RoadStationMap() {
         });
         setLoadError(null);
 
-        createStorage({
-            getSessionToken: () => authManager.getState().sessionToken,
-            onSessionRefreshed: (token) => authManager.updateSessionToken(token),
-            onUnauthorized: () => authManager.clearSession(),
-        })
+        createStorage({ getSessionToken: () => authManager.getState().sessionToken })
             .then((newStorage) => {
                 if (cancelled) return;
                 setStorage(newStorage);
