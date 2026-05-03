@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
-import { Markers } from './Markers';
+import { MAX_ROUTE_SELECTION, Markers, resolveMarkerClick } from './Markers';
 import {
     createMockFeature,
     createMockMap,
@@ -87,7 +87,7 @@ describe('Markers', () => {
         }
     });
 
-    describe('multi-select via modifier-click', () => {
+    describe('click handlers', () => {
         beforeEach(() => {
             setupGoogleMapsMock();
         });
@@ -127,61 +127,10 @@ describe('Markers', () => {
             return updater(prev);
         };
 
-        it('adds a feature to the route selection on Cmd-click', () => {
-            const { mockMap, onMultiSelectChange, onFeatureSelect } = renderMarkers();
-            const featureA = createMockFeature('A');
-
-            mockMap.data._emit('click', buildClickEvent(featureA, 'meta'));
-
-            expect(onFeatureSelect).toHaveBeenCalledWith(null);
-            expect(applyUpdater(onMultiSelectChange, [])).toEqual([featureA]);
-        });
-
-        it('treats Ctrl-click the same as Cmd-click', () => {
-            const { mockMap, onMultiSelectChange } = renderMarkers();
-            const featureA = createMockFeature('A');
-
-            mockMap.data._emit('click', buildClickEvent(featureA, 'ctrl'));
-
-            expect(applyUpdater(onMultiSelectChange, [])).toEqual([featureA]);
-        });
-
-        it('removes a feature from the route selection when Cmd-clicked again', () => {
-            const featureA = createMockFeature('A');
-            const featureB = createMockFeature('B');
-            const { mockMap, onMultiSelectChange } = renderMarkers({
-                multiSelected: [featureA, featureB],
-            });
-
-            mockMap.data._emit('click', buildClickEvent(featureA, 'meta'));
-
-            expect(applyUpdater(onMultiSelectChange, [featureA, featureB])).toEqual([featureB]);
-        });
-
-        it('promotes the currently single-selected marker into the set when extending', () => {
-            const featureA = createMockFeature('A');
-            const featureB = createMockFeature('B');
-            const { mockMap, onMultiSelectChange, onFeatureSelect } = renderMarkers({
-                selectedFeature: featureA,
-            });
-
-            mockMap.data._emit('click', buildClickEvent(featureB, 'meta'));
-
-            expect(onFeatureSelect).toHaveBeenCalledWith(null);
-            expect(applyUpdater(onMultiSelectChange, [])).toEqual([featureA, featureB]);
-        });
-
-        it('does not exceed the 9-station route selection cap', () => {
-            const existing = Array.from({ length: 9 }, (_, i) => createMockFeature(`${i}`));
-            const tenth = createMockFeature('10');
-            const { mockMap, onMultiSelectChange } = renderMarkers({ multiSelected: existing });
-
-            mockMap.data._emit('click', buildClickEvent(tenth, 'meta'));
-
-            expect(applyUpdater(onMultiSelectChange, existing)).toEqual(existing);
-        });
-
-        it('clears the route selection on a plain click and falls back to single selection', () => {
+        // The branching logic itself is covered by the resolveMarkerClick
+        // suite below. This single case exercises the glue layer:
+        // the resolved intent must flow through the props correctly.
+        it('dispatches the resolved click intent through props', () => {
             const featureA = createMockFeature('A');
             const featureB = createMockFeature('B');
             const { mockMap, onMultiSelectChange, onFeatureSelect } = renderMarkers({
@@ -246,6 +195,134 @@ describe('Markers', () => {
             expect(onMultiSelectChange).not.toHaveBeenCalled();
             expect(onFeatureSelect).not.toHaveBeenCalled();
             expect(mockMap.data.overrideStyle).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('resolveMarkerClick', () => {
+        describe('with modifier pressed', () => {
+            it('promotes the single selection into the route set when extending with a different feature', () => {
+                const a = createMockFeature('A');
+                const b = createMockFeature('B');
+
+                const result = resolveMarkerClick({
+                    clickedFeature: b,
+                    modifierPressed: true,
+                    selectedFeature: a,
+                    multiSelected: [],
+                });
+
+                expect(result.selectedFeature).toBeNull();
+                expect(result.multiSelected).toEqual([a, b]);
+                expect(result.cycleStyleOn).toBeUndefined();
+            });
+
+            it('keeps only the selected feature when modifier-clicking the same one', () => {
+                const a = createMockFeature('A');
+
+                const result = resolveMarkerClick({
+                    clickedFeature: a,
+                    modifierPressed: true,
+                    selectedFeature: a,
+                    multiSelected: [],
+                });
+
+                expect(result.selectedFeature).toBeNull();
+                expect(result.multiSelected).toEqual([a]);
+            });
+
+            it('toggles a feature out of the route set when already present', () => {
+                const a = createMockFeature('A');
+                const b = createMockFeature('B');
+
+                const result = resolveMarkerClick({
+                    clickedFeature: a,
+                    modifierPressed: true,
+                    selectedFeature: null,
+                    multiSelected: [a, b],
+                });
+
+                expect(result.multiSelected).toEqual([b]);
+                expect(result.selectedFeature).toBeNull();
+            });
+
+            it('appends a new feature to the route set under the cap', () => {
+                const a = createMockFeature('A');
+                const b = createMockFeature('B');
+
+                const result = resolveMarkerClick({
+                    clickedFeature: b,
+                    modifierPressed: true,
+                    selectedFeature: null,
+                    multiSelected: [a],
+                });
+
+                expect(result.multiSelected).toEqual([a, b]);
+            });
+
+            it('does not exceed the route-selection cap', () => {
+                const existing = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) =>
+                    createMockFeature(`${i}`),
+                );
+                const extra = createMockFeature('extra');
+
+                const result = resolveMarkerClick({
+                    clickedFeature: extra,
+                    modifierPressed: true,
+                    selectedFeature: null,
+                    multiSelected: existing,
+                });
+
+                expect(result.multiSelected).toEqual(existing);
+            });
+        });
+
+        describe('with plain click', () => {
+            it('clears the multi-selection and single-selects the clicked feature', () => {
+                const a = createMockFeature('A');
+                const b = createMockFeature('B');
+
+                const result = resolveMarkerClick({
+                    clickedFeature: b,
+                    modifierPressed: false,
+                    selectedFeature: null,
+                    multiSelected: [a],
+                });
+
+                expect(result.multiSelected).toEqual([]);
+                expect(result.selectedFeature).toBe(b);
+                expect(result.cycleStyleOn).toBeUndefined();
+            });
+
+            it('cycles the style when re-clicking the currently selected feature', () => {
+                const a = createMockFeature('A');
+
+                const result = resolveMarkerClick({
+                    clickedFeature: a,
+                    modifierPressed: false,
+                    selectedFeature: a,
+                    multiSelected: [],
+                });
+
+                expect(result.cycleStyleOn).toBe(a);
+                expect(result.selectedFeature).toBeUndefined();
+                expect(result.multiSelected).toBeUndefined();
+            });
+
+            it('single-selects a different feature without touching style', () => {
+                const a = createMockFeature('A');
+                const b = createMockFeature('B');
+
+                const result = resolveMarkerClick({
+                    clickedFeature: b,
+                    modifierPressed: false,
+                    selectedFeature: a,
+                    multiSelected: [],
+                });
+
+                expect(result.selectedFeature).toBe(b);
+                expect(result.cycleStyleOn).toBeUndefined();
+                expect(result.multiSelected).toBeUndefined();
+            });
         });
     });
 

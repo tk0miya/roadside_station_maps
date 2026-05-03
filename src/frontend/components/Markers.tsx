@@ -7,7 +7,68 @@ import { StationsGeoJSON } from '../types/geojson';
 
 // Google Maps directions support at most 10 stops (origin + destination
 // + 8 waypoints), so the route-selection set is capped just under that bound.
-const MAX_ROUTE_SELECTION = 9;
+export const MAX_ROUTE_SELECTION = 9;
+
+export interface MarkerClickContext {
+    clickedFeature: google.maps.Data.Feature;
+    modifierPressed: boolean;
+    selectedFeature: google.maps.Data.Feature | null;
+    multiSelected: google.maps.Data.Feature[];
+}
+
+// `undefined` fields mean "no change". Explicit `null` for `selectedFeature`
+// represents clearing the single selection.
+export interface MarkerClickResult {
+    selectedFeature?: google.maps.Data.Feature | null;
+    multiSelected?: google.maps.Data.Feature[];
+    cycleStyleOn?: google.maps.Data.Feature;
+}
+
+export function resolveMarkerClick({
+    clickedFeature,
+    modifierPressed,
+    selectedFeature,
+    multiSelected,
+}: MarkerClickContext): MarkerClickResult {
+    if (modifierPressed) {
+        // Modifier-click always suppresses single-selection regardless of
+        // prior state, so always emit a (possibly redundant) clear.
+        if (selectedFeature) {
+            // Extending a single selection: lift the previously selected
+            // marker into the set together with the newly clicked one.
+            return {
+                selectedFeature: null,
+                multiSelected:
+                    selectedFeature === clickedFeature
+                        ? [selectedFeature]
+                        : [selectedFeature, clickedFeature],
+            };
+        }
+        if (multiSelected.includes(clickedFeature)) {
+            return {
+                selectedFeature: null,
+                multiSelected: multiSelected.filter((feature) => feature !== clickedFeature),
+            };
+        }
+        if (multiSelected.length >= MAX_ROUTE_SELECTION) {
+            return { selectedFeature: null, multiSelected };
+        }
+        return {
+            selectedFeature: null,
+            multiSelected: [...multiSelected, clickedFeature],
+        };
+    }
+
+    // Plain click clears any in-progress multi-selection before the
+    // single-selection logic runs.
+    if (multiSelected.length > 0) {
+        return { selectedFeature: clickedFeature, multiSelected: [] };
+    }
+    if (selectedFeature === clickedFeature) {
+        return { cycleStyleOn: clickedFeature };
+    }
+    return { selectedFeature: clickedFeature };
+}
 
 const styleOptionsFor = (styleId: number): google.maps.Data.StyleOptions => ({
     icon: MARKER_ICONS[styleId],
@@ -97,51 +158,25 @@ export function Markers(props: MarkersProps) {
     const onMarkerClick = (event: google.maps.Data.MouseEvent) => {
         if (!props.map) return;
 
-        if (isModifierPressed(event)) {
-            // Modifier-click toggles the feature in the route-selection set
-            // and suppresses single-selection / style-cycling behavior.
-            const currentSelected = selectedFeatureRef.current;
-            props.onFeatureSelect(null);
+        const result = resolveMarkerClick({
+            clickedFeature: event.feature,
+            modifierPressed: isModifierPressed(event),
+            selectedFeature: selectedFeatureRef.current,
+            multiSelected: multiSelectedRef.current,
+        });
 
-            if (currentSelected) {
-                // Extending a single selection: lift the previously selected
-                // marker into the set together with the newly clicked one.
-                const next =
-                    currentSelected === event.feature
-                        ? [currentSelected]
-                        : [currentSelected, event.feature];
-                props.onMultiSelectChange(() => next);
-            } else {
-                // Already in multi-select (or starting from nothing): toggle
-                // the clicked feature, capped at the route-selection limit.
-                props.onMultiSelectChange((prev) => {
-                    if (prev.includes(event.feature)) {
-                        return prev.filter((f) => f !== event.feature);
-                    }
-                    if (prev.length >= MAX_ROUTE_SELECTION) {
-                        return prev;
-                    }
-                    return [...prev, event.feature];
-                });
-            }
-            return;
+        if (result.selectedFeature !== undefined) {
+            props.onFeatureSelect(result.selectedFeature);
         }
-
-        // Plain click clears any in-progress multi-selection before the
-        // single-selection logic runs.
-        if (multiSelectedRef.current.length > 0) {
-            props.onMultiSelectChange(() => []);
-            props.onFeatureSelect(event.feature);
-            return;
+        if (result.multiSelected !== undefined) {
+            const { multiSelected } = result;
+            props.onMultiSelectChange(() => multiSelected);
         }
-
-        if (selectedFeatureRef.current === event.feature) {
-            const stationId = event.feature.getProperty('stationId') as string;
+        if (result.cycleStyleOn) {
+            const stationId = result.cycleStyleOn.getProperty('stationId') as string;
             const newStyleId = changeStyle(storageRef.current, stationId);
-            props.map.data.overrideStyle(event.feature, styleOptionsFor(newStyleId));
+            props.map.data.overrideStyle(result.cycleStyleOn, styleOptionsFor(newStyleId));
             props.onStyleChange();
-        } else {
-            props.onFeatureSelect(event.feature);
         }
     };
 
