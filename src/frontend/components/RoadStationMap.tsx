@@ -62,10 +62,7 @@ export function RoadStationMap() {
         });
         setLoadError(null);
 
-        createStorage({
-            authState: auth,
-            getIdToken: () => authManager.getState().idToken,
-        })
+        createStorage({ getIdToken: () => authManager.getState().idToken })
             .then((newStorage) => {
                 if (cancelled) return;
                 setStorage(newStorage);

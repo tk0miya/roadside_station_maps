@@ -1,5 +1,4 @@
 import queryString from 'query-string';
-import type { AuthState } from '@shared/auth-types';
 import { MemoryStorage } from './memory-storage';
 import { RemoteStorage } from './remote-storage';
 import { SharesApiClient } from './shares-api-client';
@@ -7,7 +6,6 @@ import { Storage } from './types';
 import { VisitsApiClient } from './visits-api-client';
 
 export interface CreateStorageOptions {
-    authState: AuthState;
     getIdToken: () => string | null;
 }
 
@@ -31,7 +29,7 @@ export async function createStorage(options: CreateStorageOptions): Promise<Stor
         return new MemoryStorage(entries);
     }
 
-    if (options.authState.idToken) {
+    if (options.getIdToken()) {
         const client = new VisitsApiClient({ getIdToken: options.getIdToken });
         return RemoteStorage.create({ client });
     }
