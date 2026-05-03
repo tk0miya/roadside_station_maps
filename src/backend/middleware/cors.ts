@@ -1,6 +1,7 @@
 import { cors } from 'hono/cors';
 import type { MiddlewareHandler } from 'hono';
 import type { AppEnv } from '../env';
+import { SESSION_EXPIRES_AT_HEADER, SESSION_TOKEN_HEADER } from './auth';
 
 export const corsMiddleware = (): MiddlewareHandler<AppEnv> => {
     return async (c, next) => {
@@ -10,8 +11,9 @@ export const corsMiddleware = (): MiddlewareHandler<AppEnv> => {
 
         const handler = cors({
             origin: (origin) => (allowed.includes(origin) ? origin : null),
-            allowMethods: ['GET', 'PUT', 'DELETE', 'OPTIONS'],
+            allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
             allowHeaders: ['Authorization', 'Content-Type'],
+            exposeHeaders: [SESSION_TOKEN_HEADER, SESSION_EXPIRES_AT_HEADER],
             maxAge: 86400,
         });
         return handler(c, next);

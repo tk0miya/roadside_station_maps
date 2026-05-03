@@ -30,3 +30,13 @@ export interface CreateShareResponse {
 export interface GetShareResponse {
     visits: VisitRecord[];
 }
+
+export interface CreateSessionRequest {
+    provider: 'google';
+    idToken: string;
+}
+
+export interface CreateSessionResponse {
+    sessionToken: string;
+    expiresAt: number;
+}

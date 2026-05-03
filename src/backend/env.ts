@@ -4,6 +4,7 @@ import type { AuthUser } from '@shared/auth-types';
 export interface Bindings {
     DB: D1Database;
     GOOGLE_CLIENT_ID: string;
+    SESSION_SECRET: string;
     ALLOWED_ORIGINS: string;
 }
 
