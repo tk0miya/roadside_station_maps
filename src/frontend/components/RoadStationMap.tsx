@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuthManager } from '../auth/auth-context';
+import { useSessionRefresh } from '../auth/use-session-refresh';
 import { fetchStations, reconcileVisits } from '../station';
 import { createStorage, type Storage } from '../storage';
 import { StationsGeoJSON } from '../types/geojson';
@@ -18,6 +19,7 @@ const getCurrentPosition = (): Promise<GeolocationPosition> => {
 export function RoadStationMap() {
     const authManager = useAuthManager();
     const auth = authManager.getState();
+    useSessionRefresh(authManager);
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
