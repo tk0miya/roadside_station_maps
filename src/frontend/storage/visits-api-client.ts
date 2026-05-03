@@ -1,8 +1,12 @@
 import type { ListVisitsResponse, PutVisitRequest, VisitRecord } from '@shared/api-types';
 import { API_BASE_URL } from '../config';
 
+export const SESSION_TOKEN_HEADER = 'X-Session-Token';
+
 export interface VisitsApiClientOptions {
-    getIdToken: () => string | null;
+    getSessionToken: () => string | null;
+    onSessionRefreshed?: (token: string) => void;
+    onUnauthorized?: () => void;
 }
 
 export class VisitsApiError extends Error {
@@ -16,10 +20,14 @@ export class VisitsApiError extends Error {
 }
 
 export class VisitsApiClient {
-    private readonly getIdToken: () => string | null;
+    private readonly getSessionToken: () => string | null;
+    private readonly onSessionRefreshed?: (token: string) => void;
+    private readonly onUnauthorized?: () => void;
 
     constructor(options: VisitsApiClientOptions) {
-        this.getIdToken = options.getIdToken;
+        this.getSessionToken = options.getSessionToken;
+        this.onSessionRefreshed = options.onSessionRefreshed;
+        this.onUnauthorized = options.onUnauthorized;
     }
 
     async list(): Promise<VisitRecord[]> {
@@ -42,9 +50,9 @@ export class VisitsApiClient {
     }
 
     private async request(path: string, init: RequestInit): Promise<Response> {
-        const token = this.getIdToken();
+        const token = this.getSessionToken();
         if (!token) {
-            throw new VisitsApiError('Missing ID token; user must be signed in');
+            throw new VisitsApiError('Missing session token; user must be signed in');
         }
 
         const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -54,6 +62,15 @@ export class VisitsApiClient {
                 Authorization: `Bearer ${token}`,
             },
         });
+
+        const refreshed = response.headers.get(SESSION_TOKEN_HEADER);
+        if (refreshed) {
+            this.onSessionRefreshed?.(refreshed);
+        }
+
+        if (response.status === 401) {
+            this.onUnauthorized?.();
+        }
 
         if (!response.ok) {
             const message = await safeReadError(response);

@@ -6,7 +6,9 @@ import { Storage } from './types';
 import { VisitsApiClient } from './visits-api-client';
 
 export interface CreateStorageOptions {
-    getIdToken: () => string | null;
+    getSessionToken: () => string | null;
+    onSessionRefreshed?: (token: string) => void;
+    onUnauthorized?: () => void;
 }
 
 /**
@@ -20,7 +22,11 @@ export async function createStorage(options: CreateStorageOptions): Promise<Stor
     const queries = queryString.parse(location.search);
 
     if (typeof queries.share === 'string' && queries.share.length > 0) {
-        const sharesClient = new SharesApiClient({ getIdToken: options.getIdToken });
+        const sharesClient = new SharesApiClient({
+            getSessionToken: options.getSessionToken,
+            onSessionRefreshed: options.onSessionRefreshed,
+            onUnauthorized: options.onUnauthorized,
+        });
         const visits = await sharesClient.get(queries.share);
         const entries: Array<[string, string]> = visits.map((visit) => [
             visit.stationId,
@@ -29,8 +35,12 @@ export async function createStorage(options: CreateStorageOptions): Promise<Stor
         return new MemoryStorage(entries);
     }
 
-    if (options.getIdToken()) {
-        const client = new VisitsApiClient({ getIdToken: options.getIdToken });
+    if (options.getSessionToken()) {
+        const client = new VisitsApiClient({
+            getSessionToken: options.getSessionToken,
+            onSessionRefreshed: options.onSessionRefreshed,
+            onUnauthorized: options.onUnauthorized,
+        });
         return RemoteStorage.create({ client });
     }
 

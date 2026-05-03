@@ -3,10 +3,9 @@
  * @vitest-environment-options { "url": "http://localhost" }
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ID_TOKEN_STORAGE_KEY } from '../auth/auth-manager';
-import { GOOGLE_CLIENT_ID } from '../config';
+import { SESSION_TOKEN_STORAGE_KEY } from '../auth/auth-manager';
 import { renderWithAuth } from '@test-utils/auth';
-import { buildIdToken, createMockMap, setupGoogleMapsMock } from '@test-utils/test-utils';
+import { buildSessionToken, createMockMap, setupGoogleMapsMock } from '@test-utils/test-utils';
 
 let lastGoogleLoginProps: { onSuccess?: (response: { credential?: string }) => void } | null = null;
 
@@ -44,8 +43,7 @@ describe('LoginButton', () => {
     });
 
     it('does not push the control when already signed in', () => {
-        const token = buildIdToken(GOOGLE_CLIENT_ID);
-        window.localStorage.setItem(ID_TOKEN_STORAGE_KEY, token);
+        window.localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, buildSessionToken());
 
         const mockMap = createMockMap();
         renderWithAuth(<LoginButton map={mockMap} />);
@@ -53,15 +51,14 @@ describe('LoginButton', () => {
         expect(mockMap.controls[3].push).not.toHaveBeenCalled();
     });
 
-    it('forwards the credential to AuthManager.handleCredential on success', () => {
+    it('exchanges the credential via AuthManager.login on success', async () => {
         const mockMap = createMockMap();
         const { manager } = renderWithAuth(<LoginButton map={mockMap} />);
 
-        const handleCredential = vi.spyOn(manager, 'handleCredential');
-        const token = buildIdToken(GOOGLE_CLIENT_ID);
+        const login = vi.spyOn(manager, 'login').mockResolvedValue(undefined);
 
-        lastGoogleLoginProps?.onSuccess?.({ credential: token });
+        lastGoogleLoginProps?.onSuccess?.({ credential: 'google-id-token' });
 
-        expect(handleCredential).toHaveBeenCalledWith(token);
+        expect(login).toHaveBeenCalledWith('google-id-token');
     });
 });

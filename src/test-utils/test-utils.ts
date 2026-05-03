@@ -129,21 +129,15 @@ const base64UrlEncode = (input: string): string =>
         .replace(/\+/g, '-')
         .replace(/\//g, '_');
 
-// Build an unsigned Google ID token. Defaults to a valid set of claims for
-// the given audience; pass overrides (including `undefined` to omit a claim)
-// to construct invalid variants.
-export const buildIdToken = (
-    audience: string,
-    overrides: Record<string, unknown> = {}
-): string => {
+// Build an unsigned backend-issued session token. The frontend never verifies
+// the signature so the trailing `sig` segment is irrelevant.
+export const buildSessionToken = (overrides: Record<string, unknown> = {}): string => {
     const payload = {
         sub: 'user-1',
-        iss: 'https://accounts.google.com',
-        aud: audience,
         exp: 9999999999,
         ...overrides,
     };
-    const header = base64UrlEncode(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+    const header = base64UrlEncode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
     const body = base64UrlEncode(JSON.stringify(payload));
     return `${header}.${body}.sig`;
 };

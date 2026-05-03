@@ -1,30 +1,25 @@
-import { decodeJwt } from 'jose';
-import type { AuthState, AuthUser } from '@shared/auth-types';
+import type { CreateSessionRequest, CreateSessionResponse } from '@shared/api-types';
+import type { AuthState } from '@shared/auth-types';
+import { API_BASE_URL } from '../config';
+import { decodeSessionToken, isSessionTokenExpired } from './session-token';
 
-export const ID_TOKEN_STORAGE_KEY = 'auth:idToken';
-
-const GOOGLE_ISSUERS = ['https://accounts.google.com', 'accounts.google.com'];
+export const SESSION_TOKEN_STORAGE_KEY = 'auth:sessionToken';
 
 type Listener = (state: AuthState) => void;
 
-export class AuthManager {
-    private state: AuthState = { user: null, idToken: null };
-    private listeners: Set<Listener> = new Set();
-    // True if the user was authenticated in this session or had a (possibly
-    // expired) token in storage at startup. Used to gate silent re-login
-    // attempts so brand-new visitors are not prompted unexpectedly.
-    hadPreviousSession = false;
-
-    constructor(private readonly clientId: string) {
-        this.rehydrateFromStorage();
+export class AuthManagerError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'AuthManagerError';
     }
+}
 
-    handleCredential(idToken: string): void {
-        const user = this.verifyIdToken(idToken);
-        if (!user) return;
-        localStorage.setItem(ID_TOKEN_STORAGE_KEY, idToken);
-        this.hadPreviousSession = true;
-        this.setState({ user, idToken });
+export class AuthManager {
+    private state: AuthState = { user: null, sessionToken: null };
+    private listeners: Set<Listener> = new Set();
+
+    constructor() {
+        this.rehydrateFromStorage();
     }
 
     getState(): AuthState {
@@ -38,41 +33,53 @@ export class AuthManager {
         };
     }
 
-    private rehydrateFromStorage(): void {
-        const stored = localStorage.getItem(ID_TOKEN_STORAGE_KEY);
-        if (!stored) return;
+    // Exchange a Google ID token for a backend-issued session JWT and persist it.
+    async login(idToken: string): Promise<void> {
+        const body: CreateSessionRequest = { provider: 'google', idToken };
+        const response = await fetch(`${API_BASE_URL}/sessions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
 
-        this.hadPreviousSession = true;
-
-        const user = this.verifyIdToken(stored);
-        if (user) {
-            this.state = { user, idToken: stored };
-        } else {
-            localStorage.removeItem(ID_TOKEN_STORAGE_KEY);
+        if (!response.ok) {
+            const message = await readErrorMessage(response);
+            throw new AuthManagerError(message);
         }
+
+        const json = (await response.json()) as CreateSessionResponse;
+        this.updateSessionToken(json.sessionToken);
     }
 
-    private verifyIdToken(token: string): AuthUser | null {
-        let payload: ReturnType<typeof decodeJwt>;
-        try {
-            payload = decodeJwt(token);
-        } catch {
-            return null;
+    // Apply a freshly issued or rotated session token. Called by the login flow
+    // and by the API client wrappers when the backend rotates via response headers.
+    updateSessionToken(token: string): void {
+        const claims = decodeSessionToken(token);
+        if (!claims || isSessionTokenExpired(claims)) {
+            return;
         }
-        const nowSeconds = Math.floor(Date.now() / 1000);
+        localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
+        this.setState({ user: { sub: claims.sub }, sessionToken: token });
+    }
 
-        if (typeof payload.iss !== 'string' || !GOOGLE_ISSUERS.includes(payload.iss)) return null;
+    // Wipe the local session. Called on explicit logout or when the API
+    // returns 401 (server-side session no longer valid).
+    clearSession(): void {
+        localStorage.removeItem(SESSION_TOKEN_STORAGE_KEY);
+        this.setState({ user: null, sessionToken: null });
+    }
 
-        const audMatches = Array.isArray(payload.aud)
-            ? payload.aud.includes(this.clientId)
-            : payload.aud === this.clientId;
-        if (!audMatches) return null;
+    private rehydrateFromStorage(): void {
+        const stored = localStorage.getItem(SESSION_TOKEN_STORAGE_KEY);
+        if (!stored) return;
 
-        if (typeof payload.exp !== 'number' || payload.exp <= nowSeconds) return null;
+        const claims = decodeSessionToken(stored);
+        if (!claims || isSessionTokenExpired(claims)) {
+            localStorage.removeItem(SESSION_TOKEN_STORAGE_KEY);
+            return;
+        }
 
-        if (typeof payload.sub !== 'string' || payload.sub.length === 0) return null;
-
-        return { sub: payload.sub };
+        this.state = { user: { sub: claims.sub }, sessionToken: stored };
     }
 
     private setState(next: AuthState): void {
@@ -81,4 +88,16 @@ export class AuthManager {
             listener(next);
         }
     }
+}
+
+async function readErrorMessage(response: Response): Promise<string> {
+    try {
+        const body = (await response.json()) as { error?: string };
+        if (body && typeof body.error === 'string') {
+            return body.error;
+        }
+    } catch {
+        // ignore JSON parse failures
+    }
+    return `Failed to create session (status ${response.status})`;
 }

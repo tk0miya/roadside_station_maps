@@ -53,7 +53,11 @@ export function ShareButton(props: ShareButtonProps) {
         }
 
         let cancelled = false;
-        const client = new SharesApiClient({ getIdToken: () => authManager.getState().idToken });
+        const client = new SharesApiClient({
+            getSessionToken: () => authManager.getState().sessionToken,
+            onSessionRefreshed: (token) => authManager.updateSessionToken(token),
+            onUnauthorized: () => authManager.clearSession(),
+        });
         client
             .create()
             .then((id) => {

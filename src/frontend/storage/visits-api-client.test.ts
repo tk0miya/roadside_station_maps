@@ -9,7 +9,7 @@ describe('VisitsApiClient', () => {
 
     beforeEach(() => {
         fetchMock = vi.spyOn(globalThis, 'fetch');
-        client = new VisitsApiClient({ getIdToken: () => 'test-token' });
+        client = new VisitsApiClient({ getSessionToken: () => 'test-token' });
     });
 
     afterEach(() => {
@@ -67,11 +67,46 @@ describe('VisitsApiClient', () => {
         );
     });
 
-    it('throws VisitsApiError without calling fetch when ID token is missing', async () => {
-        const noTokenClient = new VisitsApiClient({ getIdToken: () => null });
+    it('throws VisitsApiError without calling fetch when session token is missing', async () => {
+        const noTokenClient = new VisitsApiClient({ getSessionToken: () => null });
 
         await expect(noTokenClient.list()).rejects.toBeInstanceOf(VisitsApiError);
         expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('forwards rotated session tokens via the X-Session-Token response header', async () => {
+        const onSessionRefreshed = vi.fn();
+        const rotatingClient = new VisitsApiClient({
+            getSessionToken: () => 'old-token',
+            onSessionRefreshed,
+        });
+
+        fetchMock.mockResolvedValueOnce(
+            new Response(JSON.stringify({ visits: [] }), {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-Token': 'fresh-token',
+                },
+            })
+        );
+
+        await rotatingClient.list();
+
+        expect(onSessionRefreshed).toHaveBeenCalledWith('fresh-token');
+    });
+
+    it('invokes onUnauthorized when the API returns 401', async () => {
+        const onUnauthorized = vi.fn();
+        const guardedClient = new VisitsApiClient({
+            getSessionToken: () => 'expired-token',
+            onUnauthorized,
+        });
+
+        fetchMock.mockResolvedValueOnce(jsonResponse({ error: 'Invalid token' }, 401));
+
+        await expect(guardedClient.list()).rejects.toBeInstanceOf(VisitsApiError);
+        expect(onUnauthorized).toHaveBeenCalledTimes(1);
     });
 
     it('throws VisitsApiError including the server-provided error message', async () => {

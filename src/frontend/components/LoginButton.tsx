@@ -39,7 +39,9 @@ export function LoginButton({ map }: LoginButtonProps) {
         <GoogleLogin
             onSuccess={(response) => {
                 if (response.credential) {
-                    authManager.handleCredential(response.credential);
+                    authManager.login(response.credential).catch((error) => {
+                        console.error('Failed to exchange Google credential:', error);
+                    });
                 }
             }}
         />,

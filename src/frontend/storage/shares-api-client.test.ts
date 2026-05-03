@@ -9,7 +9,7 @@ describe('SharesApiClient', () => {
 
     beforeEach(() => {
         fetchMock = vi.spyOn(globalThis, 'fetch');
-        client = new SharesApiClient({ getIdToken: () => 'test-token' });
+        client = new SharesApiClient({ getSessionToken: () => 'test-token' });
     });
 
     afterEach(() => {
@@ -32,7 +32,7 @@ describe('SharesApiClient', () => {
     });
 
     it('throws SharesApiError without calling fetch when create() has no token', async () => {
-        const noTokenClient = new SharesApiClient({ getIdToken: () => null });
+        const noTokenClient = new SharesApiClient({ getSessionToken: () => null });
 
         await expect(noTokenClient.create()).rejects.toBeInstanceOf(SharesApiError);
         expect(fetchMock).not.toHaveBeenCalled();
