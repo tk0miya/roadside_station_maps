@@ -8,8 +8,6 @@ type PendingOp = { kind: 'put'; styleId: number } | { kind: 'delete' };
 export interface RemoteStorageOptions {
     client: VisitsApiClient;
     debounceMs?: number;
-    setTimeoutImpl?: typeof setTimeout;
-    clearTimeoutImpl?: typeof clearTimeout;
 }
 
 /**
@@ -26,14 +24,10 @@ export class RemoteStorage implements Storage {
     private readonly timers = new Map<string, ReturnType<typeof setTimeout>>();
     private readonly client: VisitsApiClient;
     private readonly debounceMs: number;
-    private readonly setTimeoutImpl: typeof setTimeout;
-    private readonly clearTimeoutImpl: typeof clearTimeout;
 
     private constructor(options: RemoteStorageOptions) {
         this.client = options.client;
         this.debounceMs = options.debounceMs ?? DEFAULT_DEBOUNCE_MS;
-        this.setTimeoutImpl = options.setTimeoutImpl ?? setTimeout;
-        this.clearTimeoutImpl = options.clearTimeoutImpl ?? clearTimeout;
     }
 
     static async create(options: RemoteStorageOptions): Promise<RemoteStorage> {
@@ -89,7 +83,7 @@ export class RemoteStorage implements Storage {
     private schedule(stationId: string, op: PendingOp): void {
         this.pending.set(stationId, op);
         this.clearTimer(stationId);
-        const timer = this.setTimeoutImpl(() => {
+        const timer = setTimeout(() => {
             this.timers.delete(stationId);
             void this.flushOne(stationId);
         }, this.debounceMs);
@@ -99,7 +93,7 @@ export class RemoteStorage implements Storage {
     private clearTimer(stationId: string): void {
         const timer = this.timers.get(stationId);
         if (timer !== undefined) {
-            this.clearTimeoutImpl(timer);
+            clearTimeout(timer);
             this.timers.delete(stationId);
         }
     }
