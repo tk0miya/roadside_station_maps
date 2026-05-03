@@ -40,3 +40,8 @@ export interface CreateSessionResponse {
     sessionToken: string;
     expiresAt: number;
 }
+
+export interface RefreshSessionResponse {
+    sessionToken: string;
+    expiresAt: number;
+}

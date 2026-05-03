@@ -1,8 +1,17 @@
 import { Hono, type Context } from 'hono';
-import type { CreateSessionRequest, CreateSessionResponse } from '@shared/api-types';
+import type {
+    CreateSessionRequest,
+    CreateSessionResponse,
+    RefreshSessionResponse,
+} from '@shared/api-types';
 import { GoogleAuthError, verifyIdToken } from '../auth/google';
-import { issueSessionToken } from '../auth/session';
+import {
+    issueSessionToken,
+    SESSION_REFRESH_THRESHOLD_SECONDS,
+    verifySessionToken,
+} from '../auth/session';
 import type { AppEnv } from '../env';
+import { requireAuth } from '../middleware/auth';
 
 export const sessionsRouter = new Hono<AppEnv>();
 
@@ -37,6 +46,27 @@ sessionsRouter.post('/', async (c) => {
         expiresAt: session.expiresAt,
     };
     return c.json(response, 201);
+});
+
+// Issue a fresh session JWT for the caller when the current one is approaching
+// expiry. Authentication via the existing (still valid) session token is
+// required. If the remaining lifetime is still above the refresh threshold the
+// endpoint replies with 204 No Content so the client can keep the current token.
+sessionsRouter.post('/refresh', requireAuth(), async (c) => {
+    const token = c.req.header('Authorization')!.slice('Bearer '.length).trim();
+    const { sub, exp } = await verifySessionToken(token, c.env.SESSION_SECRET);
+
+    const remaining = exp - Math.floor(Date.now() / 1000);
+    if (remaining >= SESSION_REFRESH_THRESHOLD_SECONDS) {
+        return c.body(null, 204);
+    }
+
+    const session = await issueSessionToken(sub, c.env.SESSION_SECRET);
+    const response: RefreshSessionResponse = {
+        sessionToken: session.token,
+        expiresAt: session.expiresAt,
+    };
+    return c.json(response);
 });
 
 async function readJson<T>(c: Context<AppEnv>): Promise<T | null> {

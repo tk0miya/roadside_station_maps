@@ -5,6 +5,12 @@ const SESSION_AUDIENCE = 'roadside-station-maps-frontend';
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 365;
 const SESSION_ALGORITHM = 'HS256';
 
+// Sessions are eligible for refresh once their remaining lifetime drops below
+// half of the TTL. Refreshing early keeps active users from ever bumping into
+// the hard expiry: as long as they return within the first half of the
+// session's lifetime, the token gets renewed.
+export const SESSION_REFRESH_THRESHOLD_SECONDS = SESSION_TTL_SECONDS / 2;
+
 export interface SessionToken {
     token: string;
     expiresAt: number;
