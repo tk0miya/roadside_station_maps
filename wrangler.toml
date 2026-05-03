@@ -3,6 +3,10 @@ main = "src/backend/index.ts"
 compatibility_date = "2025-01-01"
 
 # Public OAuth client ID; the security gate is the configured authorized origins.
+# SESSION_SECRET is the HS256 signing key for in-house session JWTs; provision
+# it per environment with:
+#   wrangler secret put SESSION_SECRET
+#   wrangler secret put SESSION_SECRET --env production
 [vars]
 GOOGLE_CLIENT_ID = "740963820239-n5t81ueg3b27mtcs229fk62na8bfjvva.apps.googleusercontent.com"
 ALLOWED_ORIGINS = "http://localhost:8081"

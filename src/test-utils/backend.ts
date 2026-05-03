@@ -4,6 +4,7 @@ import type { AppEnv } from '../backend/env';
 export const TEST_ENV = {
     DB: {} as unknown as AppEnv['Bindings']['DB'],
     GOOGLE_CLIENT_ID: 'test-client',
+    SESSION_SECRET: 'test-session-secret-not-used-in-production',
     ALLOWED_ORIGINS: 'http://localhost:8081',
 };
 
