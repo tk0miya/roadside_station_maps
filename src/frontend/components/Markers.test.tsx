@@ -1,32 +1,23 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { Markers } from './Markers';
-import { createMockFeature, createMockMapData, createMockStations } from '@test-utils/test-utils';
+import { createMockFeature, createMockMap, createMockStations } from '@test-utils/test-utils';
 import { MemoryStorage } from '../storage/memory-storage';
 
 describe('Markers', () => {
-    let mockMapData: ReturnType<typeof createMockMapData>;
-    let mockMap: google.maps.Map;
-    let storage: MemoryStorage;
     const stations = createMockStations(3);
 
-    beforeEach(() => {
-        vi.clearAllMocks();
-        mockMapData = createMockMapData();
-        mockMap = { data: mockMapData } as unknown as google.maps.Map;
-        storage = new MemoryStorage();
-    });
-
     it('renders nothing to the DOM', () => {
+        const mockMap = createMockMap();
         const { container } = render(
             <Markers
                 map={mockMap}
                 selectedFeature={null}
                 onFeatureSelect={() => {}}
-                storage={storage}
+                storage={new MemoryStorage()}
                 stations={stations}
                 onStyleChange={() => {}}
             />
@@ -35,29 +26,31 @@ describe('Markers', () => {
     });
 
     it('adds GeoJSON features on mount', () => {
+        const mockMap = createMockMap();
         render(
             <Markers
                 map={mockMap}
                 selectedFeature={null}
                 onFeatureSelect={() => {}}
-                storage={storage}
+                storage={new MemoryStorage()}
                 stations={stations}
                 onStyleChange={() => {}}
             />
         );
-        expect(mockMapData.addGeoJson).toHaveBeenCalledWith(stations);
+        expect(mockMap.data.addGeoJson).toHaveBeenCalledWith(stations);
     });
 
     it('removes all features from map.data on unmount', () => {
+        const mockMap = createMockMap();
         const mockFeatures = [createMockFeature('18786'), createMockFeature('18787')];
-        mockMapData._setFeatures(mockFeatures);
+        mockMap.data._setFeatures(mockFeatures);
 
         const { unmount } = render(
             <Markers
                 map={mockMap}
                 selectedFeature={null}
                 onFeatureSelect={() => {}}
-                storage={storage}
+                storage={new MemoryStorage()}
                 stations={stations}
                 onStyleChange={() => {}}
             />
@@ -65,34 +58,35 @@ describe('Markers', () => {
 
         unmount();
 
-        expect(mockMapData.remove).toHaveBeenCalledTimes(mockFeatures.length);
+        expect(mockMap.data.remove).toHaveBeenCalledTimes(mockFeatures.length);
         for (const f of mockFeatures) {
-            expect(mockMapData.remove).toHaveBeenCalledWith(f);
+            expect(mockMap.data.remove).toHaveBeenCalledWith(f);
         }
     });
 
     it('does not leave stale features when remounted after storage switch', () => {
+        const mockMap = createMockMap();
         const mockFeatures = [createMockFeature('18786'), createMockFeature('18787')];
-        mockMapData._setFeatures(mockFeatures);
+        mockMap.data._setFeatures(mockFeatures);
 
         const props = {
             map: mockMap,
             selectedFeature: null as google.maps.Data.Feature | null,
             onFeatureSelect: vi.fn(),
-            storage,
+            storage: new MemoryStorage(),
             stations,
             onStyleChange: vi.fn(),
         };
 
         const { unmount } = render(<Markers {...props} />);
-        expect(mockMapData.addGeoJson).toHaveBeenCalledTimes(1);
+        expect(mockMap.data.addGeoJson).toHaveBeenCalledTimes(1);
 
         // Simulate Markers unmounting due to storage=null during login
         unmount();
-        expect(mockMapData.remove).toHaveBeenCalledTimes(mockFeatures.length);
+        expect(mockMap.data.remove).toHaveBeenCalledTimes(mockFeatures.length);
 
         // Remount with new storage
         render(<Markers {...props} storage={new MemoryStorage()} />);
-        expect(mockMapData.addGeoJson).toHaveBeenCalledTimes(2);
+        expect(mockMap.data.addGeoJson).toHaveBeenCalledTimes(2);
     });
 });
