@@ -1,9 +1,9 @@
 import * as cheerio from 'cheerio';
 import type { CheerioAPI } from 'cheerio';
+import jaconv from 'jaconv';
 import { setTimeout } from 'timers/promises';
 import * as StationCSV from '../lib/station-csv.js';
 import type { Station } from '../lib/types.js';
-const jaconv = require('jaconv');
 
 const BASEURI = 'https://www.michi-no-eki.jp/';
 const FETCH_INTERVAL = 1000; // 1 second in milliseconds
@@ -55,7 +55,7 @@ function normalizeText(text: string | null): string {
 
   try {
     // Use jaconv to convert zenkaku to hankaku
-    normalized = jaconv.normalize(normalized, { kana: false });
+    normalized = jaconv.normalize(normalized);
   } catch (error) {
     // If normalization fails, continue with original text
   }
@@ -271,9 +271,7 @@ async function main(): Promise<void> {
   process.stdout.write(' done\n');
 }
 
-if (require.main === module) {
-  main().catch(error => {
-    console.error('Error:', error);
-    process.exit(1);
-  });
-}
+main().catch(error => {
+  console.error('Error:', error);
+  process.exit(1);
+});
