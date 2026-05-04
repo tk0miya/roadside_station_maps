@@ -80,6 +80,4 @@ function main(): void {
   fs.writeFileSync(OUTPUT_FILENAME, json, 'utf-8');
 }
 
-if (require.main === module) {
-  main();
-}
+main();
