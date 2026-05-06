@@ -42,7 +42,7 @@
         "react-dom": "^19.2.5"
     },
     "devDependencies": {
-        "@biomejs/biome": "^2.4.13",
+        "@biomejs/biome": "^2.4.14",
         "@cloudflare/workers-types": "^4.20260503.1",
         "@testing-library/react": "^16.3.2",
         "@types/cheerio": "^1.0.0",
