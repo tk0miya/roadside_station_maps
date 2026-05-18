@@ -48,7 +48,7 @@
         "@types/cheerio": "^1.0.0",
         "@types/clipboard": "^2.0.10",
         "@types/google.maps": "^3.64.0",
-        "@types/node": "^24.12.3",
+        "@types/node": "^24.12.4",
         "@types/react": "^19.2.14",
         "@types/react-dom": "^19.2.3",
         "esbuild": "^0.28.0",
