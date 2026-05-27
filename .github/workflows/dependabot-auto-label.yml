@@ -15,6 +15,7 @@ jobs:
         with:
           app-id: ${{ vars.PR_AUTO_MERGER_APP_ID }}
           private-key: ${{ secrets.PR_AUTO_MERGER_PRIVATE_KEY }}
+          permission-issues: write
 
       - name: Dependabot metadata
         id: metadata
