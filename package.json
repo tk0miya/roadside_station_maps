@@ -34,7 +34,7 @@
         "@react-oauth/google": "^0.13.5",
         "cheerio": "^1.2.0",
         "clipboard": "^2.0.11",
-        "hono": "^4.12.21",
+        "hono": "^4.12.22",
         "jaconv": "^1.1.2",
         "jose": "^6.2.3",
         "query-string": "^9.3.1",
