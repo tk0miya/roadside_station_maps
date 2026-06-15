@@ -43,7 +43,7 @@
     },
     "devDependencies": {
         "@biomejs/biome": "^2.4.16",
-        "@cloudflare/workers-types": "^4.20260531.1",
+        "@cloudflare/workers-types": "^4.20260607.1",
         "@testing-library/react": "^16.3.2",
         "@types/cheerio": "^1.0.0",
         "@types/clipboard": "^2.0.10",
