@@ -1,4 +1,4 @@
-import type { ListVisitsResponse, PutVisitRequest, VisitRecord } from '@shared/api-types';
+import type { ListVisitsResponse, PutVisitRequest, VisitRecord } from '#shared/api-types';
 import { API_BASE_URL } from '../config';
 
 export interface VisitsApiClientOptions {

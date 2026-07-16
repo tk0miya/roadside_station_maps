@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildTestApp, TEST_ENV } from '@test-utils/backend';
+import { buildTestApp, TEST_ENV } from '#test-utils/backend';
 import { issueSessionToken } from '../auth/session';
 import { requireAuth } from './auth';
 

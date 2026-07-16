@@ -1,4 +1,4 @@
-import type { CreateShareResponse, GetShareResponse, VisitRecord } from '@shared/api-types';
+import type { CreateShareResponse, GetShareResponse, VisitRecord } from '#shared/api-types';
 import { API_BASE_URL } from '../config';
 
 export interface SharesApiClientOptions {

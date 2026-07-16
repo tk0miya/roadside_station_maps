@@ -1,4 +1,3 @@
-import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
@@ -18,9 +17,6 @@ const config: esbuild.BuildOptions = {
     jsx: 'automatic',
     sourcemap: true,
     minify: true,
-    alias: {
-        '@shared': path.resolve(import.meta.dirname, 'src/shared'),
-    },
     define: {
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
     },

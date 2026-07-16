@@ -1,6 +1,6 @@
 import { SignJWT } from 'jose';
 import { describe, expect, it } from 'vitest';
-import { TEST_ENV } from '@test-utils/backend';
+import { TEST_ENV } from '#test-utils/backend';
 import { issueSessionToken, SessionTokenError, verifySessionToken } from './session';
 
 const SECRET = TEST_ENV.SESSION_SECRET;

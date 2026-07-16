@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
-import { jsonResponse } from '@test-utils/test-utils';
+import { jsonResponse } from '#test-utils/test-utils';
 import { API_BASE_URL } from '../config';
 import { SharesApiClient, SharesApiError } from './shares-api-client';
 
