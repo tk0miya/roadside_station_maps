@@ -11,6 +11,11 @@
         "url": "https://github.com/tk0miya/roadside_station_maps"
     },
     "main": "html/js/bundle.js",
+    "imports": {
+        "#shared/*": "./src/shared/*.ts",
+        "#test-utils/auth": "./src/test-utils/auth.tsx",
+        "#test-utils/*": "./src/test-utils/*.ts"
+    },
     "scripts": {
         "start": "npx tsx esbuild.config.ts --watch",
         "build": "npx tsx esbuild.config.ts",

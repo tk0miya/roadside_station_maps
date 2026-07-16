@@ -17,7 +17,7 @@ import {
     createMockMap,
     createMockStations,
     setupGoogleMapsMock,
-} from '@test-utils/test-utils';
+} from '#test-utils/test-utils';
 import { MARKER_ICONS } from '../marker-icons';
 import { MemoryStorage } from '../storage/memory-storage';
 

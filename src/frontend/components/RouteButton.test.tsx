@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { buildDirectionsURL, RouteButton } from './RouteButton';
-import { createMockFeature, createMockMap, setupGoogleMapsMock } from '@test-utils/test-utils';
+import { createMockFeature, createMockMap, setupGoogleMapsMock } from '#test-utils/test-utils';
 
 describe('buildDirectionsURL', () => {
     it('uses "道の駅 <name>" labels for origin and destination', () => {

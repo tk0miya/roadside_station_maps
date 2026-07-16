@@ -3,7 +3,7 @@
  * @vitest-environment-options { "url": "http://localhost" }
  */
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
-import { buildSessionToken, emptyResponse, jsonResponse } from '@test-utils/test-utils';
+import { buildSessionToken, emptyResponse, jsonResponse } from '#test-utils/test-utils';
 import { API_BASE_URL } from '../config';
 import { AuthManager, AuthManagerError, SESSION_TOKEN_STORAGE_KEY } from './auth-manager';
 

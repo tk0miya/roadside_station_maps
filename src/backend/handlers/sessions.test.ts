@@ -1,6 +1,6 @@
 import { SignJWT } from 'jose';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildTestApp, TEST_ENV } from '@test-utils/backend';
+import { buildTestApp, TEST_ENV } from '#test-utils/backend';
 import { GoogleAuthError } from '../auth/google';
 import { issueSessionToken, verifySessionToken } from '../auth/session';
 import { sessionsRouter } from './sessions';

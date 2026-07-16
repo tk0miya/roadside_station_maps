@@ -3,7 +3,7 @@ import type {
     CreateSessionRequest,
     CreateSessionResponse,
     RefreshSessionResponse,
-} from '@shared/api-types';
+} from '#shared/api-types';
 import { GoogleAuthError, verifyIdToken } from '../auth/google';
 import {
     issueSessionToken,

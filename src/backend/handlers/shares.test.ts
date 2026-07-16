@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildTestApp, TEST_ENV } from '@test-utils/backend';
+import { buildTestApp, TEST_ENV } from '#test-utils/backend';
 import { sharesAuthedRouter, sharesPublicRouter } from './shares';
 
 vi.mock('../db/shares', () => ({
