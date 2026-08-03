@@ -43,8 +43,8 @@
         "jaconv": "^1.1.2",
         "jose": "^6.2.3",
         "query-string": "^9.4.1",
-        "react": "^19.2.7",
-        "react-dom": "^19.2.7"
+        "react": "^19.2.8",
+        "react-dom": "^19.2.8"
     },
     "devDependencies": {
         "@biomejs/biome": "^2.5.4",
