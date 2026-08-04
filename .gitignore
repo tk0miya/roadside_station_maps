@@ -6,5 +6,5 @@ data/
 node_modules
 html/js/bundle.js
 
-# Claude Code settings
-.claude/
+# Claude Code personal settings (project settings under .claude/ are tracked)
+.claude/settings.local.json
