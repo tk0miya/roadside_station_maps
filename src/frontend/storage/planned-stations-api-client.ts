@@ -7,8 +7,8 @@
 // The pure parse step is exported separately so it can be unit-tested.
 
 import Papa from 'papaparse';
-import type { City, PlannedStation, Status } from '../types/plan';
-import { STATUSES } from '../types/plan';
+import { parseCoordinate, parseStatus } from '#shared/plan-types';
+import type { City, PlannedStation } from '../types/plan';
 
 // Published Google Spreadsheet CSV (File → Share → Publish to web → CSV).
 // Editing the sheet is reflected on the next page reload.
@@ -22,25 +22,12 @@ function cityKey(pref: string, city: string): string {
     return `${pref} ${city}`;
 }
 
-function toStatus(value: string): Status {
-    return (STATUSES as string[]).includes(value) ? (value as Status) : '計画中';
-}
-
-function toNumber(value: string): number | null {
-    const t = value.trim();
-    if (t === '') {
-        return null;
-    }
-    const n = Number(t);
-    return Number.isNaN(n) ? null : n;
-}
-
 function toStation(record: Record<string, string>, cityIndex: Map<string, City>): PlannedStation {
     const pref = (record.pref ?? '').trim();
     const city = (record.city ?? '').trim();
 
-    let lat = toNumber(record.lat ?? '');
-    let lng = toNumber(record.lng ?? '');
+    let lat = parseCoordinate(record.lat ?? '');
+    let lng = parseCoordinate(record.lng ?? '');
     let coordSource: PlannedStation['coordSource'] = 'none';
 
     if (lat !== null && lng !== null) {
@@ -58,7 +45,7 @@ function toStation(record: Record<string, string>, cityIndex: Map<string, City>)
         name: (record.name ?? '').trim(),
         pref,
         city,
-        status: toStatus((record.status ?? '').trim()),
+        status: parseStatus((record.status ?? '').trim()),
         date: (record.date ?? '').trim(),
         lat,
         lng,
