@@ -3,9 +3,7 @@
 // This map is independent from the main scraped-station pipeline: its source of
 // truth is a human-managed Google Spreadsheet (published as CSV).
 
-export type Status = '開業' | '登録済み' | '計画中' | '中止';
-
-export const STATUSES: Status[] = ['開業', '登録済み', '計画中', '中止'];
+import type { PlanEntry } from '#shared/plan-types';
 
 // Where a station's rendered coordinate came from:
 //   exact - explicit lat/lng in the sheet
@@ -13,15 +11,8 @@ export const STATUSES: Status[] = ['開業', '登録済み', '計画中', '中�
 //   none  - could not be resolved (not rendered)
 export type CoordSource = 'exact' | 'city' | 'none';
 
-export interface PlannedStation {
-    name: string;
-    pref: string;
-    city: string;
-    status: Status;
-    date: string;
-    lat: number | null;
-    lng: number | null;
-    memo: string;
+// A sheet row plus the coordinate resolution the map performed on load.
+export interface PlannedStation extends PlanEntry {
     coordSource: CoordSource;
 }
 
