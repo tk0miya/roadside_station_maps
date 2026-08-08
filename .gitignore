@@ -2,9 +2,10 @@
 *.js.map
 
 dist/
-data/
+/data/
 node_modules
 html/js/bundle.js
+html/js/plan.js
 
 # Claude Code personal settings (project settings under .claude/ are tracked)
 .claude/settings.local.json
