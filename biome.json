@@ -1,5 +1,5 @@
 {
-    "$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
+    "$schema": "https://biomejs.dev/schemas/2.5.5/schema.json",
     "vcs": {
         "enabled": true,
         "clientKind": "git",
@@ -15,7 +15,7 @@
     "linter": {
         "enabled": true,
         "rules": {
-            "recommended": true,
+            "preset": "recommended",
             "complexity": {
                 "noBannedTypes": "error",
                 "noUselessConstructor": "error",
@@ -60,6 +60,6 @@
         }
     },
     "files": {
-        "includes": ["**/*.js", "**/gulpfile.js", "!**/node_modules", "!**/dist", "!**/html/js/**/*", "!**/bin"]
+        "includes": ["**", "!**/node_modules", "!**/dist", "!**/html/js/**/*", "!**/bin", "!.claude"]
     }
 }

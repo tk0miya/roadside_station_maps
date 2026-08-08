@@ -1,39 +1,28 @@
 {
-  "compilerOptions": {
-    "target": "ES2015",
-    "module": "preserve",
-    "lib": ["ESNext", "DOM"],
-    "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "outDir": "./dist",
-    "rootDir": "./",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "types": ["node", "@types/google.maps", "react", "react-dom"]
-  },
-  "include": [
-    "src/frontend/**/*",
-    "src/scripts/**/*",
-    "src/shared/**/*",
-    "*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "html/js/bundle.js",
-    "bin",
-    "src/backend"
-  ]
+    "compilerOptions": {
+        "target": "ES2015",
+        "module": "preserve",
+        "lib": ["ESNext", "DOM"],
+        "jsx": "react-jsx",
+        "jsxImportSource": "react",
+        "outDir": "./dist",
+        "rootDir": "./",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "moduleResolution": "bundler",
+        "allowSyntheticDefaultImports": true,
+        "types": ["node", "@types/google.maps", "react", "react-dom"]
+    },
+    "include": ["src/frontend/**/*", "src/scripts/**/*", "src/shared/**/*", "*.ts"],
+    "exclude": ["node_modules", "dist", "html/js/bundle.js", "bin", "src/backend"]
 }

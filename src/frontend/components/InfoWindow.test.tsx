@@ -1,10 +1,11 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+
 import { render } from '@testing-library/react';
-import { InfoWindow } from './InfoWindow';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockFeature } from '#test-utils/test-utils';
+import { InfoWindow } from './InfoWindow';
 
 // Mock Google Maps API
 const mockInfoWindow = {
@@ -13,15 +14,16 @@ const mockInfoWindow = {
     close: vi.fn(),
 };
 
-
 const mockMap = {} as google.maps.Map;
 
 Object.defineProperty(global, 'google', {
     value: {
         maps: {
+            // biome-ignore lint/complexity/useArrowFunction: stands in for a constructor, so it must be constructible
             InfoWindow: vi.fn(function () {
                 return mockInfoWindow;
             }),
+            // biome-ignore lint/complexity/useArrowFunction: stands in for a constructor, so it must be constructible
             Size: vi.fn(function () {}),
         },
     },
@@ -92,7 +94,7 @@ describe('InfoWindow', () => {
         const contentElement = setOptionsCall.content as HTMLElement;
 
         // Wait a bit for React to render the content
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
 
         // Check that station information is included in the content
         expect(contentElement.textContent).toContain(mockFeature.getProperty('name'));
@@ -100,9 +102,12 @@ describe('InfoWindow', () => {
         expect(contentElement.textContent).toContain(`住所：${mockFeature.getProperty('address')}`);
         expect(contentElement.textContent).toContain(`マップコード：${mockFeature.getProperty('mapcode')}`);
 
-        // Check that the link is present
-        const expectedLink = `<a href="${mockFeature.getProperty('uri')}" target="_blank">${mockFeature.getProperty('name')}</a>`;
-        expect(contentElement.innerHTML).toContain(expectedLink);
+        // The link points at michi-no-eki.jp, so it must not hand the opener to a third party
+        const link = contentElement.querySelector('a');
+        expect(link?.textContent).toBe(mockFeature.getProperty('name'));
+        expect(link?.getAttribute('href')).toBe(mockFeature.getProperty('uri'));
+        expect(link?.getAttribute('target')).toBe('_blank');
+        expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
     });
 
     it('should update InfoWindow content when selectedFeature changes', async () => {
@@ -123,7 +128,7 @@ describe('InfoWindow', () => {
         const firstContentElement = firstSetOptionsCall.content as HTMLElement;
 
         // Wait for React to render
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
 
         // Verify first feature content
         expect(firstContentElement.textContent).toContain(mockFeatureA.getProperty('name'));
@@ -137,7 +142,7 @@ describe('InfoWindow', () => {
         const secondContentElement = secondSetOptionsCall.content as HTMLElement;
 
         // Wait for React to render the new content
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
 
         // Verify second feature content has changed
         expect(secondContentElement.textContent).toContain(mockFeatureB.getProperty('name'));

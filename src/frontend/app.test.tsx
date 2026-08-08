@@ -1,9 +1,10 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createRoot } from 'react-dom/client';
+
 import type { Root } from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock React DOM
 const mockRoot: Root = { render: vi.fn(), unmount: vi.fn() };

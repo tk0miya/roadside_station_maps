@@ -1,8 +1,4 @@
-import type {
-    CreateSessionRequest,
-    CreateSessionResponse,
-    RefreshSessionResponse,
-} from '#shared/api-types';
+import type { CreateSessionRequest, CreateSessionResponse, RefreshSessionResponse } from '#shared/api-types';
 import type { AuthState } from '#shared/auth-types';
 import { API_BASE_URL } from '../config';
 import { decodeSessionToken, isSessionTokenExpired } from './session-token';

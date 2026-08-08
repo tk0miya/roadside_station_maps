@@ -10,7 +10,7 @@ export interface VerifyIdTokenResult {
 export class GoogleAuthError extends Error {
     constructor(
         message: string,
-        readonly status: 401 | 502,
+        readonly status: 401 | 502
     ) {
         super(message);
         this.name = 'GoogleAuthError';

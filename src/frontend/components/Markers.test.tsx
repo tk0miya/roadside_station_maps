@@ -1,8 +1,12 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { render } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createMockFeature, createMockMap, createMockStations, setupGoogleMapsMock } from '#test-utils/test-utils';
+import { MARKER_ICONS } from '../marker-icons';
+import { MemoryStorage } from '../storage/memory-storage';
 import {
     applyMultiSelection,
     changeStyle,
@@ -12,21 +16,10 @@ import {
     resetStyle,
     resolveMarkerClick,
 } from './Markers';
-import {
-    createMockFeature,
-    createMockMap,
-    createMockStations,
-    setupGoogleMapsMock,
-} from '#test-utils/test-utils';
-import { MARKER_ICONS } from '../marker-icons';
-import { MemoryStorage } from '../storage/memory-storage';
 
 const stations = createMockStations(3);
 
-const buildClickEvent = (
-    feature: google.maps.Data.Feature,
-    modifier?: 'meta' | 'ctrl',
-): google.maps.Data.MouseEvent =>
+const buildClickEvent = (feature: google.maps.Data.Feature, modifier?: 'meta' | 'ctrl'): google.maps.Data.MouseEvent =>
     ({
         feature,
         domEvent: {
@@ -105,7 +98,7 @@ describe('Markers', () => {
             overrides: {
                 multiSelected?: google.maps.Data.Feature[];
                 selectedFeature?: google.maps.Data.Feature | null;
-            } = {},
+            } = {}
         ) => {
             const mockMap = createMockMap();
             const onMultiSelectChange = vi.fn();
@@ -120,19 +113,17 @@ describe('Markers', () => {
                     storage={new MemoryStorage()}
                     stations={stations}
                     onStyleChange={() => {}}
-                />,
+                />
             );
             return { mockMap, onMultiSelectChange, onFeatureSelect };
         };
 
         const applyUpdater = (
             mock: ReturnType<typeof vi.fn>,
-            prev: google.maps.Data.Feature[],
+            prev: google.maps.Data.Feature[]
         ): google.maps.Data.Feature[] => {
             expect(mock).toHaveBeenCalledTimes(1);
-            const updater = mock.mock.calls[0][0] as (
-                p: google.maps.Data.Feature[],
-            ) => google.maps.Data.Feature[];
+            const updater = mock.mock.calls[0][0] as (p: google.maps.Data.Feature[]) => google.maps.Data.Feature[];
             return updater(prev);
         };
 
@@ -164,7 +155,7 @@ describe('Markers', () => {
             expect(applyUpdater(onMultiSelectChange, [featureA, featureB])).toEqual([]);
             expect(mockMap.data.overrideStyle).toHaveBeenCalledWith(
                 featureB,
-                expect.objectContaining({ icon: expect.any(String) }),
+                expect.objectContaining({ icon: expect.any(String) })
             );
         });
 
@@ -298,9 +289,7 @@ describe('resolveMarkerClick', () => {
         });
 
         it('does not exceed the route-selection cap', () => {
-            const existing = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) =>
-                createMockFeature(`${i}`),
-            );
+            const existing = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) => createMockFeature(`${i}`));
             const extra = createMockFeature('extra');
 
             const result = resolveMarkerClick({
@@ -444,7 +433,7 @@ describe('loadRoadStations', () => {
         loadRoadStations(mockMap, stations, storage, noopHandlers());
 
         const styleFor = (mockMap.data.setStyle as ReturnType<typeof vi.fn>).mock.calls[0][0] as (
-            f: google.maps.Data.Feature,
+            f: google.maps.Data.Feature
         ) => google.maps.Data.StyleOptions;
         expect(styleFor(createMockFeature('A'))).toEqual({ icon: MARKER_ICONS[2] });
         expect(styleFor(createMockFeature('B'))).toEqual({ icon: MARKER_ICONS[0] });
@@ -472,12 +461,7 @@ describe('loadRoadStations', () => {
         const features = [createMockFeature('A'), createMockFeature('B')];
         mockMap.data._setFeatures(features);
 
-        const cleanup = loadRoadStations(
-            mockMap,
-            stations,
-            new MemoryStorage(),
-            noopHandlers(),
-        );
+        const cleanup = loadRoadStations(mockMap, stations, new MemoryStorage(), noopHandlers());
 
         cleanup();
 
@@ -539,8 +523,9 @@ describe('applyMultiSelection', () => {
             icon: MARKER_ICONS[0],
         });
         // `b` and `c` get numbered icons (1, 2)
-        const numberedCalls = (mockMap.data.overrideStyle as ReturnType<typeof vi.fn>).mock.calls
-            .filter((call) => call[0] === b || call[0] === c);
+        const numberedCalls = (mockMap.data.overrideStyle as ReturnType<typeof vi.fn>).mock.calls.filter(
+            (call) => call[0] === b || call[0] === c
+        );
         expect(numberedCalls).toHaveLength(2);
         expect(numberedCalls[0][0]).toBe(b);
         expect(numberedCalls[1][0]).toBe(c);

@@ -3,12 +3,12 @@ import { useAuthManager } from '../auth/auth-context';
 import { useSessionRefresh } from '../auth/use-session-refresh';
 import { fetchStations, reconcileVisits } from '../station';
 import { createStorage, type Storage } from '../storage';
-import { StationsGeoJSON } from '../types/geojson';
-import { ShareButton } from './ShareButton';
+import type { StationsGeoJSON } from '../types/geojson';
 import { InfoWindow } from './InfoWindow';
 import { LoginButton } from './LoginButton';
 import { Markers } from './Markers';
 import { RouteButton } from './RouteButton';
+import { ShareButton } from './ShareButton';
 import { StationCounter } from './StationCounter';
 
 const getCurrentPosition = (): Promise<GeolocationPosition> => {
@@ -101,9 +101,7 @@ export function RoadStationMap() {
     return (
         <>
             <div ref={mapContainerRef} className="map-canvas" />
-            {!storage && !loadError && (
-                <div className="loading-overlay">訪問履歴を読み込み中...</div>
-            )}
+            {!storage && !loadError && <div className="loading-overlay">訪問履歴を読み込み中...</div>}
             {loadError && (
                 <div className="loading-overlay loading-overlay-error">
                     訪問履歴の読み込みに失敗しました: {loadError}
@@ -122,19 +120,11 @@ export function RoadStationMap() {
                         onStyleChange={() => setStyleVersion((v) => v + 1)}
                     />
                     <ShareButton map={map} />
-                    <StationCounter
-                        storage={storage}
-                        stations={stations}
-                        styleVersion={styleVersion}
-                        map={map}
-                    />
+                    <StationCounter storage={storage} stations={stations} styleVersion={styleVersion} map={map} />
                 </>
             )}
             <RouteButton map={map} multiSelected={multiSelected} />
-            <InfoWindow
-                selectedFeature={multiSelected.length > 0 ? null : feature}
-                map={map}
-            />
+            <InfoWindow selectedFeature={multiSelected.length > 0 ? null : feature} map={map} />
             <LoginButton map={map} />
         </>
     );

@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { MARKER_ICONS } from '../marker-icons';
 import type { Storage } from '../storage';
 import { entries, STYLE_COUNT } from '../style';
-import { StationsGeoJSON } from '../types/geojson';
+import type { StationsGeoJSON } from '../types/geojson';
 
 interface StationCounterProps {
     storage: Storage;
@@ -70,8 +70,9 @@ export function StationCounter({ storage, stations, styleVersion: _styleVersion,
         contentRootRef.current.render(
             <div>
                 {MARKER_ICONS.map((icon, styleId) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: the index is the styleId, a stable identifier
                     <div key={styleId} className="station-counter-style">
-                        <img src={icon} />
+                        <img src={icon} alt="" />
                         <span>{counts[styleId]}</span>
                     </div>
                 ))}

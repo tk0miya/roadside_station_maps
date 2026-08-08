@@ -59,7 +59,7 @@ export function PlanInfoWindow({ map, selected }: PlanInfoWindowProps) {
                         {area ? ` / ${area}` : ''}
                     </div>
                     {selected.memo.trim() && <div className="plan-memo">{memoNodes(selected.memo)}</div>}
-                </div>,
+                </div>
             );
             infoWindow.setOptions({
                 position: { lat: selected.lat, lng: selected.lng },

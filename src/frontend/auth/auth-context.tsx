@@ -1,4 +1,4 @@
-import { type ReactNode, createContext, useContext, useSyncExternalStore } from 'react';
+import { createContext, type ReactNode, useContext, useSyncExternalStore } from 'react';
 import type { AuthManager } from './auth-manager';
 
 const AuthContext = createContext<AuthManager | null>(null);

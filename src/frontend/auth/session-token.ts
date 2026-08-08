@@ -23,6 +23,9 @@ export function decodeSessionToken(token: string): SessionTokenClaims | null {
     return { sub: payload.sub, exp: payload.exp };
 }
 
-export function isSessionTokenExpired(claims: SessionTokenClaims, nowSeconds: number = Math.floor(Date.now() / 1000)): boolean {
+export function isSessionTokenExpired(
+    claims: SessionTokenClaims,
+    nowSeconds: number = Math.floor(Date.now() / 1000)
+): boolean {
     return claims.exp <= nowSeconds;
 }

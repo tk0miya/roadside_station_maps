@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { changeStyle, entries, getStyle, resetStyle } from './style';
+import { describe, expect, it } from 'vitest';
 import { MemoryStorage } from './storage';
+import { changeStyle, entries, getStyle, resetStyle } from './style';
 
 describe('getStyle', () => {
     it('should return 0 when no style is stored', () => {

@@ -1,5 +1,5 @@
 import type { Storage } from './types';
-import { VisitsApiClient } from './visits-api-client';
+import type { VisitsApiClient } from './visits-api-client';
 
 const DEFAULT_DEBOUNCE_MS = 400;
 

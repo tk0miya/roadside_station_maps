@@ -1,13 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { createMockStations } from '#test-utils/test-utils';
 import { reconcileVisits } from './station';
 import { MemoryStorage } from './storage';
-import { createMockStations } from '#test-utils/test-utils';
 
 describe('reconcileVisits', () => {
     it('removes stored entries for stations not present in the GeoJSON', () => {
         const storage = new MemoryStorage();
-        storage.setItem('18786', '1');  // exists in mock stations
-        storage.setItem('99999', '2');  // does not exist
+        storage.setItem('18786', '1'); // exists in mock stations
+        storage.setItem('99999', '2'); // does not exist
 
         reconcileVisits(storage, createMockStations(3));
 

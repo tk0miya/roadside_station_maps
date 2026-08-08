@@ -2,8 +2,8 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { createRoot } from 'react-dom/client';
 import { AuthProvider } from './auth/auth-context';
 import { AuthManager } from './auth/auth-manager';
-import { GOOGLE_CLIENT_ID } from './config';
 import { RoadStationMap } from './components/RoadStationMap';
+import { GOOGLE_CLIENT_ID } from './config';
 
 const container = document.getElementById('map-canvas');
 if (container) {

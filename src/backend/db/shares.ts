@@ -16,12 +16,7 @@ export async function getUserIdByShareId(db: D1Database, shareId: string): Promi
     return row?.user_id ?? null;
 }
 
-export async function insertShare(
-    db: D1Database,
-    shareId: string,
-    userId: string,
-    createdAt: number
-): Promise<void> {
+export async function insertShare(db: D1Database, shareId: string, userId: string, createdAt: number): Promise<void> {
     await db
         .prepare('INSERT INTO shares (share_id, user_id, created_at) VALUES (?, ?, ?)')
         .bind(shareId, userId, createdAt)
