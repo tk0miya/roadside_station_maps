@@ -56,6 +56,13 @@
 - `npm run serve` - ポート8081で開発サーバーを起動（ライブリロード付き）
 - `npm run dev` - 開発サーバー起動（serveのエイリアス）
 
+### Google Apps Script（計画マップ用スプレッドシートAPI）
+- `npm run gas:build` - `src/gas/` を `gas/main.js` にバンドル（`gas:watch` で自動リビルド）
+- `npm run gas:push` - ビルドして clasp でスクリプトを更新
+- `npm run gas:deploy` - push した上で固定デプロイを更新（URLは変わらない。デプロイIDは Git 管理外）
+
+API仕様は `gas/README.md` を参照してください。
+
 ### テスト・品質管理
 - `npm test` - Vitestでユニットテストを実行
 - `npm run lint` - Biomeでコード品質チェック
@@ -65,7 +72,7 @@
 
 ## テストルール
 
-- **test-utilsの使用**: テストでモックオブジェクトが必要な場合は `src/test-utils/test-utils.ts` のヘルパー関数を使用
+- **test-utilsの使用**: テストでモックオブジェクトが必要な場合は `src/test-utils/` のヘルパー関数を使用
 - **StyleManagerを使用するテスト**: StyleManagerを使用するテストでは、基本的に `MemoryStorage` インスタンスを使用してStyleManagerを作成（オンメモリ実装のため外部モックは不要）
 
 
@@ -90,20 +97,31 @@ src/
 │   ├── storage/             訪問データのストレージ抽象（memory / remote）+ APIクライアント
 │   ├── types/               GeoJSON型など
 │   └── config.ts            フロントエンド設定（Google Client ID等）
+├── gas/        Google Apps Script（計画マップ用スプレッドシートの更新API）
+│   ├── main.ts              doPost エントリーポイント + トークン認証
+│   ├── api.ts               コマンド実行（name + pref による行の特定・リネーム衝突チェック）
+│   ├── plan-command.ts      リクエストJSONの検証（更新対象外の列は黙って捨てる）
+│   ├── sheet-table.ts       シートのグリッド ⇔ PlanEntry の変換（純粋関数）
+│   ├── sheet-store.ts       SpreadsheetApp によるシート読み書き
+│   ├── token.ts             共有シークレットの比較
+│   └── errors.ts            ApiError / ErrorCode（APIの失敗ボキャブラリ）
 ├── shared/     フロント・バック共通の型定義
 │   ├── api-types.ts         APIリクエスト・レスポンス型
-│   └── auth-types.ts        AuthUser / AuthState 型
+│   ├── auth-types.ts        AuthUser / AuthState 型
+│   └── plan-types.ts        計画シートの列スキーマ（フロント / GAS 共通）
 ├── lib/        共通ユーティリティ
 │   ├── station-csv.ts       CSV パース
 │   └── types.ts             Station 型
-├── scripts/    データパイプライン用CLIスクリプト
+├── scripts/    CLIスクリプト（データパイプライン / デプロイ）
 │   ├── generate-stationlist.ts
-│   └── generate-geojson.ts
+│   ├── generate-geojson.ts
+│   └── deploy-gas.ts        Apps Script を固定デプロイへリリース
 └── test-utils/ テスト用ヘルパー
 
 migrations/    Cloudflare D1 マイグレーション（SQL）
 html/          静的アセット（index.html、CSS、ビルド成果物 bundle.js）
 data/          生成データ（CSV / GeoJSON）
+gas/           clasp プロジェクト（appsscript.json、ビルド成果物 main.js、README）
 ```
 
 ### バックエンド（Cloudflare Workers + Hono）
@@ -260,18 +278,33 @@ Authorization Code Flow ではなく Implicit Flow のままにしているの�
 2. `src/scripts/generate-geojson.ts` - CSV を読み込み、Point Feature の GeoJSON (`data/stations.geojson`) に変換
 3. フロントエンドは生成された GeoJSON を読み込み Google Maps 上に描画
 
+### 計画マップ用スプレッドシートAPI（Google Apps Script）
+
+開設計画マップ（`html/plan.html`）のデータ元は人手管理の Google スプレッドシートで、フロントエンドは
+その公開CSVを読むだけの読み取り専用。そこに「プログラムからの更新手段」を足すのが `src/gas/` の
+Apps Script ウェブアプリ（既存行の更新のみ。行の追加・削除は扱わない）。
+**設計とAPI仕様は `gas/README.md` に一本化している。**
+
+コードを触るときの制約はひとつだけ: **SpreadsheetApp に触れてよいのは `sheet-store.ts` のみ。**
+他のモジュールは Apps Script 非依存に保ち、`#test-utils/gas` のスタブ・オンメモリストアに対して
+ユニットテストする。シートの列スキーマはフロントエンドと共通で `src/shared/plan-types.ts` にある。
+
 ### ビルド・デプロイ
 
 - **`esbuild.config.ts`** - `src/frontend/app.tsx` を `html/js/bundle.js` にバンドル。watch / serve / build モードを切り替え
+- **`esbuild.gas.config.ts`** - `src/gas/main.ts` を `gas/main.js` にバンドル。watch / build モードを切り替え
 - **`html/index.html`** - Google Maps API と `js/bundle.js` を読み込む静的HTML
 - **`wrangler.toml`** - Workers の設定。D1 バインディング（`DB`）、`migrations_dir`、`env.production` の許可オリジン等を定義
-- **TypeScript設定** - フロント (`tsconfig.json`) とバックエンド (`tsconfig.backend.json`) で別構成。`npm run typecheck` は両方を実行
+- **`gas/.clasp.json` / `gas/.deployment-id`** - clasp の設定（scriptId）とデプロイID。いずれもGit管理外（前者の雛形が `gas/.clasp.json.example`）。**デプロイIDはエンドポイントURLそのもの**なので、publicなこのリポジトリにコミットしない
+- **`gas/appsscript.json`** - Apps Script のマニフェスト。`oauthScopes` を**あえて書いていない**（書くと自動検出が無効になり、宣言し忘れたスコープで実行時に落ちる）
+- **TypeScript設定** - フロント (`tsconfig.json`)、バックエンド (`tsconfig.backend.json`)、Apps Script (`tsconfig.gas.json`) で別構成。`npm run typecheck` は3つとも実行
 
 ### 主要技術
 
 - **バックエンド**: Cloudflare Workers, Hono, D1 (SQLite), jose（JWT検証）
 - **フロントエンド**: React 19, Google Maps API, `@react-oauth/google`
 - **データ生成**: TypeScript, cheerio, jaconv, fetch API
+- **計画シートAPI**: Google Apps Script（V8ランタイム）, clasp
 - **ビルド**: esbuild
 - **テスト**: Vitest（`@testing-library/react` + jsdom）
 - **コード品質**: Biome（lint + format）
@@ -285,6 +318,11 @@ michi-no-eki.jp → スクレイピング → CSV → GeoJSON
                                      React フロントエンド
                                           ↓
                                      Google Maps 描画
+
+開設計画マップ（html/plan.html）
+  Google スプレッドシート ──公開CSV──▶ PlanMap（読み取り専用・ページ読み込み時に取得）
+         ▲
+         └── Apps Script ウェブアプリ（src/gas/）◀── API クライアント（token + JSON）
 
 ユーザー操作（訪問記録）
   ├─ 未ログイン: MemoryStorage（セッション内のみ保持、永続化なし）

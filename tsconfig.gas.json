@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "ES2019",
+        "module": "ESNext",
+        "lib": ["ES2019"],
+        "noEmit": true,
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "moduleResolution": "bundler",
+        "allowSyntheticDefaultImports": true,
+        "types": ["google-apps-script"]
+    },
+    "include": ["src/gas/**/*", "src/shared/**/*", "src/test-utils/gas.ts"],
+    "exclude": ["node_modules", "dist"]
+}

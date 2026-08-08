@@ -7,5 +7,12 @@ node_modules
 html/js/bundle.js
 html/js/plan.js
 
+# Apps Script: the bundle is generated; .clasp.json holds a per-user script ID,
+# and .deployment-id is the web app endpoint
+gas/main.js
+gas/.clasp.json
+gas/.deployment-id
+.clasprc.json
+
 # Claude Code personal settings (project settings under .claude/ are tracked)
 .claude/settings.local.json
