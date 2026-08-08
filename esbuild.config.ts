@@ -3,9 +3,12 @@ import * as esbuild from 'esbuild';
 
 // Common configuration
 const config: esbuild.BuildOptions = {
-    entryPoints: ['src/frontend/app.tsx'],
+    entryPoints: {
+        bundle: 'src/frontend/app.tsx',
+        plan: 'src/frontend/plan-app.tsx',
+    },
     bundle: true,
-    outfile: 'html/js/bundle.js',
+    outdir: 'html/js',
     platform: 'browser',
     target: ['es2015'],
     loader: {
