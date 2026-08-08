@@ -11,6 +11,7 @@
 - **Claude Codeとのやり取り**: 日本語を使用
 - **コミットログ**: 英語で記述
 - **プログラム内のコメント・出力メッセージ**: 英語で記述
+- **ドキュメント（`docs/`）**: 日本語で記述
 
 ## コード品質ルール
 
@@ -104,6 +105,7 @@ src/
 migrations/    Cloudflare D1 マイグレーション（SQL）
 html/          静的アセット（index.html、CSS、ビルド成果物 bundle.js）
 data/          生成データ（CSV / GeoJSON）
+docs/          運用手順書
 ```
 
 ### バックエンド（Cloudflare Workers + Hono）
