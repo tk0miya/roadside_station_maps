@@ -1,6 +1,5 @@
 import { vi } from 'vitest';
 
-
 // Create mock Google Maps instance with controls and Data layer
 export const createMockMap = () => {
     const topLeftControls: HTMLElement[] = [];
@@ -9,22 +8,26 @@ export const createMockMap = () => {
     const rightTopControls: HTMLElement[] = [];
 
     const controls = {
-        [1]: {  // TOP_LEFT
+        // TOP_LEFT
+        1: {
             push: vi.fn((element: HTMLElement) => topLeftControls.push(element)),
             removeAt: vi.fn((index: number) => topLeftControls.splice(index, 1)),
             getArray: vi.fn(() => topLeftControls),
         },
-        [2]: {  // TOP_CENTER
+        // TOP_CENTER
+        2: {
             push: vi.fn((element: HTMLElement) => topCenterControls.push(element)),
             removeAt: vi.fn((index: number) => topCenterControls.splice(index, 1)),
             getArray: vi.fn(() => topCenterControls),
         },
-        [3]: {  // TOP_RIGHT
+        // TOP_RIGHT
+        3: {
             push: vi.fn((element: HTMLElement) => topRightControls.push(element)),
             removeAt: vi.fn((index: number) => topRightControls.splice(index, 1)),
             getArray: vi.fn(() => topRightControls),
         },
-        [7]: {  // RIGHT_TOP
+        // RIGHT_TOP
+        7: {
             push: vi.fn((element: HTMLElement) => rightTopControls.push(element)),
             removeAt: vi.fn((index: number) => rightTopControls.splice(index, 1)),
             getArray: vi.fn(() => rightTopControls),
@@ -91,13 +94,13 @@ export const createMockFeature = (stationId: string, overrides: Record<string, s
 };
 
 // Create mock StationsGeoJSON
-export const createMockStations = (count: number, startId: number = 18786) => ({
+export const createMockStations = (count: number, startId = 18786) => ({
     type: 'FeatureCollection' as const,
     features: Array.from({ length: count }, (_, i) => ({
         type: 'Feature' as const,
         geometry: {
             type: 'Point' as const,
-            coordinates: [139.0 + i * 0.1, 35.0 + i * 0.1] as [number, number]
+            coordinates: [139.0 + i * 0.1, 35.0 + i * 0.1] as [number, number],
         },
         properties: {
             stationId: `${startId + i}`,
@@ -107,9 +110,9 @@ export const createMockStations = (count: number, startId: number = 18786) => ({
             hours: '',
             uri: '',
             mapcode: '',
-            prefId: '01'
-        }
-    }))
+            prefId: '01',
+        },
+    })),
 });
 
 // Setup Google Maps API mock
@@ -120,15 +123,21 @@ export const setupGoogleMapsMock = () => {
                 TOP_LEFT: 1,
                 TOP_CENTER: 2,
                 TOP_RIGHT: 3,
-                RIGHT_TOP: 7
+                RIGHT_TOP: 7,
             },
             Size: class {
-                constructor(public width: number, public height: number) {}
+                constructor(
+                    public width: number,
+                    public height: number
+                ) {}
             },
             Point: class {
-                constructor(public x: number, public y: number) {}
+                constructor(
+                    public x: number,
+                    public y: number
+                ) {}
             },
-        }
+        },
     };
 };
 
@@ -144,11 +153,7 @@ export const emptyResponse = (status = 204): Response => new Response(null, { st
 
 // Base64URL encode a UTF-8 string (used for fake JWT segments)
 const base64UrlEncode = (input: string): string =>
-    Buffer.from(input, 'utf8')
-        .toString('base64')
-        .replace(/=+$/, '')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_');
+    Buffer.from(input, 'utf8').toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 
 // Build an unsigned backend-issued session token. The frontend never verifies
 // the signature so the trailing `sig` segment is irrelevant.

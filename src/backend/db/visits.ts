@@ -40,8 +40,5 @@ export async function upsertVisit(
 }
 
 export async function deleteVisit(db: D1Database, userId: string, stationId: string): Promise<void> {
-    await db
-        .prepare('DELETE FROM visits WHERE user_id = ? AND station_id = ?')
-        .bind(userId, stationId)
-        .run();
+    await db.prepare('DELETE FROM visits WHERE user_id = ? AND station_id = ?').bind(userId, stationId).run();
 }

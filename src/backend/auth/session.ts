@@ -1,4 +1,4 @@
-import { SignJWT, jwtVerify } from 'jose';
+import { jwtVerify, SignJWT } from 'jose';
 
 const SESSION_ISSUER = 'roadside-station-maps';
 const SESSION_AUDIENCE = 'roadside-station-maps-frontend';

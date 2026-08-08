@@ -1,5 +1,5 @@
-import { cors } from 'hono/cors';
 import type { MiddlewareHandler } from 'hono';
+import { cors } from 'hono/cors';
 import type { AppEnv } from '../env';
 
 export const corsMiddleware = (): MiddlewareHandler<AppEnv> => {

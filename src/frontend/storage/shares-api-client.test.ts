@@ -67,10 +67,7 @@ describe('SharesApiClient', () => {
 
         await client.get('a/b c');
 
-        expect(fetchMock).toHaveBeenCalledWith(
-            `${API_BASE_URL}/shares/a%2Fb%20c`,
-            expect.anything()
-        );
+        expect(fetchMock).toHaveBeenCalledWith(`${API_BASE_URL}/shares/a%2Fb%20c`, expect.anything());
     });
 
     it('throws SharesApiError including the server-provided error message', async () => {

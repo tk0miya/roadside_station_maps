@@ -6,7 +6,7 @@ const MAX_STYLE_ID = STYLE_COUNT - 1;
 export function getStyle(storage: Storage, stationId: string): number {
     const styleId = storage.getItem(stationId);
     if (styleId) {
-        return parseInt(styleId);
+        return Number.parseInt(styleId, 10);
     }
     return 0;
 }

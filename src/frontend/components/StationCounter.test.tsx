@@ -1,20 +1,15 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect } from 'vitest';
+
 import { render, waitFor } from '@testing-library/react';
-import { StationCounter } from './StationCounter';
+import { describe, expect, it } from 'vitest';
+import { createMockMap, createMockStations, setupGoogleMapsMock } from '#test-utils/test-utils';
 import { MemoryStorage } from '../storage';
-import {
-    createMockStations,
-    createMockMap,
-    setupGoogleMapsMock,
-} from '#test-utils/test-utils';
+import { StationCounter } from './StationCounter';
 
 const getCounts = (element: HTMLElement): number[] =>
-    Array.from(element.querySelectorAll('.station-counter-style span')).map((span) =>
-        Number(span.textContent ?? '0')
-    );
+    Array.from(element.querySelectorAll('.station-counter-style span')).map((span) => Number(span.textContent ?? '0'));
 
 describe('StationCounter', () => {
     it('renders style counts into the map controls', async () => {
@@ -29,9 +24,7 @@ describe('StationCounter', () => {
         const mockStations = createMockStations(100);
         const mockMap = createMockMap();
 
-        render(
-            <StationCounter storage={storage} stations={mockStations} styleVersion={0} map={mockMap} />
-        );
+        render(<StationCounter storage={storage} stations={mockStations} styleVersion={0} map={mockMap} />);
 
         expect(mockMap.controls[7].push).toHaveBeenCalledTimes(1);
         const [counterElement] = mockMap.controls[7].getArray() as HTMLElement[];
@@ -59,9 +52,7 @@ describe('StationCounter', () => {
         const storage = new MemoryStorage();
         const mockMap = createMockMap();
 
-        render(
-            <StationCounter storage={storage} stations={null} styleVersion={0} map={mockMap} />
-        );
+        render(<StationCounter storage={storage} stations={null} styleVersion={0} map={mockMap} />);
 
         const [counterElement] = mockMap.controls[7].getArray() as HTMLElement[];
         expect(counterElement.className).toBe('station-counter');
@@ -86,9 +77,7 @@ describe('StationCounter', () => {
 
         // Mutate storage and bump styleVersion; counts should reflect the new entry.
         storage.setItem('002', '2');
-        rerender(
-            <StationCounter storage={storage} stations={mockStations} styleVersion={1} map={mockMap} />
-        );
+        rerender(<StationCounter storage={storage} stations={mockStations} styleVersion={1} map={mockMap} />);
 
         await waitFor(() => {
             expect(getCounts(counterElement)).toEqual([98, 1, 1, 0, 0]);

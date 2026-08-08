@@ -17,8 +17,7 @@ import * as visitsDb from '../db/visits';
 const buildAuthedApp = (user: { sub: string } = { sub: 'user-1' }) =>
     buildTestApp((app) => app.route('/shares', sharesAuthedRouter), user);
 
-const buildPublicApp = () =>
-    buildTestApp((app) => app.route('/shares', sharesPublicRouter), null);
+const buildPublicApp = () => buildTestApp((app) => app.route('/shares', sharesPublicRouter), null);
 
 describe('shares handlers', () => {
     beforeEach(() => {
@@ -29,11 +28,7 @@ describe('shares handlers', () => {
         it('returns the existing share id when one already exists', async () => {
             vi.mocked(sharesDb.getShareIdByUser).mockResolvedValue('existing-share-id');
 
-            const res = await buildAuthedApp().request(
-                '/shares',
-                { method: 'POST' },
-                TEST_ENV
-            );
+            const res = await buildAuthedApp().request('/shares', { method: 'POST' }, TEST_ENV);
 
             expect(res.status).toBe(200);
             expect(await res.json()).toEqual({ shareId: 'existing-share-id' });
@@ -46,11 +41,7 @@ describe('shares handlers', () => {
                 '11111111-2222-4333-8444-555555555555' as `${string}-${string}-${string}-${string}-${string}`
             );
 
-            const res = await buildAuthedApp().request(
-                '/shares',
-                { method: 'POST' },
-                TEST_ENV
-            );
+            const res = await buildAuthedApp().request('/shares', { method: 'POST' }, TEST_ENV);
 
             expect(res.status).toBe(201);
             expect(await res.json()).toEqual({
@@ -68,15 +59,9 @@ describe('shares handlers', () => {
     describe('GET /shares/:shareId', () => {
         it('returns the visits for the share owner', async () => {
             vi.mocked(sharesDb.getUserIdByShareId).mockResolvedValue('user-1');
-            vi.mocked(visitsDb.listVisits).mockResolvedValue([
-                { stationId: '111', styleId: 1, updatedAt: 1000 },
-            ]);
+            vi.mocked(visitsDb.listVisits).mockResolvedValue([{ stationId: '111', styleId: 1, updatedAt: 1000 }]);
 
-            const res = await buildPublicApp().request(
-                '/shares/11111111-2222-4333-8444-555555555555',
-                {},
-                TEST_ENV
-            );
+            const res = await buildPublicApp().request('/shares/11111111-2222-4333-8444-555555555555', {}, TEST_ENV);
 
             expect(res.status).toBe(200);
             expect(await res.json()).toEqual({
@@ -95,11 +80,7 @@ describe('shares handlers', () => {
         it('returns 404 when the share id is unknown', async () => {
             vi.mocked(sharesDb.getUserIdByShareId).mockResolvedValue(null);
 
-            const res = await buildPublicApp().request(
-                '/shares/11111111-2222-4333-8444-555555555555',
-                {},
-                TEST_ENV
-            );
+            const res = await buildPublicApp().request('/shares/11111111-2222-4333-8444-555555555555', {}, TEST_ENV);
 
             expect(res.status).toBe(404);
             expect(visitsDb.listVisits).not.toHaveBeenCalled();

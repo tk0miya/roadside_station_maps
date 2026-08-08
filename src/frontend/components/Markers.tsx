@@ -4,7 +4,7 @@ import { MARKER_ICONS, numberedMarkerIcon } from '../marker-icons';
 import type { Storage } from '../storage';
 import * as style from '../style';
 import { getStyle } from '../style';
-import { StationsGeoJSON } from '../types/geojson';
+import type { StationsGeoJSON } from '../types/geojson';
 
 // Google Maps directions support at most 10 stops (origin + destination
 // + 8 waypoints), so the route-selection set is capped just under that bound.
@@ -40,9 +40,7 @@ export function resolveMarkerClick({
             return {
                 selectedFeature: null,
                 multiSelected:
-                    selectedFeature === clickedFeature
-                        ? [selectedFeature]
-                        : [selectedFeature, clickedFeature],
+                    selectedFeature === clickedFeature ? [selectedFeature] : [selectedFeature, clickedFeature],
             };
         }
         if (multiSelected.includes(clickedFeature)) {
@@ -82,11 +80,7 @@ const isModifierPressed = (event: google.maps.Data.MouseEvent): boolean => {
 
 // Cycle the stored style id for the feature's station and re-apply the
 // resulting icon to the map's data layer.
-export function changeStyle(
-    map: google.maps.Map,
-    feature: google.maps.Data.Feature,
-    storage: Storage,
-): void {
+export function changeStyle(map: google.maps.Map, feature: google.maps.Data.Feature, storage: Storage): void {
     const stationId = feature.getProperty('stationId') as string;
     const newStyleId = style.changeStyle(storage, stationId);
     map.data.overrideStyle(feature, styleOptionsFor(newStyleId));
@@ -94,11 +88,7 @@ export function changeStyle(
 
 // Clear the stored style id for the feature's station and restore the
 // default icon on the map's data layer.
-export function resetStyle(
-    map: google.maps.Map,
-    feature: google.maps.Data.Feature,
-    storage: Storage,
-): void {
+export function resetStyle(map: google.maps.Map, feature: google.maps.Data.Feature, storage: Storage): void {
     const stationId = feature.getProperty('stationId') as string;
     const newStyleId = style.resetStyle(storage, stationId);
     map.data.overrideStyle(feature, styleOptionsFor(newStyleId));
@@ -118,7 +108,7 @@ export function loadRoadStations(
     map: google.maps.Map,
     stations: StationsGeoJSON,
     storage: Storage,
-    handlers: MarkerHandlers,
+    handlers: MarkerHandlers
 ): () => void {
     map.data.addGeoJson(stations);
     const clickListener = map.data.addListener('click', handlers.onMarkerClick);
@@ -134,8 +124,12 @@ export function loadRoadStations(
         doubleClickListener.remove();
         rightClickListener.remove();
         const features: google.maps.Data.Feature[] = [];
-        map.data.forEach((f) => features.push(f));
-        features.forEach((f) => map.data.remove(f));
+        map.data.forEach((f) => {
+            features.push(f);
+        });
+        for (const f of features) {
+            map.data.remove(f);
+        }
     };
 }
 
@@ -146,7 +140,7 @@ export function applyMultiSelection(
     map: google.maps.Map,
     previous: google.maps.Data.Feature[],
     next: google.maps.Data.Feature[],
-    storage: Storage,
+    storage: Storage
 ): void {
     for (const feature of previous) {
         if (!next.includes(feature)) {
@@ -164,9 +158,7 @@ interface MarkersProps {
     selectedFeature: google.maps.Data.Feature | null;
     onFeatureSelect: (feature: google.maps.Data.Feature | null) => void;
     multiSelected: google.maps.Data.Feature[];
-    onMultiSelectChange: (
-        update: (prev: google.maps.Data.Feature[]) => google.maps.Data.Feature[],
-    ) => void;
+    onMultiSelectChange: (update: (prev: google.maps.Data.Feature[]) => google.maps.Data.Feature[]) => void;
     storage: Storage;
     stations: StationsGeoJSON | null;
     onStyleChange: () => void;
@@ -203,12 +195,7 @@ export function Markers(props: MarkersProps) {
 
     useEffect(() => {
         if (!props.map) return;
-        applyMultiSelection(
-            props.map,
-            multiSelectedRef.current,
-            props.multiSelected,
-            storageRef.current,
-        );
+        applyMultiSelection(props.map, multiSelectedRef.current, props.multiSelected, storageRef.current);
         multiSelectedRef.current = props.multiSelected;
     }, [props.map, props.multiSelected]);
 

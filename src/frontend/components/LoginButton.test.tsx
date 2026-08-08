@@ -3,9 +3,9 @@
  * @vitest-environment-options { "url": "http://localhost" }
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { SESSION_TOKEN_STORAGE_KEY } from '../auth/auth-manager';
 import { renderWithAuth } from '#test-utils/auth';
 import { buildSessionToken, createMockMap, setupGoogleMapsMock } from '#test-utils/test-utils';
+import { SESSION_TOKEN_STORAGE_KEY } from '../auth/auth-manager';
 
 let lastGoogleLoginProps: { onSuccess?: (response: { credential?: string }) => void } | null = null;
 

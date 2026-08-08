@@ -27,8 +27,7 @@ export function PlanMap() {
     const [map, setMap] = useState<google.maps.Map | null>(null);
     const [stations, setStations] = useState<PlannedStation[]>([]);
     const [selected, setSelected] = useState<PlannedStation | null>(null);
-    const [visibleCategories, setVisibleCategories] =
-        useState<Record<Category, boolean>>(DEFAULT_VISIBLE);
+    const [visibleCategories, setVisibleCategories] = useState<Record<Category, boolean>>(DEFAULT_VISIBLE);
     const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -67,7 +66,7 @@ export function PlanMap() {
                 }
             }
         },
-        [map],
+        [map]
     );
 
     return (

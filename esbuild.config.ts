@@ -55,18 +55,20 @@ const serve = (): Promise<esbuild.ServeResult> => {
         });
 };
 
-export { build, watch, serve, config };
+export { build, config, serve, watch };
 
 // CLI handling
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const args = process.argv.slice(2);
-    
+
     if (args.includes('--watch')) {
         watch().catch(console.error);
     } else if (args.includes('--serve')) {
-        serve().then(result => {
-            console.log(`Server at http://localhost:${result.port}`);
-        }).catch(console.error);
+        serve()
+            .then((result) => {
+                console.log(`Server at http://localhost:${result.port}`);
+            })
+            .catch(console.error);
     } else {
         build().catch(console.error);
     }

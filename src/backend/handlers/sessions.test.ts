@@ -25,7 +25,7 @@ const post = (body: unknown, env: typeof TEST_ENV = TEST_ENV) =>
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
         },
-        env,
+        env
     );
 
 describe('POST /sessions', () => {
@@ -62,7 +62,7 @@ describe('POST /sessions', () => {
             const res = await buildApp().request(
                 '/sessions',
                 { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: 'not-json' },
-                TEST_ENV,
+                TEST_ENV
             );
             expect(res.status).toBe(400);
             expect(google.verifyIdToken).not.toHaveBeenCalled();

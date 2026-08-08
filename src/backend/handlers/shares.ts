@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import type { GetShareResponse, CreateShareResponse } from '#shared/api-types';
+import type { CreateShareResponse, GetShareResponse } from '#shared/api-types';
 import { getShareIdByUser, getUserIdByShareId, insertShare } from '../db/shares';
 import { listVisits } from '../db/visits';
 import type { AppEnv } from '../env';

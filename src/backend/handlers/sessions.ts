@@ -1,15 +1,7 @@
-import { Hono, type Context } from 'hono';
-import type {
-    CreateSessionRequest,
-    CreateSessionResponse,
-    RefreshSessionResponse,
-} from '#shared/api-types';
+import { type Context, Hono } from 'hono';
+import type { CreateSessionRequest, CreateSessionResponse, RefreshSessionResponse } from '#shared/api-types';
 import { GoogleAuthError, verifyIdToken } from '../auth/google';
-import {
-    issueSessionToken,
-    SESSION_REFRESH_THRESHOLD_SECONDS,
-    verifySessionToken,
-} from '../auth/session';
+import { issueSessionToken, SESSION_REFRESH_THRESHOLD_SECONDS, verifySessionToken } from '../auth/session';
 import type { AppEnv } from '../env';
 import { requireAuth } from '../middleware/auth';
 
@@ -21,7 +13,7 @@ sessionsRouter.post('/', async (c) => {
     }
 
     const body = await readJson<CreateSessionRequest>(c);
-    if (!body || body.provider !== 'google') {
+    if (body?.provider !== 'google') {
         return c.json({ error: 'Unsupported or missing provider' }, 400);
     }
     if (typeof body.idToken !== 'string' || body.idToken.length === 0) {

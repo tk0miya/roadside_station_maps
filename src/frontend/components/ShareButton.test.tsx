@@ -8,6 +8,7 @@ import { createMockMap } from '#test-utils/test-utils';
 import { ShareButton } from './ShareButton';
 
 vi.mock('clipboard', () => ({
+    // biome-ignore lint/complexity/useArrowFunction: stands in for a constructor, so it must be constructible
     default: vi.fn(function () {
         return {
             on: vi.fn(),

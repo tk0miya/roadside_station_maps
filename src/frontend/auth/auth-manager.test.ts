@@ -126,9 +126,7 @@ describe('AuthManager', () => {
 
         it('exchanges the Google id_token for a session token via POST /sessions', async () => {
             const sessionToken = buildSessionToken({ sub: 'google-sub' });
-            fetchMock.mockResolvedValueOnce(
-                jsonResponse({ sessionToken, expiresAt: 9999999999 }, 201)
-            );
+            fetchMock.mockResolvedValueOnce(jsonResponse({ sessionToken, expiresAt: 9999999999 }, 201));
 
             const manager = new AuthManager();
             await manager.login('google-id-token');
@@ -213,9 +211,7 @@ describe('AuthManager', () => {
             const oldToken = buildSessionToken({ sub: 'user-1', exp: 2000000000 });
             localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, oldToken);
             const newToken = buildSessionToken({ sub: 'user-1', exp: 2999999999 });
-            fetchMock.mockResolvedValueOnce(
-                jsonResponse({ sessionToken: newToken, expiresAt: 2999999999 })
-            );
+            fetchMock.mockResolvedValueOnce(jsonResponse({ sessionToken: newToken, expiresAt: 2999999999 }));
 
             const manager = new AuthManager();
             await manager.refreshSession();

@@ -5,7 +5,7 @@ import type { AppEnv } from '../env';
 export const requireAuth = (): MiddlewareHandler<AppEnv> => {
     return async (c, next) => {
         const header = c.req.header('Authorization');
-        if (!header || !header.startsWith('Bearer ')) {
+        if (!header?.startsWith('Bearer ')) {
             return c.json({ error: 'Missing bearer token' }, 401);
         }
 

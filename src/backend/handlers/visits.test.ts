@@ -51,13 +51,7 @@ describe('visits handlers', () => {
             );
 
             expect(res.status).toBe(204);
-            expect(visitsDb.upsertVisit).toHaveBeenCalledWith(
-                TEST_ENV.DB,
-                'user-1',
-                '123',
-                2,
-                expect.any(Number)
-            );
+            expect(visitsDb.upsertVisit).toHaveBeenCalledWith(TEST_ENV.DB, 'user-1', '123', 2, expect.any(Number));
         });
 
         it('rejects a non-numeric station id', async () => {
@@ -123,26 +117,17 @@ describe('visits handlers', () => {
 
     describe('DELETE /visits/:stationId', () => {
         it('deletes the visit', async () => {
-            const res = await buildApp().request(
-                '/visits/123',
-                { method: 'DELETE' },
-                TEST_ENV
-            );
+            const res = await buildApp().request('/visits/123', { method: 'DELETE' }, TEST_ENV);
 
             expect(res.status).toBe(204);
             expect(visitsDb.deleteVisit).toHaveBeenCalledWith(TEST_ENV.DB, 'user-1', '123');
         });
 
         it('rejects a non-numeric station id', async () => {
-            const res = await buildApp().request(
-                '/visits/abc',
-                { method: 'DELETE' },
-                TEST_ENV
-            );
+            const res = await buildApp().request('/visits/abc', { method: 'DELETE' }, TEST_ENV);
 
             expect(res.status).toBe(400);
             expect(visitsDb.deleteVisit).not.toHaveBeenCalled();
         });
     });
-
 });

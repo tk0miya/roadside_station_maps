@@ -2,7 +2,7 @@ name: Biome migrate
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - "package-lock.json"
 

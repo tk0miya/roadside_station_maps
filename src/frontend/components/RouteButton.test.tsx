@@ -1,17 +1,15 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
 import { render } from '@testing-library/react';
-import { buildDirectionsURL, RouteButton } from './RouteButton';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockFeature, createMockMap, setupGoogleMapsMock } from '#test-utils/test-utils';
+import { buildDirectionsURL, RouteButton } from './RouteButton';
 
 describe('buildDirectionsURL', () => {
     it('uses "道の駅 <name>" labels for origin and destination', () => {
-        const features = [
-            createMockFeature('1', { name: '三笠' }),
-            createMockFeature('2', { name: 'びふか' }),
-        ];
+        const features = [createMockFeature('1', { name: '三笠' }), createMockFeature('2', { name: 'びふか' })];
 
         const url = new URL(buildDirectionsURL(features));
 
@@ -22,10 +20,7 @@ describe('buildDirectionsURL', () => {
     });
 
     it('omits the waypoints parameter when only two stations are given', () => {
-        const features = [
-            createMockFeature('1', { name: '三笠' }),
-            createMockFeature('2', { name: 'びふか' }),
-        ];
+        const features = [createMockFeature('1', { name: '三笠' }), createMockFeature('2', { name: 'びふか' })];
 
         const url = new URL(buildDirectionsURL(features));
 
@@ -44,15 +39,11 @@ describe('buildDirectionsURL', () => {
 
         expect(url.searchParams.get('origin')).toBe('道の駅 三笠');
         expect(url.searchParams.get('destination')).toBe('道の駅 びふか');
-        expect(url.searchParams.get('waypoints')).toBe(
-            '道の駅 スタープラザ 芦別|道の駅 南ふらの',
-        );
+        expect(url.searchParams.get('waypoints')).toBe('道の駅 スタープラザ 芦別|道の駅 南ふらの');
     });
 
     it('handles the maximum 9-station route (7 waypoints)', () => {
-        const features = Array.from({ length: 9 }, (_, i) =>
-            createMockFeature(`${i}`, { name: `S${i}` }),
-        );
+        const features = Array.from({ length: 9 }, (_, i) => createMockFeature(`${i}`, { name: `S${i}` }));
 
         const url = new URL(buildDirectionsURL(features));
 
@@ -94,10 +85,7 @@ describe('RouteButton', () => {
 
     it('mounts a button into TOP_CENTER controls once two stations are selected', () => {
         const mockMap = createMockMap();
-        const features = [
-            createMockFeature('1', { name: '三笠' }),
-            createMockFeature('2', { name: 'びふか' }),
-        ];
+        const features = [createMockFeature('1', { name: '三笠' }), createMockFeature('2', { name: 'びふか' })];
 
         render(<RouteButton map={mockMap} multiSelected={features} />);
 
@@ -108,10 +96,7 @@ describe('RouteButton', () => {
 
     it('opens a Google Maps directions URL in a new tab on click', () => {
         const mockMap = createMockMap();
-        const features = [
-            createMockFeature('1', { name: '三笠' }),
-            createMockFeature('2', { name: 'びふか' }),
-        ];
+        const features = [createMockFeature('1', { name: '三笠' }), createMockFeature('2', { name: 'びふか' })];
         const openSpy = vi.fn();
         window.open = openSpy as unknown as typeof window.open;
 
@@ -129,10 +114,7 @@ describe('RouteButton', () => {
 
     it('removes the button when the selection drops below two stations', () => {
         const mockMap = createMockMap();
-        const features = [
-            createMockFeature('1', { name: '三笠' }),
-            createMockFeature('2', { name: 'びふか' }),
-        ];
+        const features = [createMockFeature('1', { name: '三笠' }), createMockFeature('2', { name: 'びふか' })];
 
         const { rerender } = render(<RouteButton map={mockMap} multiSelected={features} />);
 

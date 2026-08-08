@@ -1,4 +1,4 @@
-import { Hono, type Context } from 'hono';
+import { type Context, Hono } from 'hono';
 import type { ListVisitsResponse, PutVisitRequest } from '#shared/api-types';
 import { deleteVisit, listVisits, upsertVisit } from '../db/visits';
 import type { AppEnv } from '../env';

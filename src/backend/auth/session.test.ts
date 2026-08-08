@@ -51,7 +51,7 @@ describe('verifySessionToken failure modes', () => {
                 .setIssuer(ISSUER)
                 .setAudience(AUDIENCE)
                 .setIssuedAt(past - 60)
-                .setExpirationTime(past),
+                .setExpirationTime(past)
         );
         await expect(verifySessionToken(expired, SECRET)).rejects.toThrow();
     });
@@ -63,21 +63,21 @@ describe('verifySessionToken failure modes', () => {
                 .setIssuer(ISSUER)
                 .setAudience('someone-else')
                 .setIssuedAt()
-                .setExpirationTime('1h'),
+                .setExpirationTime('1h')
         );
         await expect(verifySessionToken(wrongAud, SECRET)).rejects.toThrow();
     });
 
     it('rejects a token without a sub claim', async () => {
         const noSub = await sign((jwt) =>
-            jwt.setIssuer(ISSUER).setAudience(AUDIENCE).setIssuedAt().setExpirationTime('1h'),
+            jwt.setIssuer(ISSUER).setAudience(AUDIENCE).setIssuedAt().setExpirationTime('1h')
         );
         await expect(verifySessionToken(noSub, SECRET)).rejects.toThrow(SessionTokenError);
     });
 
     it('rejects a token without an exp claim', async () => {
         const noExp = await sign((jwt) =>
-            jwt.setSubject('user-123').setIssuer(ISSUER).setAudience(AUDIENCE).setIssuedAt(),
+            jwt.setSubject('user-123').setIssuer(ISSUER).setAudience(AUDIENCE).setIssuedAt()
         );
         await expect(verifySessionToken(noExp, SECRET)).rejects.toThrow(SessionTokenError);
     });

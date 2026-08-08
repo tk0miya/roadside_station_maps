@@ -99,9 +99,6 @@ describe('VisitsApiClient', () => {
 
         await client.put('1 2/3', 1);
 
-        expect(fetchMock).toHaveBeenCalledWith(
-            `${API_BASE_URL}/api/visits/1%202%2F3`,
-            expect.anything()
-        );
+        expect(fetchMock).toHaveBeenCalledWith(`${API_BASE_URL}/api/visits/1%202%2F3`, expect.anything());
     });
 });

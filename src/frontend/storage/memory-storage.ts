@@ -1,4 +1,4 @@
-import { Storage } from './types';
+import type { Storage } from './types';
 
 /**
  * In-memory Storage. Used as the backing store for the shared-view mode

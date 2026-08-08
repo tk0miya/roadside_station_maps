@@ -2,7 +2,7 @@ import queryString from 'query-string';
 import { MemoryStorage } from './memory-storage';
 import { RemoteStorage } from './remote-storage';
 import { SharesApiClient } from './shares-api-client';
-import { Storage } from './types';
+import type { Storage } from './types';
 import { VisitsApiClient } from './visits-api-client';
 
 export interface CreateStorageOptions {
@@ -22,10 +22,7 @@ export async function createStorage(options: CreateStorageOptions): Promise<Stor
     if (typeof queries.share === 'string' && queries.share.length > 0) {
         const sharesClient = new SharesApiClient({ getSessionToken: options.getSessionToken });
         const visits = await sharesClient.get(queries.share);
-        const entries: Array<[string, string]> = visits.map((visit) => [
-            visit.stationId,
-            String(visit.styleId),
-        ]);
+        const entries: Array<[string, string]> = visits.map((visit) => [visit.stationId, String(visit.styleId)]);
         return new MemoryStorage(entries);
     }
 

@@ -30,7 +30,9 @@ export function InfoWindow(props: InfoWindowProps) {
                 contentRootRef.current.render(
                     <div>
                         <div>
-                            <a href={uri} target="_blank">{name}</a>
+                            <a href={uri} target="_blank" rel="noopener noreferrer">
+                                {name}
+                            </a>
                         </div>
                         <div>営業時間：{hours}</div>
                         <div>住所：{address}</div>
@@ -43,7 +45,7 @@ export function InfoWindow(props: InfoWindowProps) {
                     position: geometry.get(),
                     content: contentElementRef.current,
                     headerDisabled: true,
-                    pixelOffset: new google.maps.Size(0, -30)
+                    pixelOffset: new google.maps.Size(0, -30),
                 });
                 infoWindowRef.current.open(props.map);
             } else {
@@ -53,5 +55,4 @@ export function InfoWindow(props: InfoWindowProps) {
     }, [props.selectedFeature, props.map]);
 
     return null; // This component doesn't render anything directly
-};
-
+}

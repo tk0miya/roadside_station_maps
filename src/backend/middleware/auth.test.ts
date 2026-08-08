@@ -27,11 +27,7 @@ describe('requireAuth middleware', () => {
         });
 
         it('returns 401 when the Authorization scheme is not Bearer', async () => {
-            const res = await buildApp().request(
-                '/echo',
-                { headers: { Authorization: 'Basic abc' } },
-                TEST_ENV,
-            );
+            const res = await buildApp().request('/echo', { headers: { Authorization: 'Basic abc' } }, TEST_ENV);
             expect(res.status).toBe(401);
         });
 
