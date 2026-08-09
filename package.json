@@ -29,7 +29,7 @@
         "deploy:backend": "wrangler deploy --env production",
         "db:migrate:local": "wrangler d1 migrations apply DB --local",
         "db:migrate": "wrangler d1 migrations apply DB --remote --env production",
-        "gas:push": "clasp push && clasp deploy -i $CLASP_DEPLOY_ID",
+        "gas:push": "clasp push -f && clasp deploy -i $CLASP_DEPLOY_ID",
         "generate:geojson": "npx tsx src/scripts/generate-geojson.ts",
         "generate:stations": "npx tsx src/scripts/generate-stationlist.ts",
         "generate:all": "npm run generate:stations && npm run generate:geojson",
