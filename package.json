@@ -29,6 +29,7 @@
         "deploy:backend": "wrangler deploy --env production",
         "db:migrate:local": "wrangler d1 migrations apply DB --local",
         "db:migrate": "wrangler d1 migrations apply DB --remote --env production",
+        "gas:push": "clasp push && clasp deploy -i $CLASP_DEPLOY_ID",
         "generate:geojson": "npx tsx src/scripts/generate-geojson.ts",
         "generate:stations": "npx tsx src/scripts/generate-stationlist.ts",
         "generate:all": "npm run generate:stations && npm run generate:geojson",
@@ -50,6 +51,7 @@
     "devDependencies": {
         "@biomejs/biome": "^2.5.5",
         "@cloudflare/workers-types": "^5.20260713.1",
+        "@google/clasp": "^3.3.0",
         "@testing-library/react": "^16.3.2",
         "@types/cheerio": "^1.0.0",
         "@types/clipboard": "^2.0.10",

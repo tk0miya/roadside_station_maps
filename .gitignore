@@ -1,6 +1,9 @@
 *.swp
 *.js.map
 
+# clasp local settings (holds the script and spreadsheet ids)
+.clasp.json
+
 dist/
 /data/
 node_modules
