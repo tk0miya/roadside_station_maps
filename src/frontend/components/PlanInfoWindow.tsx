@@ -1,25 +1,27 @@
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { parseMemo } from '../plan-memo';
 import type { PlannedStation } from '../types/plan';
 import { categoryOf } from '../types/plan';
 
 function memoNodes(memo: string) {
-    return memo.split('\n').map((line, index) => {
-        const text = line.trim();
-        const isUrl = /^https?:\/\//.test(text);
-        return (
-            // biome-ignore lint/suspicious/noArrayIndexKey: memo lines are static per selection
-            <div key={index}>
-                {isUrl ? (
-                    <a href={text} target="_blank" rel="noopener noreferrer">
-                        {text}
-                    </a>
-                ) : (
-                    text
-                )}
-            </div>
-        );
-    });
+    return parseMemo(memo).map((segments, lineIndex) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: memo lines are static per selection
+        <div key={lineIndex}>
+            {segments.map((segment, segmentIndex) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: memo segments are static per selection
+                <Fragment key={segmentIndex}>
+                    {segment.type === 'link' ? (
+                        <a href={segment.href} target="_blank" rel="noopener noreferrer">
+                            {segment.text}
+                        </a>
+                    ) : (
+                        segment.text
+                    )}
+                </Fragment>
+            ))}
+        </div>
+    ));
 }
 
 interface PlanInfoWindowProps {
