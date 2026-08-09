@@ -34,7 +34,6 @@
 - **フロントエンド**: `npm start`（ウォッチビルド） / `npm run serve`（開発サーバー、ポート 8081） / `npm run build`
 - **バックエンド**: `npm run dev:backend`（wrangler dev） / `npm run deploy:backend` / `npm run db:migrate:local` / `npm run db:migrate`
 - **データ生成**: `npm run generate:all`（`generate:stations` → `generate:geojson`）
-- **GAS**: `npm run gas:push`（`CLASP_DEPLOY_ID` が必要）
 - **品質**: `npm test` / `npm run lint` / `npm run format` / `npm run typecheck` / `npm run lint:fix`
 
 ### generate:stations のデバッグモード
@@ -124,7 +123,7 @@ data/         生成データ（CSV / GeoJSON）
 開発計画マップ（`html/plan.html`）のデータ元は人手管理の Google スプレッドシートを CSV 公開したもの。`gas/` はそのスプレッドシートに紐づく GAS プロジェクトで、**エントリーの更新のみ**を Web App として公開する。
 
 - **更新のみの理由**: 一覧は公開 CSV で取得でき、行の追加・削除はスプレッドシート上で人手が行うため
-- **TypeScript ではなく JavaScript**: 個人利用の小さなスクリプトで、ビルド工程を挟まず `clasp push` でそのまま反映することを優先
+- **TypeScript ではなく JavaScript**: 個人利用の小さなスクリプトで、ビルド工程を挟まずそのまま GAS に反映することを優先
 - **列の解決**: 列位置はハードコードせずヘッダ行（`name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `memo`）から引く。API のフィールド名は公開 CSV のヘッダ名と一致する
 - **エントリーの特定**: `name` 列の完全一致（該当なしなら `{ updated: false, row: null }`）
 - **`Content-Type: text/plain`**: CORS プリフライトを避けるため（Apps Script は preflight に応答しない）
@@ -140,8 +139,6 @@ POST https://script.google.com/macros/s/xxx/exec   (Content-Type: text/plain)
 ```
 
 `values` に含めたフィールドのみ上書きし、含めなかったフィールドは現在値を保つ。
-
-`.clasp.json`（`scriptId` / `rootDir: "gas"` / `parentId`）は gitignore しているのでローカルで用意する。`npm run gas:push` は Web App の URL を固定するため `clasp deploy -i $CLASP_DEPLOY_ID` で既存デプロイを更新する。
 
 ### ビルド・デプロイ
 

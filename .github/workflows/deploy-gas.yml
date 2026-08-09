@@ -1,0 +1,54 @@
+name: Deploy to Google Apps Script
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "gas/**"
+      - ".github/workflows/deploy-gas.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-gas
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create clasp configuration
+        run: printenv CLASP_JSON > .clasp.json
+        env:
+          CLASP_JSON: ${{ secrets.CLASP_JSON }}
+
+      - name: Create clasp credentials
+        run: printenv CLASPRC_JSON > ~/.clasprc.json
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+
+      - name: Push and deploy to GAS
+        run: npm run gas:push
+        env:
+          CLASP_DEPLOY_ID: ${{ secrets.CLASP_DEPLOY_ID }}
+
+      - name: Cleanup credentials
+        if: always()
+        run: rm -f .clasp.json ~/.clasprc.json
