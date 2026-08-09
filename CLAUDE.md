@@ -1,76 +1,53 @@
 # CLAUDE.md
 
-このファイルは、このリポジトリでコードを扱う際のClaude Code (claude.ai/code)向けのガイダンスを提供します。
+このリポジトリでコードを扱う際の Claude Code (claude.ai/code) 向けガイダンス。
 
 ## プロジェクト概要
 
-日本の道の駅の地図アプリケーションです。michi-no-eki.jpから駅データをスクレイピングし、インタラクティブなGoogle Mapsインターフェース上に表示します。TypeScriptによるデータスクレイピング/処理とReactベースのフロントエンドを組み合わせたプロジェクトです。
+日本の道の駅の地図アプリケーション。michi-no-eki.jp から駅データをスクレイピングし、Google Maps 上にインタラクティブに表示する。データ生成 CLI（TypeScript）、React フロントエンド、Cloudflare Workers + D1 バックエンドで構成される。
 
-## 言語ルール
+## ルール
 
-- **Claude Codeとのやり取り**: 日本語を使用
-- **コミットログ**: 英語で記述
-- **プログラム内のコメント・出力メッセージ**: 英語で記述
+### 言語
 
-## コード品質ルール
+- **Claude Code とのやり取り**: 日本語
+- **コミットログ**: 英語
+- **プログラム内のコメント・出力メッセージ**: 英語
 
-- **TypeScriptコードの変更時**: 必ずBiomeでlintとformatを実行
-  - `npm run lint` でコードチェック
-  - `npm run format` でコードフォーマット
-  - `npm run typecheck` で型チェック
-  - または `npm run lint:fix` で自動修正
-- **プロジェクト完了時**: 必ずlint、format、typecheckを実行してコードの品質を確保
+### コード品質
 
-## コミットルール
+- TypeScript を変更したら Biome の lint / format と型チェックを実行する（`npm run lint:fix` + `npm run typecheck`）
+- 作業完了時には必ず lint・format・typecheck を通す
 
-- **変更内容重視**: コミットログは「何を変更したか」を説明し、作業の経緯や途中の改善作業は含めない
-- **結果説明**: 変更の結果として何が達成されたかを明確に示す
+### コミット
+
+- コミットログは「何を変更したか」と「その結果何が達成されたか」を書く
+- 作業の経緯や途中の試行錯誤は含めない
+
+### テスト
+
+- モックオブジェクトが必要な場合は `src/test-utils/test-utils.ts` のヘルパーを使う
+- StyleManager を使うテストでは原則 `MemoryStorage` で StyleManager を生成する（オンメモリ実装なので外部モック不要）
 
 ## 開発コマンド
 
-### データ生成
-- `npm run generate:all` - 完全な駅データセットを生成（CSV → GeoJSON）
-- `npm run generate:stations` - michi-no-eki.jpから駅データをスクレイピング
-- `npm run generate:geojson` - CSVをGeoJSON形式に変換
+- **フロントエンド**: `npm start`（ウォッチビルド） / `npm run serve`（開発サーバー、ポート 8081） / `npm run build`
+- **バックエンド**: `npm run dev:backend`（wrangler dev） / `npm run deploy:backend` / `npm run db:migrate:local` / `npm run db:migrate`
+- **データ生成**: `npm run generate:all`（`generate:stations` → `generate:geojson`）
+- **GAS**: `npm run gas:push`（`CLASP_DEPLOY_ID` が必要）
+- **品質**: `npm test` / `npm run lint` / `npm run format` / `npm run typecheck` / `npm run lint:fix`
 
-### デバッグモード
-`generate:stations`は実行に10分程度かかるため、開発時はデバッグオプションを使用してください：
+### generate:stations のデバッグモード
 
-- `npm run generate:stations -- --debug --max-prefs=2 --max-stations=3`
-  - `--debug`: デバッグモードを有効化（処理状況の詳細表示）
-  - `--max-prefs=N`: 処理する都道府県数を制限
-  - `--max-stations=N`: 各都道府県で処理する道の駅数を制限
+全件スクレイピングは 10 分程度かかるため、開発時は件数を絞る:
 
-**使用例:**
-- 動作確認: `npm run generate:stations -- --debug --max-prefs=1 --max-stations=2`
-- 部分テスト: `npm run generate:stations -- --debug --max-prefs=5 --max-stations=10`
+```
+npm run generate:stations -- --debug --max-prefs=2 --max-stations=3
+```
 
-**⚠️ 重要な注意事項:**
-- **デバッグ実行後は`data/`以下をコミットしないでください**
-- デバッグモードで生成されるデータは不完全なため、本番データを破損させる可能性があります
-- `git status`でdataディレクトリの変更を確認し、必要に応じて`git restore data/`で元に戻してください
+`--debug` は処理状況の詳細表示、`--max-prefs=N` / `--max-stations=N` は処理する都道府県数・各県の駅数の上限。
 
-### フロントエンド開発
-- `npm run build` - esbuildでプロダクションバンドルをビルド（高速）
-- `npm start` - 開発用ウォッチモード（変更時に自動リビルド）
-- `npm run serve` - ポート8081で開発サーバーを起動（ライブリロード付き）
-- `npm run dev` - 開発サーバー起動（serveのエイリアス）
-
-### Google Apps Script（開発計画スプレッドシートAPI）
-- `npm run gas:push` - `gas/` を GAS にプッシュし、既存のデプロイを更新（`CLASP_DEPLOY_ID` が必要）
-
-### テスト・品質管理
-- `npm test` - Vitestでユニットテストを実行
-- `npm run lint` - Biomeでコード品質チェック
-- `npm run format` - Biomeでコードフォーマット
-- `npm run typecheck` - TypeScriptの型チェック
-- `npm run lint:fix` - Biomeでコードの自動修正
-
-## テストルール
-
-- **test-utilsの使用**: テストでモックオブジェクトが必要な場合は `src/test-utils/test-utils.ts` のヘルパー関数を使用
-- **StyleManagerを使用するテスト**: StyleManagerを使用するテストでは、基本的に `MemoryStorage` インスタンスを使用してStyleManagerを作成（オンメモリ実装のため外部モックは不要）
-
+**⚠️ デバッグ実行で生成された `data/` はコミットしないこと。** データが不完全なため本番データを破損させる。`git status` を確認し、必要なら `git restore data/` で戻す。
 
 ## アーキテクチャ
 
@@ -78,276 +55,101 @@
 
 ```
 src/
-├── backend/    Cloudflare Workers（Hono）バックエンドAPI
-│   ├── index.ts             ルーティング・アプリ初期化
-│   ├── env.ts               Workers環境変数の型定義
-│   ├── auth/                Google OAuth code 交換 / セッション JWT 発行
-│   ├── handlers/            auth / visits / shares のリクエストハンドラ
-│   ├── db/                  D1（SQLite）アクセスレイヤ
-│   └── middleware/          CORS / 認証ミドルウェア
-├── frontend/   React 19 製フロントエンド（TSX）
-│   ├── app.tsx              エントリーポイント（GoogleOAuthProvider）
-│   ├── style-manager.ts     駅マーカーのスタイル管理 + ストレージ抽象の組み立て
-│   ├── components/          UIコンポーネント
-│   ├── auth/                Google OAuth + JWT 認証
-│   ├── storage/             訪問データのストレージ抽象（memory / remote）+ APIクライアント
-│   ├── types/               GeoJSON型など
-│   └── config.ts            フロントエンド設定（Google Client ID等）
-├── shared/     フロント・バック共通の型定義
-│   ├── api-types.ts         APIリクエスト・レスポンス型
-│   └── auth-types.ts        AuthUser / AuthState 型
-├── lib/        共通ユーティリティ
-│   ├── station-csv.ts       CSV パース
-│   └── types.ts             Station 型
-├── scripts/    データパイプライン用CLIスクリプト
-│   ├── generate-stationlist.ts
-│   └── generate-geojson.ts
-└── test-utils/ テスト用ヘルパー
+├── backend/     Cloudflare Workers（Hono）API。auth / handlers / db / middleware
+├── frontend/    React 19 フロントエンド。components / auth / storage / types
+├── shared/      フロント・バック共通の型定義
+├── lib/         共通ユーティリティ（CSV パース、Station 型）
+├── scripts/     データパイプライン用 CLI
+└── test-utils/  テスト用ヘルパー
 
-gas/           Google Apps Script（開発計画スプレッドシート更新API）
-migrations/    Cloudflare D1 マイグレーション（SQL）
-html/          静的アセット（index.html、CSS、ビルド成果物 bundle.js）
-data/          生成データ（CSV / GeoJSON）
+gas/          開発計画スプレッドシート更新 API（Google Apps Script）
+migrations/   Cloudflare D1 マイグレーション（SQL）
+html/         静的アセット（index.html、CSS、ビルド成果物 bundle.js）
+data/         生成データ（CSV / GeoJSON）
 ```
 
-### バックエンド（Cloudflare Workers + Hono）
+### バックエンド（Cloudflare Workers + Hono + D1）
 
-- **フレームワーク**: Hono を Cloudflare Workers 上で実行（`src/backend/index.ts`）
-- **データベース**: Cloudflare D1（SQLite）を `DB` バインディングとして利用
-- **認証**: Google OAuth 2.0 Implicit Flow（ID トークン）+ 自前のセッション JWT（`requireAuth` で保護）
-- **エンドポイント**:
-  - `GET /health` - ヘルスチェック
-  - `POST /sessions` - フロントから受け取った Google ID トークンを検証し、自前のセッション JWT を発行（リソース指向：将来のログアウトを `DELETE /sessions/current` で対称に表現できる）
-  - `POST /sessions/refresh` - 既存のセッション JWT を提示し、残期限が 30 日未満なら新しいセッション JWT を発行（残期限が十分なら 204 No Content）
-  - `GET /shares/:shareId` - 共有用：他ユーザーの訪問データを公開取得
-  - `POST /api/shares` - 認証済みユーザーの共有IDを発行・取得
-  - `GET /api/visits` - 認証済みユーザーの訪問一覧を取得
-  - `PUT /api/visits/:stationId` - 訪問記録の作成・更新（styleId 1〜4）
-  - `DELETE /api/visits/:stationId` - 訪問記録の削除
-- **テーブル**:
-  - `visits` (`migrations/0001_create_visits.sql`) - user_id, station_id, style_id, updated_at
-  - `shares` (`migrations/0002_create_shares.sql`) - share_id, user_id, created_at（1ユーザー1共有ID）
+エンドポイント:
 
-### 認証アーキテクチャ（Google ID トークン交換 + 自前セッション JWT）
+- `GET /health` - ヘルスチェック
+- `POST /sessions` - Google ID トークンを検証してセッション JWT を発行
+- `POST /sessions/refresh` - 残期限が 30 日未満なら新しいセッション JWT を発行（十分なら 204）
+- `GET /shares/:shareId` - 共有用：他ユーザーの訪問データを公開取得（認証不要）
+- `POST /api/shares` - ログインユーザーの共有 ID を発行・取得
+- `GET /api/visits` / `PUT /api/visits/:stationId` / `DELETE /api/visits/:stationId` - 訪問記録（styleId 1〜4）
 
-#### 背景
+テーブル（`migrations/`）:
 
-複数 Google アカウントにログインしている環境では One Tap によるサイレント再認証が機能せず、Google ID トークン（有効期限 1 時間）を毎リクエストに添付する従来方式ではセッションが頻繁に切れていた。これを解決するため、**ログイン時のみ Google ID トークンを検証して自前のセッション JWT を発行し、以後は Google から完全に独立して認証を回す方式**に切り替えている。
+- `visits` - user_id, station_id, style_id, updated_at
+- `shares` - share_id, user_id, created_at（1 ユーザー 1 共有 ID）
 
-Authorization Code Flow ではなく Implicit Flow のままにしているのは、用途が身元確認 (`sub`) のみで Google API を継続呼び出す要件がなく、`client_secret` も Google refresh token も不要だからである。
+認証は `/api/*` のみ `requireAuth` で保護する。`POST /sessions` と `GET /shares/:shareId` は公開。
 
-#### 登場するトークン
+### 認証（Google ID トークン交換 + 自前セッション JWT）
 
-| 名称 | 形式 | 寿命 | 発行者 | 用途 |
-|---|---|---|---|---|
-| **Google ID Token** | JWT (RS256, Google 署名) | 約 1 時間 | Google | 「このアプリにログインしようとしている本人」を Google が保証 |
-| **Session JWT** | JWT (HS256, 自前署名) | 1 年（自動延長） | バックエンド | 継続的な認証手段。`sub` クレームに Google `sub` を格納 |
+ログイン時のみ Google ID トークン（RS256, 約 1 時間）を JWKS で検証し、以後は自前のセッション JWT（HS256, 1 年）で認証を回す。フロントは `localStorage` の `auth:sessionToken` に保管し、`Authorization: Bearer <token>` で送る。起動時とタブ復帰時（`visibilitychange`）に `POST /sessions/refresh` を呼び、残期限が 30 日未満なら新トークンを受け取って上書きする。401 を受けたら localStorage をクリアして再ログイン UI を出す。
 
-#### システム別の責務
+設計判断:
 
-> **バックエンドは Google ID Token / Session JWT の検証と Session JWT の発行に責任を持つ。フロントエンドは Google ID Token の取得、Session JWT の保存と送信に責任を持つ。**
+- **Implicit Flow のまま**: 用途は身元確認（`sub`）のみで Google API を継続呼び出さないため、`client_secret` も Google refresh token も不要。ID トークンを 1 回検証すれば足りる
+- **セッション JWT はステートレス + スライディング延長**: D1 にセッションテーブルを持たず HS256 署名のみで検証する。30 日以内に 1 度でも開けばセッションは事実上失効しない。即時 revoke が必要になったら `sessions` テーブルを追加する
+- **One Tap によるサイレント再認証は使わない**: 複数 Google アカウント環境で機能しないため、1 年セッション + 延長で代替する
+- **`sub` の扱い**: Google `sub` は（アカウント × クライアント ID）ごとの不透明 ID でクレデンシャルではないが、ログ・URL・他ユーザー向けレスポンスには露出させない。共有 API は所有者の `sub` を返さず、別 UUID の `share_id` を介する
+- **エンドポイントはリソース指向**: プロバイダはパスではなく body の `provider` で指定する。ログアウトは将来 `DELETE /sessions/current` で対称に書ける
 
-| 責務 | バックエンド | フロントエンド |
-|---|---|---|
-| Google ID Token の取得 | - | ✅ `@react-oauth/google` 経由で Google から取得 |
-| Google ID Token の検証 | ✅ `auth/google.ts` で JWKS 検証 | - |
-| Session JWT の発行 | ✅ `auth/session.ts:issueSessionToken` | - |
-| Session JWT の検証（毎リクエスト） | ✅ `middleware/auth.ts:requireAuth` | - |
-| Session JWT の保存 | - | ✅ `localStorage` キー `auth:sessionToken` |
-| Session JWT の送信 | - | ✅ `Authorization: Bearer <token>` ヘッダ |
-| Session JWT のローテーション発火 | ✅ `POST /sessions/refresh` で残期限が 30 日未満なら新トークンを発行 | - |
-| Session JWT のローテーション要求 | - | ✅ 起動時・タブ復帰時に `POST /sessions/refresh` を明示的に呼び出す |
-| ローテーション後トークンの保存 | - | ✅ レスポンス body の `sessionToken` を localStorage に上書き |
-
-#### フロー
-
-```
-1. 初回ログイン
-   フロント: GoogleLogin（@react-oauth/google の Implicit Flow）でユーザーがアカウントを選択
-            → Google ID トークン取得
-   フロント → POST /sessions { provider: 'google', idToken }
-   バックエンド:
-     - id_token を Google JWKS (RS256) で検証
-     - sub を取り出し、自前のセッション JWT（HS256, 1 年）を発行
-     - 201 Created で { sessionToken, expiresAt } を返却
-   フロント: localStorage に sessionToken を保存（Google ID トークンは破棄）
-
-2. 通常 API リクエスト
-   フロント → Authorization: Bearer <sessionToken>
-   バックエンド: requireAuth が SESSION_SECRET で HS256 検証 → user.sub を取得
-
-3. スライディング期限延長（リフレッシュ）
-   フロント: アプリ起動時およびタブ復帰時 (`visibilitychange`) に
-            POST /sessions/refresh を Authorization: Bearer <sessionToken> で呼ぶ。
-   バックエンド:
-     - requireAuth で sessionToken を検証
-     - 残期限が 30 日以上あれば 204 No Content で応答（フロントは現在のトークンを維持）
-     - 残期限が 30 日未満なら新しい sessionToken を発行し、200 で
-       { sessionToken, expiresAt } を返す
-   フロント: 200 を受けたら新トークンを localStorage に上書き保存する。
-   → 30 日以内に 1 回でもアプリを開けばセッションは半永久的に維持される。
-
-4. セッション期限切れ
-   30 日以上アクセスが途絶えた状態で残期限が尽きると失効。
-   フロントは 401 を受けたら localStorage をクリアして再ログイン UI を表示する。
-```
-
-#### 設計判断
-
-- **Authorization Code Flow ではなく Implicit Flow を採用**: 用途は身元確認 (`sub`) のみで、Google API を継続呼び出す要件がないため、Google refresh token も `client_secret` も不要。Implicit Flow で得た ID トークンを 1 回検証するだけで十分。
-- **セッション JWT は 1 年・ステートレス + スライディング延長**: D1 にセッションテーブルを増やさず、`SESSION_SECRET` による HS256 署名のみで検証する。フロントは起動時・タブ復帰時に `POST /sessions/refresh` を明示的に呼び、残期限が 30 日未満なら新しいトークンを発行してもらう。アクティブなユーザーのセッションは事実上失効しない。失効・即時 revoke が必要になった段階で `sessions` テーブルを追加する余地は残している。
-- **`sub` 漏洩耐性**: Google `sub` は (Google アカウント × OAuth クライアント ID) ごとに発行される不透明 ID で、クレデンシャルではない。そのため `sub` 単体が漏れてもなりすましや個人情報逆引きには使えない。共有 API は所有者の `sub` を返さず、別 UUID の `share_id` を介して訪問データを公開する設計を維持する。ログ・URL・他ユーザー向けレスポンスには `sub` を露出させない。
-- **DB スキーマ変更なし**: `user_id` は引き続き Google `sub` を利用する。
-- **`POST /sessions` は公開エンドポイント**: `requireAuth` の対象外（`/api/*` のみ保護）。
-- **エンドポイントはリソース指向**: 認証手段（プロバイダ）はパスではなく body の `provider` で指定する。プロバイダを追加しても URL は不変。将来ログアウトを実装する場合は `DELETE /sessions/current` で対称に書ける。
-
-#### シークレット
+シークレット:
 
 - `GOOGLE_CLIENT_ID` - 公開 ID。`wrangler.toml` の `[vars]` に記載
-- `SESSION_SECRET` - 自前セッション JWT の HS256 署名鍵。`wrangler secret put SESSION_SECRET` でローカル / `--env production` で本番に投入。ローテーションすると全ユーザーが強制ログアウトされる
+- `SESSION_SECRET` - セッション JWT の HS256 署名鍵。`wrangler secret put SESSION_SECRET`（本番は `--env production`）。ローテーションすると全ユーザーが強制ログアウトされる
 
-#### バックエンド構成
+### フロントエンド（React 19）
 
-- `src/backend/auth/google.ts` - Google ID トークンを JWKS で検証し `sub` を取り出す（`verifyGoogleIdToken`）
-- `src/backend/auth/session.ts` - 自前セッション JWT の sign / verify ヘルパー（HS256, `sub` クレーム, 1 年有効）。`verifySessionToken` は `sub` と `exp` を返す
-- `src/backend/handlers/sessions.ts` - `POST /sessions` ハンドラ（`sessionsRouter` を `app.route('/sessions', ...)` で mount）
-- `src/backend/middleware/auth.ts` - `requireAuth` は Session JWT を検証して `c.set('user', { sub })` を行う（ローテーションは行わない）
-- `src/backend/handlers/sessions.ts` - `POST /sessions/refresh` ハンドラ。`requireAuth` 通過後に残期限を確認し、30 日未満なら新トークンを返却、それ以外は 204 No Content
+`src/frontend/app.tsx` が `GoogleOAuthProvider` で地図コンポーネントを包む。駅データは GeoJSON を Google Maps Data Layer として描画する。
 
-#### フロントエンド実装要件
+訪問データ（駅 → styleId）の永続化は `src/frontend/storage/` の `Storage` インターフェースで抽象化され、`style-manager.ts` の `createStyleManager()` がアプリの状態に応じて実装を選ぶ:
 
-- `auth-manager.ts`
-  - `localStorage` キー `auth:sessionToken` に Session JWT を保管
-  - 起動時に payload をデコードして `exp` を確認（署名検証はしない・できない）
-  - `updateSessionToken(token)` メソッドでログイン時およびリフレッシュ時の上書き保存と購読者通知を担う
-  - `refreshSession()` メソッドで `POST /sessions/refresh` を呼び、200 ならトークンを更新、401 ならセッションをクリア、204 なら現状維持
-- `use-session-refresh.ts`
-  - React フック。アプリ起動時とタブ復帰時 (`visibilitychange`) に `authManager.refreshSession()` を発火する
-- `LoginButton` / ログインフロー
-  - `GoogleLogin` 成功時に取得した ID トークンを `POST /sessions { provider: 'google', idToken }` で送信し、返却された `sessionToken` を保存
-- API クライアント (`visits-api-client.ts` / `shares-api-client.ts`)
-  - `Authorization: Bearer <sessionToken>` を毎リクエスト付与
-  - 401 を受けたら `authManager` を未ログイン状態に戻し、再ログイン UI を表示
-- 不要になる仕組み
-  - One Tap によるサイレント再認証 (`SilentSignIn` 相当) は撤去可能（1 年セッション + スライディング延長で代替）
-  - Google ID トークンの永続化は不要（受領後すぐにバックエンドへ送って破棄）
-
-### フロントエンド（React 19 + TypeScript）
-
-- **エントリーポイント**: `src/frontend/app.tsx` が `GoogleOAuthProvider` で `RoadStationMap` を包んで描画
-- **主要コンポーネント** (`src/frontend/components/`)
-  - `RoadStationMap` - 地図全体のオーケストレーション
-  - `Markers` - GeoJSON 駅データを Google Maps Data Layer として描画
-  - `InfoWindow` - 駅詳細のポップアップ
-  - `StationCounter` - スタイル別の訪問数カウンタ
-  - `LoginButton` - Google OAuth ログインボタン
-  - `ShareButton` - 共有リンク生成ボタン
-- **認証** (`src/frontend/auth/`)
-  - `auth-manager.ts` - `AuthState` を保持するシングルトン。バックエンド発行の **セッション JWT** を `localStorage` に永続化
-  - `session-token.ts` - セッション JWT のクライアント側デコード（`sub` / 期限の参照用、署名検証はサーバー側で実施）
-  - `use-auth.ts` - React フックで `AuthState` を購読
-  - **ログイン**: `GoogleLogin` コンポーネントで取得した Google ID トークンを `POST /auth/google` に送り、返却された `sessionToken` を保存する
-  - **詳細**: 「認証アーキテクチャ」セクションを参照
-- **ストレージ抽象** (`src/frontend/storage/`) - 訪問データ（駅 → styleId のマッピング）の永続化レイヤ
-  - `types.ts` - `Storage` インターフェース
-  - `memory-storage.ts` - オンメモリ実装。ゲスト閲覧・共有ビュー・テストで使用
-  - `remote-storage.ts` - Workers API と同期するリモート実装（デバウンス付き）
-  - `visits-api-client.ts` / `shares-api-client.ts` - REST API クライアント
-- **スタイル管理**: `style-manager.ts` の `createStyleManager()` がアプリの状態に応じて適切な `Storage` 実装を選択し、`StyleManager` を生成
-  - `?share=<id>` 付き: 共有 API から取得したデータで `MemoryStorage` を初期化
-  - ログイン済み: Workers + D1 と同期する `RemoteStorage`
-  - 未ログイン: 空の `MemoryStorage`（ゲストモード、データはセッション内のみ保持）
+- `?share=<id>` 付き: 共有 API から取得したデータで初期化した `MemoryStorage`
+- ログイン済み: Workers + D1 と同期する `RemoteStorage`（デバウンス付き）
+- 未ログイン: 空の `MemoryStorage`（ゲストモード、永続化なし）
 
 ### データパイプライン
 
-1. `src/scripts/generate-stationlist.ts` - michi-no-eki.jp をスクレイピング、都道府県・駅の階層をたどって `data/stations.csv` を出力（`jaconv` でテキスト正規化、`cheerio` で HTML 解析）
-2. `src/scripts/generate-geojson.ts` - CSV を読み込み、Point Feature の GeoJSON (`data/stations.geojson`) に変換
-3. フロントエンドは生成された GeoJSON を読み込み Google Maps 上に描画
+1. `generate-stationlist.ts` - michi-no-eki.jp を都道府県・駅の階層でたどり `data/stations.csv` を出力（`cheerio` で HTML 解析、`jaconv` でテキスト正規化）
+2. `generate-geojson.ts` - CSV を Point Feature の GeoJSON（`data/stations.geojson`）へ変換
+3. フロントエンドが GeoJSON を読み込んで描画
 
-### 開発計画スプレッドシートAPI（Google Apps Script）
+### 開発計画スプレッドシート API（Google Apps Script）
 
-開発計画マップ（`html/plan.html`）のデータ元は、人手で管理している Google スプレッドシートを CSV として公開したものである。`gas/` はそのスプレッドシートに紐づく GAS プロジェクトで、**エントリーの更新のみ**を Web App として公開する。
+開発計画マップ（`html/plan.html`）のデータ元は人手管理の Google スプレッドシートを CSV 公開したもの。`gas/` はそのスプレッドシートに紐づく GAS プロジェクトで、**エントリーの更新のみ**を Web App として公開する。
 
-- **更新のみを提供する理由**: 一覧は公開 CSV（`PlannedStationsApiClient`）で取得できており、行の追加・削除はスプレッドシート上で人手が行うため
-- **TypeScript ではなく JavaScript**: 個人利用の小さなスクリプトであり、ビルド工程を挟まず `clasp push` でそのまま反映できることを優先している
-- **列の解決**: 列位置はハードコードせず、ヘッダ行（`name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `memo`）から引く。API が受け付けるフィールド名は公開 CSV のヘッダ名と一致する
-- **エントリーの特定**: `name` 列の完全一致で行を探す（該当行がなければ `{ updated: false, row: null }` を返す）
+- **更新のみの理由**: 一覧は公開 CSV で取得でき、行の追加・削除はスプレッドシート上で人手が行うため
+- **TypeScript ではなく JavaScript**: 個人利用の小さなスクリプトで、ビルド工程を挟まず `clasp push` でそのまま反映することを優先
+- **列の解決**: 列位置はハードコードせずヘッダ行（`name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `memo`）から引く。API のフィールド名は公開 CSV のヘッダ名と一致する
+- **エントリーの特定**: `name` 列の完全一致（該当なしなら `{ updated: false, row: null }`）
+- **`Content-Type: text/plain`**: CORS プリフライトを避けるため（Apps Script は preflight に応答しない）
+- **公開範囲**: `ANYONE_ANONYMOUS`。個人利用前提の割り切りなので URL は共有しない
+- **Biome**: `gas/` は GAS のグローバルスコープ前提（`export` を持たない）のため `biome.json` の `overrides` で `noUnusedVariables` を無効化
 
-#### ファイル
-
-- `gas/Code.js` - Web App のエントリーポイント（`doPost`）
-- `gas/plan.js` - スプレッドシート操作（`updateEntry` ほか）
-- `gas/appsscript.json` - GAS マニフェスト（Web App 設定）
-
-#### リクエスト・レスポンス
+リクエスト・レスポンス:
 
 ```
-POST https://script.google.com/macros/s/xxx/exec
-Content-Type: text/plain
-
+POST https://script.google.com/macros/s/xxx/exec   (Content-Type: text/plain)
 { "name": "道の駅◯◯", "values": { "status": "開業", "date": "2026-04-01" } }
+→ { "updated": true, "row": 12 }
 ```
 
-```json
-{ "updated": true, "row": 12 }
-```
+`values` に含めたフィールドのみ上書きし、含めなかったフィールドは現在値を保つ。
 
-- `values` に含めたフィールドのみを上書きし、含めなかったフィールドは現在の値を保つ
-- `Content-Type: text/plain` を使うのは、CORS のプリフライトを避けるため（Apps Script は preflight に応答しない）
-
-#### 管理・デプロイ（clasp）
-
-`.clasp.json` は `scriptId` / `parentId` を含むため gitignore している。ローカルで次の内容を用意する:
-
-```json
-{
-  "scriptId": "GASプロジェクトID",
-  "rootDir": "gas",
-  "parentId": "スプレッドシートのID"
-}
-```
-
-- `npm run gas:push` - `clasp push` + 既存デプロイの更新（`clasp deploy -i $CLASP_DEPLOY_ID`）。Web App の URL を固定するため、デプロイ ID は環境変数 `CLASP_DEPLOY_ID` で指定する
-- **Web App の公開範囲**: `appsscript.json` は `ANYONE_ANONYMOUS`（URL を知っていれば誰でも POST 可能）。個人利用前提の割り切りであり、URL は共有しないこと
-- **Biome**: `gas/` 配下は GAS のグローバルスコープ前提（`export` を持たない）のため、`biome.json` の `overrides` で `noUnusedVariables` を無効化している
+`.clasp.json`（`scriptId` / `rootDir: "gas"` / `parentId`）は gitignore しているのでローカルで用意する。`npm run gas:push` は Web App の URL を固定するため `clasp deploy -i $CLASP_DEPLOY_ID` で既存デプロイを更新する。
 
 ### ビルド・デプロイ
 
-- **`esbuild.config.ts`** - `src/frontend/app.tsx` を `html/js/bundle.js` にバンドル。watch / serve / build モードを切り替え
-- **`html/index.html`** - Google Maps API と `js/bundle.js` を読み込む静的HTML
-- **`wrangler.toml`** - Workers の設定。D1 バインディング（`DB`）、`migrations_dir`、`env.production` の許可オリジン等を定義
-- **TypeScript設定** - フロント (`tsconfig.json`) とバックエンド (`tsconfig.backend.json`) で別構成。`npm run typecheck` は両方を実行
+- `esbuild.config.ts` - `src/frontend/app.tsx` を `html/js/bundle.js` にバンドル（watch / serve / build モード）
+- `wrangler.toml` - Workers 設定。D1 バインディング（`DB`）、`migrations_dir`、`env.production` の許可オリジン
+- TypeScript 設定はフロント（`tsconfig.json`）とバックエンド（`tsconfig.backend.json`）で分かれており、`npm run typecheck` は両方を実行する
+- デプロイ先は Cloudflare Workers（バックエンド）と静的ホスティング（`html/`）
 
 ### 主要技術
 
-- **バックエンド**: Cloudflare Workers, Hono, D1 (SQLite), jose（JWT検証）
-- **フロントエンド**: React 19, Google Maps API, `@react-oauth/google`
-- **データ生成**: TypeScript, cheerio, jaconv, fetch API
-- **ビルド**: esbuild
-- **テスト**: Vitest（`@testing-library/react` + jsdom）
-- **コード品質**: Biome（lint + format）
-- **デプロイ**: Cloudflare Workers（バックエンド）、静的ホスティング（フロントエンド `html/`）
-
-### データフロー
-
-```
-michi-no-eki.jp → スクレイピング → CSV → GeoJSON
-                                          ↓
-                                     React フロントエンド
-                                          ↓
-                                     Google Maps 描画
-
-ユーザー操作（訪問記録）
-  ├─ 未ログイン: MemoryStorage（セッション内のみ保持、永続化なし）
-  ├─ ログイン:   RemoteStorage → Workers API → D1 に永続化
-  └─ 共有閲覧:   ?share= で Workers API から取得 → MemoryStorage で表示
-
-認証
-  Google ── id_token ──▶ フロント ── POST /sessions ──▶ バックエンド
-                                                              │
-                                                              ▼
-  フロント ◀──────────── sessionToken (1年) ───────────────────┘
-     │
-     ├─ 以後の API: Authorization: Bearer <sessionToken>
-     └─ 起動時・タブ復帰時: POST /sessions/refresh で残期限 < 30日なら新トークンに更新
-```
+Cloudflare Workers / Hono / D1 / jose、React 19 / Google Maps API / `@react-oauth/google`、cheerio / jaconv、esbuild、Vitest（`@testing-library/react` + jsdom）、Biome。
