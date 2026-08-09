@@ -23,6 +23,6 @@
         "allowSyntheticDefaultImports": true,
         "types": ["node", "@types/google.maps", "react", "react-dom"]
     },
-    "include": ["src/frontend/**/*", "src/scripts/**/*", "src/shared/**/*", "*.ts"],
+    "include": ["src/frontend/**/*", "src/lib/**/*", "src/scripts/**/*", "src/shared/**/*", "*.ts"],
     "exclude": ["node_modules", "dist", "html/js/bundle.js", "bin", "src/backend"]
 }

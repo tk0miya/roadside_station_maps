@@ -34,6 +34,7 @@
 - **フロントエンド**: `npm start`（ウォッチビルド） / `npm run serve`（開発サーバー、ポート 8081） / `npm run build`
 - **バックエンド**: `npm run dev:backend`（wrangler dev） / `npm run deploy:backend` / `npm run db:migrate:local` / `npm run db:migrate`
 - **データ生成**: `npm run generate:all`（`generate:stations` → `generate:geojson`）
+- **開発計画データ**: `npm run --silent plan:list` / `npm run plan:update`（`.env` の `PLAN_API_URL` が必要）
 - **品質**: `npm test` / `npm run lint` / `npm run format` / `npm run typecheck` / `npm run lint:fix`
 
 ### generate:stations のデバッグモード
@@ -57,11 +58,11 @@ src/
 ├── backend/     Cloudflare Workers（Hono）API。auth / handlers / db / middleware
 ├── frontend/    React 19 フロントエンド。components / auth / storage / types
 ├── shared/      フロント・バック共通の型定義
-├── lib/         共通ユーティリティ（CSV パース、Station 型）
-├── scripts/     データパイプライン用 CLI
+├── lib/         scripts が使うモジュール（CSV パース、Station 型、開発計画 API クライアント）
+├── scripts/     CLI のエントリーポイント（npm script から実行する）
 └── test-utils/  テスト用ヘルパー
 
-gas/          開発計画スプレッドシート更新 API（Google Apps Script）
+gas/          開発計画スプレッドシート API（Google Apps Script）
 migrations/   Cloudflare D1 マイグレーション（SQL）
 html/         静的アセット（index.html、CSS、ビルド成果物 bundle.js）
 data/         生成データ（CSV / GeoJSON）
@@ -120,10 +121,18 @@ data/         生成データ（CSV / GeoJSON）
 
 ### 開発計画スプレッドシート API（Google Apps Script）
 
-開発計画マップ（`html/plan.html`）のデータ元は人手管理の Google スプレッドシートを CSV 公開したもの。`gas/` はそのスプレッドシートに紐づく GAS プロジェクトで、**エントリーの更新のみ**を Web App として公開する。
+開発計画マップ（`html/plan.html`）のデータ元は人手管理の Google スプレッドシート。`gas/` はそのスプレッドシートに紐づく GAS プロジェクトで、**一覧取得（`doGet`）と更新（`doPost`）**を Web App として公開する。行の追加・削除はスプレッドシート上で人手が行うため公開しない。
 
-- **更新のみの理由**: 一覧は公開 CSV で取得でき、行の追加・削除はスプレッドシート上で人手が行うため
+**読み取り経路は 2 つある**:
+
+- **地図（`html/plan.html`）は CSV 公開版を読む** — 地図の表示を GAS の実行時間・クォータに依存させないため
+- **CLI（`npm run plan`）は `doGet` を読む** — 必要なデータ形が地図と違うため。地図は `data/cities.json` で市区町村代表点にフォールバックした `PlannedStation` を使うが、CLI が扱うのは `update` で書き戻せるシートの生の値。加えて公開 CSV は Google 側で数分キャッシュされるので、`update` 直後の確認に使えない
+
+どちらもヘッダ行から列を引くので形は揃う。
+
 - **TypeScript ではなく JavaScript**: 個人利用の小さなスクリプトで、ビルド工程を挟まずそのまま GAS に反映することを優先
+- **`doGet` / `doPost` で分ける**: verb 分岐は Apps Script が提供しているので、`doPost({ action })` のような分岐を自前で作らない。読み取りは副作用がなく冪等で、`/exec` をブラウザで開けばデプロイの確認もできる
+- **日付の正規化**: `doGet` は Date セルを `yyyy-MM-dd` に揃えて返す。セルの表示書式に API の応答が左右されないようにするため。Date 以外は素通しするので、`lat` / `lng` は JSON の数値、空セルは空文字になる
 - **列の解決**: 列位置はハードコードせずヘッダ行（`name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `memo`）から引く。API のフィールド名は公開 CSV のヘッダ名と一致する
 - **エントリーの特定**: `name` 列の完全一致（該当なしなら `{ updated: false, row: null }`）
 - **`Content-Type: text/plain`**: CORS プリフライトを避けるため（Apps Script は preflight に応答しない）
@@ -133,12 +142,32 @@ data/         生成データ（CSV / GeoJSON）
 リクエスト・レスポンス:
 
 ```
+GET https://script.google.com/macros/s/xxx/exec
+→ [{ "name": "道の駅◯◯", "pref": "福井県", "status": "計画中", "date": "", "lat": 36.1, ... }, ...]
+
 POST https://script.google.com/macros/s/xxx/exec   (Content-Type: text/plain)
 { "name": "道の駅◯◯", "values": { "status": "開業", "date": "2026-04-01" } }
 → { "updated": true, "row": 12 }
 ```
 
 `values` に含めたフィールドのみ上書きし、含めなかったフィールドは現在値を保つ。
+
+### 開発計画データ CLI（`npm run plan:*`）
+
+上記 API の唯一のクライアント。`src/scripts/plan.ts`（エントリーポイント、引数解析・検証）と `src/lib/plan-api.ts`（通信）。
+
+```
+npm run --silent plan:list | jq -r '.[] | select(.status == "計画中") | .name'
+npm run plan:update -- "道の駅◯◯" --status=開業 --date=2026-04-01
+```
+
+- **`list` は JSON を出すだけ**で絞り込み・整形のオプションを持たない。`jq` のほうが上手くやれるため
+- **`npm run` のバナーは stdout に出る**ので、`jq` に流すときは `--silent` が要る
+- **script 名は `plan:list` / `plan:update`**: `db:migrate` / `gas:push` と同じ `<名前空間>:<動詞>` 形式に揃える。サブコマンドを script 側に埋めてあるので、`list` は `--` なしで `jq` に流せる
+- **`update` は送信前に検証する**: 更新可能フィールド（`status` / `date` / `lat` / `lng` / `memo`）以外のフラグ、範囲外の `status`、非数値の座標、フィールド無指定を弾く。GAS 側にエラー処理がなく、不正入力は HTML のエラーページとして返るため
+- **`date` は検証しない**: シートは判明している粒度をそのまま記録するため、`2026-04-01` / `2026-04` / `2026` / `2026夏` のいずれもありうる。単一のパターンに押し込められない
+- **`name` / `pref` / `city` は更新対象外**: エントリーを同定・配置する列で、進捗を表す列ではない（`name` は一致キー、`city` は地図の市区町村代表点フォールバックの引き当てに使う）。修正は文脈の見えるスプレッドシート上で行う
+- **`PLAN_API_URL`**: `/exec` の URL。`.env`（gitignore 済み、`.env.example` を参照）に置き、`dotenv` で読む
 
 ### ビルド・デプロイ
 
