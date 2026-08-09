@@ -134,7 +134,7 @@ data/         生成データ（CSV / GeoJSON）
 - **`doGet` / `doPost` で分ける**: verb 分岐は Apps Script が提供しているので、`doPost({ action })` のような分岐を自前で作らない。読み取りは副作用がなく冪等で、`/exec` をブラウザで開けばデプロイの確認もできる
 - **日付の正規化**: `doGet` は Date セルを `yyyy-MM-dd` に揃えて返す。セルの表示書式に API の応答が左右されないようにするため。Date 以外は素通しするので、`lat` / `lng` は JSON の数値、空セルは空文字になる
 - **列の解決**: 列位置はハードコードせずヘッダ行（`name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `memo`）から引く。API のフィールド名は公開 CSV のヘッダ名と一致する
-- **エントリーの特定**: `name` 列の完全一致（該当なしなら `{ updated: false, row: null }`）
+- **エントリーの特定**: `name` 列の完全一致（重複していれば最初に見つかった行、該当なしなら `{ updated: false, row: null }`）
 - **`Content-Type: text/plain`**: CORS プリフライトを避けるため（Apps Script は preflight に応答しない）
 - **公開範囲**: `ANYONE_ANONYMOUS`。個人利用前提の割り切りなので URL は共有しない
 - **Biome**: `gas/` は GAS のグローバルスコープ前提（`export` を持たない）のため `biome.json` の `overrides` で `noUnusedVariables` を無効化
@@ -150,7 +150,7 @@ POST https://script.google.com/macros/s/xxx/exec   (Content-Type: text/plain)
 → { "updated": true, "row": 12 }
 ```
 
-`values` に含めたフィールドのみ上書きし、含めなかったフィールドは現在値を保つ。
+`values` に含めたフィールドのみ上書きし、含めなかったフィールドは現在値を保つ。`values.name` を含めるとエントリーを改名する。
 
 ### 開発計画データ CLI（`npm run plan:*`）
 
@@ -159,14 +159,15 @@ POST https://script.google.com/macros/s/xxx/exec   (Content-Type: text/plain)
 ```
 npm run --silent plan:list | jq -r '.[] | select(.status == "計画中") | .name'
 npm run plan:update -- "道の駅◯◯" --status=開業 --date=2026-04-01
+npm run plan:update -- "道の駅◯◯（仮称）" --name=道の駅◯◯
 ```
 
 - **`list` は JSON を出すだけ**で絞り込み・整形のオプションを持たない。`jq` のほうが上手くやれるため
 - **`npm run` のバナーは stdout に出る**ので、`jq` に流すときは `--silent` が要る
 - **script 名は `plan:list` / `plan:update`**: `db:migrate` / `gas:push` と同じ `<名前空間>:<動詞>` 形式に揃える。サブコマンドを script 側に埋めてあるので、`list` は `--` なしで `jq` に流せる
-- **`update` は送信前に検証する**: 更新可能フィールド（`status` / `date` / `lat` / `lng` / `memo`）以外のフラグ、範囲外の `status`、非数値の座標、フィールド無指定を弾く。GAS 側にエラー処理がなく、不正入力は HTML のエラーページとして返るため
+- **`update` は送信前に検証する**: 更新可能フィールド（`name` / `status` / `date` / `lat` / `lng` / `memo`）以外のフラグ、範囲外の `status`、非数値の座標、空の `name`、フィールド無指定を弾く。GAS 側にエラー処理がなく、不正入力は HTML のエラーページとして返るため
 - **`date` は検証しない**: シートは判明している粒度をそのまま記録するため、`2026-04-01` / `2026-04` / `2026` / `2026夏` のいずれもありうる。単一のパターンに押し込められない
-- **`name` / `pref` / `city` は更新対象外**: エントリーを同定・配置する列で、進捗を表す列ではない（`name` は一致キー、`city` は地図の市区町村代表点フォールバックの引き当てに使う）。修正は文脈の見えるスプレッドシート上で行う
+- **`pref` / `city` は更新対象外**: エントリーを配置する列で、進捗を表す列ではない（`city` は地図の市区町村代表点フォールバックの引き当てに使う）。修正は文脈の見えるスプレッドシート上で行う
 - **`PLAN_API_URL`**: `/exec` の URL。`.env`（gitignore 済み、`.env.example` を参照）に置き、`dotenv` で読む
 
 ### ビルド・デプロイ
