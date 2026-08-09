@@ -4,6 +4,9 @@
 # clasp local settings (holds the script and spreadsheet ids)
 .clasp.json
 
+# Local CLI settings (holds the GAS web app /exec URL)
+.env
+
 dist/
 /data/
 node_modules
