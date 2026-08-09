@@ -56,6 +56,9 @@
 - `npm run serve` - ポート8081で開発サーバーを起動（ライブリロード付き）
 - `npm run dev` - 開発サーバー起動（serveのエイリアス）
 
+### Google Apps Script（開発計画スプレッドシートAPI）
+- `npm run gas:push` - `gas/` を GAS にプッシュし、既存のデプロイを更新（`CLASP_DEPLOY_ID` が必要）
+
 ### テスト・品質管理
 - `npm test` - Vitestでユニットテストを実行
 - `npm run lint` - Biomeでコード品質チェック
@@ -101,6 +104,7 @@ src/
 │   └── generate-geojson.ts
 └── test-utils/ テスト用ヘルパー
 
+gas/           Google Apps Script（開発計画スプレッドシート更新API）
 migrations/    Cloudflare D1 マイグレーション（SQL）
 html/          静的アセット（index.html、CSS、ビルド成果物 bundle.js）
 data/          生成データ（CSV / GeoJSON）
@@ -259,6 +263,53 @@ Authorization Code Flow ではなく Implicit Flow のままにしているの�
 1. `src/scripts/generate-stationlist.ts` - michi-no-eki.jp をスクレイピング、都道府県・駅の階層をたどって `data/stations.csv` を出力（`jaconv` でテキスト正規化、`cheerio` で HTML 解析）
 2. `src/scripts/generate-geojson.ts` - CSV を読み込み、Point Feature の GeoJSON (`data/stations.geojson`) に変換
 3. フロントエンドは生成された GeoJSON を読み込み Google Maps 上に描画
+
+### 開発計画スプレッドシートAPI（Google Apps Script）
+
+開発計画マップ（`html/plan.html`）のデータ元は、人手で管理している Google スプレッドシートを CSV として公開したものである。`gas/` はそのスプレッドシートに紐づく GAS プロジェクトで、**エントリーの更新のみ**を Web App として公開する。
+
+- **更新のみを提供する理由**: 一覧は公開 CSV（`PlannedStationsApiClient`）で取得できており、行の追加・削除はスプレッドシート上で人手が行うため
+- **TypeScript ではなく JavaScript**: 個人利用の小さなスクリプトであり、ビルド工程を挟まず `clasp push` でそのまま反映できることを優先している
+- **列の解決**: 列位置はハードコードせず、ヘッダ行（`name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `memo`）から引く。API が受け付けるフィールド名は公開 CSV のヘッダ名と一致する
+- **エントリーの特定**: `name` 列の完全一致で行を探す（該当行がなければ `{ updated: false, row: null }` を返す）
+
+#### ファイル
+
+- `gas/Code.js` - Web App のエントリーポイント（`doPost`）
+- `gas/plan.js` - スプレッドシート操作（`updateEntry` ほか）
+- `gas/appsscript.json` - GAS マニフェスト（Web App 設定）
+
+#### リクエスト・レスポンス
+
+```
+POST https://script.google.com/macros/s/xxx/exec
+Content-Type: text/plain
+
+{ "name": "道の駅◯◯", "values": { "status": "開業", "date": "2026-04-01" } }
+```
+
+```json
+{ "updated": true, "row": 12 }
+```
+
+- `values` に含めたフィールドのみを上書きし、含めなかったフィールドは現在の値を保つ
+- `Content-Type: text/plain` を使うのは、CORS のプリフライトを避けるため（Apps Script は preflight に応答しない）
+
+#### 管理・デプロイ（clasp）
+
+`.clasp.json` は `scriptId` / `parentId` を含むため gitignore している。ローカルで次の内容を用意する:
+
+```json
+{
+  "scriptId": "GASプロジェクトID",
+  "rootDir": "gas",
+  "parentId": "スプレッドシートのID"
+}
+```
+
+- `npm run gas:push` - `clasp push` + 既存デプロイの更新（`clasp deploy -i $CLASP_DEPLOY_ID`）。Web App の URL を固定するため、デプロイ ID は環境変数 `CLASP_DEPLOY_ID` で指定する
+- **Web App の公開範囲**: `appsscript.json` は `ANYONE_ANONYMOUS`（URL を知っていれば誰でも POST 可能）。個人利用前提の割り切りであり、URL は共有しないこと
+- **Biome**: `gas/` 配下は GAS のグローバルスコープ前提（`export` を持たない）のため、`biome.json` の `overrides` で `noUnusedVariables` を無効化している
 
 ### ビルド・デプロイ
 
