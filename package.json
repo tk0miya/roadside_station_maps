@@ -31,6 +31,7 @@
         "db:migrate": "wrangler d1 migrations apply DB --remote --env production",
         "gas:push": "clasp push -f && clasp deploy -i $CLASP_DEPLOY_ID",
         "plan:list": "NODE_USE_ENV_PROXY=1 node --import tsx src/scripts/plan.ts list",
+        "plan:show": "NODE_USE_ENV_PROXY=1 node --import tsx src/scripts/plan.ts show",
         "plan:update": "NODE_USE_ENV_PROXY=1 node --import tsx src/scripts/plan.ts update",
         "generate:geojson": "node --import tsx src/scripts/generate-geojson.ts",
         "generate:stations": "NODE_USE_ENV_PROXY=1 node --import tsx src/scripts/generate-stationlist.ts",

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildKey, buildValues, parseArgs } from './plan';
+import type { PlanEntry } from '../lib/plan-api';
+import { buildKey, buildValues, parseArgs, rejectFlags, selectEntry } from './plan';
 
 describe('parseArgs', () => {
     it('takes the command from the first positional', () => {
@@ -35,21 +36,21 @@ describe('parseArgs', () => {
 
 describe('buildKey', () => {
     it('takes the name and the prefecture from the two positionals', () => {
-        expect(buildKey(['道の駅 川崎町', '福岡県'])).toEqual({ name: '道の駅 川崎町', pref: '福岡県' });
+        expect(buildKey(['道の駅 川崎町', '福岡県'], 'update')).toEqual({ name: '道の駅 川崎町', pref: '福岡県' });
     });
 
     it('trims both halves, keeping stray spaces out of the messages built from them', () => {
-        expect(buildKey([' 道の駅あ ', ' 福井県 '])).toEqual({ name: '道の駅あ', pref: '福井県' });
+        expect(buildKey([' 道の駅あ ', ' 福井県 '], 'update')).toEqual({ name: '道の駅あ', pref: '福井県' });
     });
 
     it.each([[[]], [['']], [['  ', '福井県']]])('rejects the positionals %j as a missing name', (positionals) => {
-        expect(() => buildKey(positionals)).toThrow('Missing entry name');
+        expect(() => buildKey(positionals, 'update')).toThrow('Missing entry name');
     });
 
     it.each([[['道の駅あ']], [['道の駅あ', '']], [['道の駅あ', '  ']]])(
         'rejects the positionals %j as a missing prefecture',
         (positionals) => {
-            expect(() => buildKey(positionals)).toThrow('Missing prefecture for 道の駅あ');
+            expect(() => buildKey(positionals, 'update')).toThrow('Missing prefecture for 道の駅あ');
         }
     );
 
@@ -57,18 +58,63 @@ describe('buildKey', () => {
         [['道の駅', '川崎町', '福岡県'], '"道の駅 川崎町" 福岡県'],
         [['道の駅', 'スタープラザ', '芦別', '北海道'], '"道の駅 スタープラザ 芦別" 北海道'],
     ])('quotes %j back as %s, the name an unquoted argument list split apart', (positionals, quoted) => {
-        expect(() => buildKey(positionals)).toThrow(`Unexpected extra arguments. Quote the name: ${quoted}`);
+        expect(() => buildKey(positionals, 'update')).toThrow(`Unexpected extra arguments. Quote the name: ${quoted}`);
     });
 
     it.each([
         [['道の駅', '川崎町'], '川崎町'],
         [['道の駅', 'スタープラザ', '芦別'], '芦別'],
     ])('reports %j as the invalid prefecture %s, an unquoted name given no prefecture at all', (positionals, pref) => {
-        expect(() => buildKey(positionals)).toThrow(`Invalid prefecture: ${pref}`);
+        expect(() => buildKey(positionals, 'update')).toThrow(`Invalid prefecture: ${pref}`);
     });
 
     it.each(['東京都', '北海道', '京都府'])('accepts the %s suffix as well as 県', (pref) => {
-        expect(buildKey(['道の駅あ', pref]).pref).toBe(pref);
+        expect(buildKey(['道の駅あ', pref], 'update').pref).toBe(pref);
+    });
+
+    it.each([
+        ['show', 'npm run --silent plan:show'],
+        ['update', 'npm run plan:update'],
+    ] as const)('points %s at its own usage line', (command, usage) => {
+        expect(() => buildKey([], command)).toThrow(usage);
+    });
+});
+
+describe('rejectFlags', () => {
+    it('accepts a command given no options', () => {
+        expect(() => rejectFlags('list', {})).not.toThrow();
+    });
+
+    it('names the offending option and points at both jq and update, the two things it could have meant', () => {
+        expect(() => rejectFlags('show', { status: '開業' })).toThrow(
+            /Unknown option: --status\. show only reads .*jq.*plan:update/
+        );
+    });
+});
+
+describe('selectEntry', () => {
+    const entries: PlanEntry[] = [
+        { name: '道の駅 川崎町', pref: '福岡県', status: '計画中' },
+        { name: '道の駅 川崎町', pref: '宮城県', status: '開業' },
+        { name: '道の駅あ', pref: '福井県', status: '計画中' },
+    ];
+
+    it('matches on the name and the prefecture together', () => {
+        expect(selectEntry(entries, '道の駅 川崎町', '宮城県')).toEqual({
+            name: '道の駅 川崎町',
+            pref: '宮城県',
+            status: '開業',
+        });
+    });
+
+    it('rejects a name held by no entry of that prefecture', () => {
+        expect(() => selectEntry(entries, '道の駅あ', '宮城県')).toThrow('No entry named 道の駅あ in 宮城県');
+    });
+
+    it('reports a duplicate with its count instead of picking one of the rows', () => {
+        const duplicated = [...entries, { name: '道の駅あ', pref: '福井県', status: '中止' }];
+
+        expect(() => selectEntry(duplicated, '道の駅あ', '福井県')).toThrow('2 entries named 道の駅あ in 福井県');
     });
 });
 
