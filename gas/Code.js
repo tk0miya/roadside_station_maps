@@ -9,10 +9,12 @@
 //
 // POST updates one entry. Its body uses Content-Type: text/plain, so the
 // request stays a CORS simple request and Apps Script does not answer it with
-// a redirect to a preflight:
-//   { "name": "道の駅◯◯", "values": { "status": "開業", "date": "2026-04-01" } }
+// a redirect to a preflight. `name` and `pref` together identify the entry; see
+// plan.js for when a write happens at all:
+//   { "name": "道の駅◯◯", "pref": "福岡県",
+//     "values": { "status": "開業", "date": "2026-04-01" } }
 // Response:
-//   { "updated": true, "row": 12 }
+//   { "updated": true, "row": 12, "matched": 1 }
 
 function doGet() {
     return ContentService.createTextOutput(JSON.stringify(listEntries())).setMimeType(ContentService.MimeType.JSON);
@@ -20,6 +22,6 @@ function doGet() {
 
 function doPost(e) {
     const request = JSON.parse(e.postData.contents);
-    const result = updateEntry(request.name, request.values);
+    const result = updateEntry(request.name, request.pref, request.values);
     return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
 }
