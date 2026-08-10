@@ -16,6 +16,9 @@ export type PlanEntry = Record<string, string | number | boolean>;
 export interface UpdateResult {
     updated: boolean;
     row: number | null;
+    // How many entries the key selected. Nothing is written unless this is 1;
+    // see gas/plan.js.
+    matched: number;
 }
 
 // How much of an unexpected (HTML) response body to quote back.
@@ -52,14 +55,15 @@ export async function list(): Promise<PlanEntry[]> {
     return (await readJson(response, 'list')) as PlanEntry[];
 }
 
-// Overwrite the given fields on the entry named `name`. Fields left out keep
-// their current content.
-export async function update(name: string, values: Record<string, string>): Promise<UpdateResult> {
+// Overwrite the given fields on the entry keyed by `name` and `pref`, both of
+// which are required (see gas/plan.js). Fields left out keep their current
+// content.
+export async function update(name: string, pref: string, values: Record<string, string>): Promise<UpdateResult> {
     const response = await fetch(getApiUrl(), {
         method: 'POST',
         // text/plain keeps this a CORS simple request; see gas/Code.js.
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ name, values }),
+        body: JSON.stringify({ name, pref, values }),
     });
     return (await readJson(response, 'update')) as UpdateResult;
 }

@@ -62,19 +62,20 @@ describe('plan-api', () => {
     });
 
     describe('update', () => {
-        it('POSTs the name and values as text/plain', async () => {
-            fetchMock.mockResolvedValueOnce(jsonResponse({ updated: true, row: 12 }));
+        it('POSTs the key and values as text/plain', async () => {
+            fetchMock.mockResolvedValueOnce(jsonResponse({ updated: true, row: 12, matched: 1 }));
 
-            const result = await update('道の駅あ', { status: '開業', date: '2026-04-01' });
+            const result = await update('道の駅 川崎町', '福岡県', { status: '開業', date: '2026-04-01' });
 
-            expect(result).toEqual({ updated: true, row: 12 });
+            expect(result).toEqual({ updated: true, row: 12, matched: 1 });
             expect(fetchMock).toHaveBeenCalledWith(
                 API_URL,
                 expect.objectContaining({
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
-                        name: '道の駅あ',
+                        name: '道の駅 川崎町',
+                        pref: '福岡県',
                         values: { status: '開業', date: '2026-04-01' },
                     }),
                 })
@@ -82,27 +83,31 @@ describe('plan-api', () => {
         });
 
         it('passes through a miss so the caller can report it', async () => {
-            fetchMock.mockResolvedValueOnce(jsonResponse({ updated: false, row: null }));
+            fetchMock.mockResolvedValueOnce(jsonResponse({ updated: false, row: null, matched: 0 }));
 
-            expect(await update('道の駅ない', { status: '開業' })).toEqual({ updated: false, row: null });
+            expect(await update('道の駅ない', '福井県', { status: '開業' })).toEqual({
+                updated: false,
+                row: null,
+                matched: 0,
+            });
         });
 
         it('reports a non-OK status', async () => {
             fetchMock.mockResolvedValueOnce(jsonResponse({}, 403));
 
-            await expect(update('道の駅あ', { status: '開業' })).rejects.toThrow('Failed to update: 403');
+            await expect(update('道の駅あ', '福井県', { status: '開業' })).rejects.toThrow('Failed to update: 403');
         });
 
         it('reports a non-JSON response body', async () => {
             fetchMock.mockResolvedValueOnce(new Response(HTML_ERROR_PAGE));
 
-            await expect(update('道の駅あ', { status: '開業' })).rejects.toThrow('non-JSON response');
+            await expect(update('道の駅あ', '福井県', { status: '開業' })).rejects.toThrow('non-JSON response');
         });
 
         it('reports an unset PLAN_API_URL instead of fetching', async () => {
             delete process.env.PLAN_API_URL;
 
-            await expect(update('道の駅あ', { status: '開業' })).rejects.toThrow('PLAN_API_URL is not set');
+            await expect(update('道の駅あ', '福井県', { status: '開業' })).rejects.toThrow('PLAN_API_URL is not set');
             expect(fetchMock).not.toHaveBeenCalled();
         });
     });

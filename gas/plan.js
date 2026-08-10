@@ -4,85 +4,107 @@
 // the column layout is discovered from the header row instead of being
 // hard-coded: the field names accepted by the API are exactly the CSV headers
 // (name, pref, city, status, date, lat, lng, memo).
+//
+// The sheet is read in one place, readPlanSheet, which normalizes every value it
+// hands out, so what listEntries returns is what findRows matches on.
 
-// Header label of the column identifying an entry.
+// Header labels of the columns identifying an entry. A name is not unique on
+// its own -- 道の駅 川崎町 exists in both 福岡県 and 宮城県 -- so the prefecture
+// is the second half of the key.
 const NAME_FIELD = 'name';
+const PREF_FIELD = 'pref';
 
 // The plan sheet is the leftmost one, as in the published CSV.
 function getPlanSheet() {
     return SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
 }
 
-// Header label -> 1-based column index.
-function getColumnIndexes(sheet) {
-    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    const indexes = {};
-    headers.forEach((header, index) => {
-        indexes[String(header).trim()] = index + 1;
-    });
-    return indexes;
-}
-
-// 1-based row number of the entry with the given name, or -1 when it is absent.
-function findRowByName(sheet, nameColumn, name) {
-    const lastRow = sheet.getLastRow();
-    if (lastRow < 2) {
-        return -1;
-    }
-
-    const names = sheet.getRange(2, nameColumn, lastRow - 1, 1).getValues();
-    const index = names.findIndex((row) => String(row[0]).trim() === name);
-    return index === -1 ? -1 : index + 2;
-}
-
-// Sheet cell value -> JSON-safe value. Date cells are normalized to yyyy-MM-dd
-// so the API's shape does not depend on how the column happens to be formatted.
-// Everything else is passed through, which keeps numeric columns (lat, lng)
-// numbers in the JSON and empty cells empty strings.
+// Sheet cell value -> JSON-safe value: a Date becomes yyyy-MM-dd, so the API's
+// shape does not depend on how the column happens to be formatted, and text is
+// trimmed. Everything else is passed through, which keeps numeric columns (lat,
+// lng) numbers in the JSON and empty cells empty strings.
 function toFieldValue(value) {
     if (value instanceof Date) {
         return Utilities.formatDate(value, 'Asia/Tokyo', 'yyyy-MM-dd');
     }
+    if (typeof value === 'string') {
+        return value.trim();
+    }
     return value;
 }
 
-// Every entry in the sheet, as objects keyed by the header labels. The whole
-// range is read in one call rather than row by row, as in findRowByName.
-function listEntries() {
+// Request value -> the form the sheet's text columns are read in, so the two can
+// be compared as they are. A missing key normalizes to the empty string.
+function toKeyValue(value) {
+    return String(value === undefined || value === null ? '' : value).trim();
+}
+
+// The sheet in one read: the sheet itself, to write back to; its header labels
+// in column order, which give a field its column (0-based here, 1-based in the
+// sheet); and every row below the header, where row N of the sheet is
+// rows[N - 2].
+function readPlanSheet() {
     const sheet = getPlanSheet();
     const lastRow = sheet.getLastRow();
-    if (lastRow < 2) {
-        return [];
+    if (lastRow < 1) {
+        return { sheet, fields: [], rows: [] };
     }
 
     const values = sheet.getRange(1, 1, lastRow, sheet.getLastColumn()).getValues();
-    const fields = values[0].map((header) => String(header).trim());
+    return {
+        sheet,
+        fields: values[0].map(toFieldValue),
+        rows: values.slice(1).map((row) => row.map(toFieldValue)),
+    };
+}
 
-    return values
-        .slice(1)
+// Positions in `rows` of every entry with the given name and prefecture, both
+// matched exactly.
+function findRows(fields, rows, name, pref) {
+    const nameIndex = fields.indexOf(NAME_FIELD);
+    const prefIndex = fields.indexOf(PREF_FIELD);
+    const found = [];
+    rows.forEach((row, index) => {
+        if (row[nameIndex] === name && row[prefIndex] === pref) {
+            found.push(index);
+        }
+    });
+    return found;
+}
+
+// Every entry in the sheet, as objects keyed by the header labels.
+function listEntries() {
+    const { fields, rows } = readPlanSheet();
+
+    return rows
         .map((row) => {
             const entry = {};
             fields.forEach((field, index) => {
-                entry[field] = toFieldValue(row[index]);
+                entry[field] = row[index];
             });
             return entry;
         })
-        .filter((entry) => String(entry[NAME_FIELD]).trim() !== '');
+        .filter((entry) => entry[NAME_FIELD] !== '');
 }
 
-// Overwrite the fields given in `values` on the entry identified by `name`.
-// Fields left out of `values` keep their current content.
-function updateEntry(name, values) {
-    const sheet = getPlanSheet();
-    const columns = getColumnIndexes(sheet);
-    const row = findRowByName(sheet, columns[NAME_FIELD], name);
-    if (row === -1) {
-        return { updated: false, row: null };
+// Overwrite the fields given in `values` on the entry identified by `name` and
+// `pref`. Fields left out of `values` keep their current content.
+//
+// Nothing is written unless exactly one entry matches: writing to the first of
+// several rows would update the wrong one unnoticed. `matched` tells the two
+// failures apart -- 0 is a miss, more than 1 means the sheet holds duplicate
+// rows, which the key cannot split.
+function updateEntry(name, pref, values) {
+    const { sheet, fields, rows } = readPlanSheet();
+    const found = findRows(fields, rows, toKeyValue(name), toKeyValue(pref));
+    if (found.length !== 1) {
+        return { updated: false, row: null, matched: found.length };
     }
 
+    const row = found[0] + 2;
     Object.keys(values).forEach((field) => {
-        sheet.getRange(row, columns[field]).setValue(values[field]);
+        sheet.getRange(row, fields.indexOf(field) + 1).setValue(values[field]);
     });
 
-    return { updated: true, row };
+    return { updated: true, row, matched: 1 };
 }

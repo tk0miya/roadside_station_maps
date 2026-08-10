@@ -1,7 +1,7 @@
 // Command-line client for the development-plan spreadsheet API.
 //
 //   npm run --silent plan:list
-//   npm run plan:update -- "道の駅◯◯" --status=開業 --date=2026-04-01
+//   npm run plan:update -- "道の駅◯◯" 福井県 --status=開業 --date=2026-04-01
 //
 // `list` prints the sheet as JSON and does no filtering or formatting of its
 // own; jq does that far better than any set of flags would. Because of that its
@@ -19,26 +19,32 @@ import { list, update } from '../lib/plan-api.js';
 const STATUSES = ['開業', '登録済み', '計画中', '中止'];
 
 // Columns update accepts, matching the sheet's header labels. `pref` and `city`
-// are left out: they place an entry rather than describe its progress, and
-// `city` also drives the map's fallback to the municipality's representative
-// point. Correcting them is done in the spreadsheet, where the change is
-// visible in context.
+// are left out: `pref` is half of the key, and `city` places an entry rather
+// than describing its progress, driving the map's fallback to the
+// municipality's representative point. Correcting them is done in the
+// spreadsheet, where the change is visible in context.
 const UPDATABLE_FIELDS = ['name', 'status', 'date', 'lat', 'lng', 'memo'];
+
+// The usage line buildKey's errors point at.
+const KEY_USAGE = 'npm run plan:update -- "<name>" <prefecture> --status=開業';
 
 const USAGE = `Read and update the roadside-station development-plan spreadsheet.
 
 Usage:
   npm run --silent plan:list
-  npm run plan:update -- "<name>" [--name=<new name>] [--status=<status>]
-                                  [--date=<text>] [--lat=<number>]
-                                  [--lng=<number>] [--memo=<text>]
+  npm run plan:update -- "<name>" <prefecture> [--name=<new name>]
+                                               [--status=<status>] [--date=<text>]
+                                               [--lat=<number>] [--lng=<number>]
+                                               [--memo=<text>]
 
 Commands:
   list     Print every entry as JSON. Filter it with jq:
              npm run --silent plan:list | jq -r '.[] | select(.status == "計画中") | .name'
            Note the --silent: without it npm prints its banner to stdout and jq
            fails to parse the output.
-  update   Overwrite the given fields on the entry whose name matches exactly.
+  update   Overwrite the given fields on the entry matched exactly by the name
+           and prefecture given as positional arguments. Both are required:
+           names are not unique across prefectures.
            Fields left out keep their current content; pass an empty value
            (e.g. --date=) to clear a field -- except --name, which every entry
            is identified by. pref and city are not writable here -- correct
@@ -114,6 +120,38 @@ function validateField(field: string, value: string): void {
     }
 }
 
+// The key of the entry to update, taken from the two positional arguments: its
+// name and its prefecture. Both are trimmed, so what is sent and what is printed
+// carry no stray spaces.
+export function buildKey(positionals: string[]): { name: string; pref: string } {
+    // Station names hold spaces (道の駅 川崎町), so an unquoted one arrives split
+    // across several arguments. The prefecture is the last of them either way.
+    const args = positionals.map((positional) => positional.trim());
+    const name = args[0];
+    const pref = args.length > 1 ? args[args.length - 1] : '';
+
+    if (!name) {
+        throw new Error(`Missing entry name. Usage: ${KEY_USAGE}`);
+    }
+    if (!pref) {
+        throw new Error(`Missing prefecture for ${name}. Names are not unique across prefectures. Usage: ${KEY_USAGE}`);
+    }
+    // Checked before the argument count, so an unquoted name that also lacks a
+    // prefecture is reported as a problem with the prefecture rather than as a
+    // quoting slip whose suggested fix fails in turn.
+    if (!/[都道府県]$/.test(pref)) {
+        throw new Error(
+            `Invalid prefecture: ${pref}. Expected a name ending in 都/道/府/県 -- quote a station name ` +
+                `that holds spaces. Usage: ${KEY_USAGE}`
+        );
+    }
+    if (args.length > 2) {
+        throw new Error(`Unexpected extra arguments. Quote the name: "${args.slice(0, -1).join(' ')}" ${pref}`);
+    }
+
+    return { name, pref };
+}
+
 export function buildValues(flags: Record<string, string>): Record<string, string> {
     const values: Record<string, string> = {};
 
@@ -145,18 +183,15 @@ async function runList(): Promise<void> {
 }
 
 async function runUpdate(parsed: ParsedArgs): Promise<void> {
-    const name = parsed.positionals[0];
-    if (name === undefined || name === '') {
-        throw new Error('Missing entry name. Usage: npm run plan:update -- "<name>" --status=開業');
-    }
-
+    const { name, pref } = buildKey(parsed.positionals);
     const values = buildValues(parsed.flags);
-    const result = await update(name, values);
+
+    const result = await update(name, pref, values);
     if (!result.updated) {
-        throw new Error(`Entry not found: ${name}`);
+        throw new Error(`Update error: ${name} (${pref}) (matched: ${result.matched})`);
     }
 
-    console.error(`Updated ${name} (row ${result.row}).`);
+    console.error(`Updated ${name} (${pref}) (row ${result.row}).`);
 }
 
 async function main(): Promise<void> {
