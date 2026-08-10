@@ -133,7 +133,7 @@ data/         生成データ（CSV / GeoJSON）
 - **TypeScript ではなく JavaScript**: 個人利用の小さなスクリプトで、ビルド工程を挟まずそのまま GAS に反映することを優先
 - **`doGet` / `doPost` で分ける**: verb 分岐は Apps Script が提供しているので、`doPost({ action })` のような分岐を自前で作らない。読み取りは副作用がなく冪等で、`/exec` をブラウザで開けばデプロイの確認もできる
 - **値の正規化**: `doGet` は Date セルを `yyyy-MM-dd` に揃え、文字列セルは前後の空白を落として返す。セルの表示書式や余分な空白に API の応答が左右されず、一覧で見た値をそのまま `update` の一致キーに使えるようにするため。数値は素通しするので `lat` / `lng` は JSON の数値、空セルは空文字になる
-- **列の解決**: 列位置はハードコードせずヘッダ行（`name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `memo`）から引く。API のフィールド名は公開 CSV のヘッダ名と一致する
+- **列の解決**: 列位置はハードコードせずヘッダ行（`name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `memo` / `checked_on`）から引く。API のフィールド名は公開 CSV のヘッダ名と一致する
 - **エントリーの特定**: `name` 列と `pref` 列の完全一致。`name` は一意ではない（「道の駅 川崎町」が福岡県と宮城県にある）ので、`pref` はキーの片割れとして必須にする。**一致が 1 件のときだけ書き込む** — 複数一致で先頭行を書くと取り違えに気づけないため
 - **`Content-Type: text/plain`**: CORS プリフライトを避けるため（Apps Script は preflight に応答しない）
 - **公開範囲**: `ANYONE_ANONYMOUS`。個人利用前提の割り切りなので URL は共有しない
@@ -166,8 +166,9 @@ npm run plan:update -- "道の駅◯◯（仮称）" 福井県 --name=道の駅�
 - **`list` / `show` は JSON を出すだけ**で絞り込み・整形のオプションを持たない。`jq` のほうが上手くやれるため
 - **`npm run` のバナーは stdout に出る**ので、`jq` に流すときは `--silent` が要る
 - **script 名は `plan:list` / `plan:show` / `plan:update`**: `db:migrate` / `gas:push` と同じ `<名前空間>:<動詞>` 形式に揃える。サブコマンドを script 側に埋めてあるので、`list` は `--` なしで `jq` に流せる
-- **`update` は送信前に検証する**: 更新可能フィールド（`name` / `status` / `date` / `lat` / `lng` / `memo`）以外のフラグ、範囲外の `status`、非数値の座標、空の `name`、フィールド無指定、キー（名前・都道府県）の欠落や不正を弾く。GAS 側にエラー処理がなく、不正入力は HTML のエラーページとして返るため
+- **`update` は送信前に検証する**: 更新可能フィールド（`name` / `status` / `date` / `lat` / `lng` / `memo` / `checked_on`）以外のフラグ、範囲外の `status`、非数値の座標、空の `name`、不正な `checked_on`、フィールド無指定、キー（名前・都道府県）の欠落や不正を弾く。GAS 側にエラー処理がなく、不正入力は HTML のエラーページとして返るため
 - **`date` は検証しない**: シートは判明している粒度をそのまま記録するため、`2026-04-01` / `2026-04` / `2026` / `2026夏` のいずれもありうる。単一のパターンに押し込められない
+- **`checked_on` は逆に `yyyy-mm-dd` を強制する**: その駅を最後に調査した日を機械が記録する列で、人が育てた他の列とは持ち主が違う。調査は古い順に少しずつ進める（`.claude/skills/michi-no-eki-plan-research/SKILL.md`）ため**この列は並び替えキー**であり、表記がぶれると順序が静かに崩れる（詳細は `plan.ts` の `CHECKED_ON_PATTERN` のコメント）
 - **`pref` / `city` は更新対象外**: エントリーを同定・配置する列で、進捗を表す列ではない（`city` は地図の市区町村代表点フォールバックの引き当てに使う）。修正は文脈の見えるスプレッドシート上で行う
 - **`PLAN_API_URL`**: `/exec` の URL。`.env`（gitignore 済み、`.env.example` を参照）に置き、`dotenv` で読む
 

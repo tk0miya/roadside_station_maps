@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { PlanEntry } from '../lib/plan-api';
 import { buildKey, buildValues, parseArgs, rejectFlags, selectEntry } from './plan';
 
@@ -165,6 +165,32 @@ describe('buildValues', () => {
             expect(buildValues({ date })).toEqual({ date });
         }
     );
+
+    it.each(['2026/8/10', '2026-8-10', '2026-08', 'today', '2026-13-45', '2026-02-31'])(
+        'rejects the checked_on stamp %s, which is not a plain day that exists',
+        (checkedOn) => {
+            expect(() => buildValues({ checked_on: checkedOn })).toThrow(`Invalid --checked_on: ${checkedOn}`);
+        }
+    );
+
+    // Fixed at a moment where Japan and UTC disagree on the date, so this covers
+    // which timezone "today" is read in, that today itself is allowed, and that a
+    // day yet to come -- when nothing could have been researched -- is not.
+    it('takes today from Japan rather than from the clock of the machine running it', () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-08-10T23:00:00Z')); // 2026-08-11 08:00 JST
+        try {
+            expect(buildValues({ checked_on: '2026-08-11' })).toEqual({ checked_on: '2026-08-11' });
+            expect(() => buildValues({ checked_on: '2026-08-12' })).toThrow('Invalid --checked_on: 2026-08-12');
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('passes a full checked_on stamp through, and allows clearing it', () => {
+        expect(buildValues({ checked_on: '2026-08-10' })).toEqual({ checked_on: '2026-08-10' });
+        expect(buildValues({ checked_on: '' })).toEqual({ checked_on: '' });
+    });
 
     it('rejects a non-numeric lat/lng but allows clearing them', () => {
         expect(() => buildValues({ lat: 'north' })).toThrow('Invalid --lat: north');

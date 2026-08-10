@@ -23,7 +23,42 @@ const STATUSES = ['開業', '登録済み', '計画中', '中止'];
 // than describing its progress, driving the map's fallback to the
 // municipality's representative point. Correcting them is done in the
 // spreadsheet, where the change is visible in context.
-const UPDATABLE_FIELDS = ['name', 'status', 'date', 'lat', 'lng', 'memo'];
+//
+// `checked_on` differs from the rest in who owns it: the others hold what a
+// person has curated about a station, while it holds the day an entry was last
+// researched.
+const UPDATABLE_FIELDS = ['name', 'status', 'date', 'lat', 'lng', 'memo', 'checked_on'];
+
+// The one form `checked_on` is written in. Unlike `date`, which preserves
+// whatever precision a source stated, it records a day the tooling itself
+// observed, so holding it to one format costs nothing -- and leaving it open
+// costs a fair amount, because research passes order entries by this column to
+// pick the ones they look into next. A value Sheets does not read as a date
+// ('today') stays text and sorts after every stamped day, so that entry waits
+// behind all of them and its turn never comes; a partial one ('2026-08') is
+// read as a day the tooling never observed. Neither fails loudly.
+const CHECKED_ON_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+// Whether a `checked_on` value names a day that exists. The pattern alone lets
+// 2026-13-45 through, which Sheets cannot read as a date either -- the same
+// dead end as 'today'. Date parsing rolls an overflowing day forward
+// (2026-02-31 becomes March 3) rather than rejecting it, so the parsed day is
+// compared back against the text it came from.
+function isCheckedOnStamp(value: string): boolean {
+    if (!CHECKED_ON_PATTERN.test(value)) {
+        return false;
+    }
+    const parsed = new Date(`${value}T00:00:00Z`);
+    return !Number.isNaN(parsed.getTime()) && parsed.toISOString().startsWith(value);
+}
+
+// Today in JST, as the column writes it. The sheet records Japanese days and the
+// stamp says when research happened, so the machine running it -- often on UTC --
+// does not get to decide which day that is. en-CA is the locale that formats a
+// date as yyyy-mm-dd, which makes the result comparable to a stamp as text.
+function todayInJapan(): string {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+}
 
 // The commands that take an entry key -- a name and a prefecture -- rather than
 // operating on the sheet as a whole.
@@ -45,6 +80,7 @@ Usage:
                                                [--status=<status>] [--date=<text>]
                                                [--lat=<number>] [--lng=<number>]
                                                [--memo=<text>]
+                                               [--checked_on=<yyyy-mm-dd>]
 
 Commands:
   list     Print every entry as JSON. Filter it with jq:
@@ -64,6 +100,7 @@ Commands:
 
 Status values: ${STATUSES.join(', ')}
 Date: free text, as precise as is known -- 2026-04-01, 2026-04, 2026, 2026夏
+Checked on: yyyy-mm-dd -- the day the entry was last researched
 
 Requires PLAN_API_URL in .env -- see .env.example.
 `;
@@ -126,6 +163,24 @@ function validateField(field: string, value: string): void {
     // `date` is deliberately unchecked: the sheet records whatever is known,
     // which may be a full date, a year, a year and month, or a season
     // ("2026夏"). No single pattern covers that.
+
+    // `checked_on`, unlike `date`, is held to one form; see CHECKED_ON_PATTERN
+    // for what a stray one costs. A day that has not arrived yet is refused for
+    // the same reason: nothing was researched then, and the entry would outrank
+    // every honest stamp for as long as the date stays in the future.
+    if (field === 'checked_on' && value !== '') {
+        if (!isCheckedOnStamp(value)) {
+            throw new Error(
+                `Invalid --checked_on: ${value}. Expected a real yyyy-mm-dd date, or an empty value to clear it.`
+            );
+        }
+        const today = todayInJapan();
+        if (value > today) {
+            throw new Error(
+                `Invalid --checked_on: ${value}. It is ${today} in Japan -- a stamp cannot be a future day.`
+            );
+        }
+    }
 
     if ((field === 'lat' || field === 'lng') && value !== '' && Number.isNaN(Number(value))) {
         throw new Error(`Invalid --${field}: ${value}. Expected a number, or an empty value to clear it.`);
