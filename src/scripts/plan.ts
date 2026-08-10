@@ -178,19 +178,10 @@ export function buildKey(positionals: string[], command: KeyedCommand): { name: 
     return { name, pref };
 }
 
-// Everything an update writes: the fields the caller gave, plus `checked_on`.
-//
-// That column records the day an entry was last researched, and every update is
-// part of a research pass, so the day is always the day of the run -- there is
-// nothing for the caller to say and several ways to say it wrong. Writing it here
-// also means it cannot be left out, which is what the column is worth: research
-// passes take the least recently checked entries, so an update that skipped the
-// stamp would leave that entry at the head of the queue to be researched again,
-// and nothing about it would look like a failure.
-//
-// No flags at all is therefore a valid update -- it records that the entry was
-// researched and nothing about it changed, which is most of what a pass finds.
-// To clear the column, empty the cell in the spreadsheet.
+// Everything an update writes: the fields the caller gave, plus `checked_on`, the
+// day the entry was last researched. That day is the day of the run, so no flag
+// sets it -- which also makes an update with no fields valid, recording only that
+// the entry was researched.
 export function buildValues(flags: Record<string, string>): Record<string, string> {
     const values: Record<string, string> = { checked_on: todayInJapan() };
 
