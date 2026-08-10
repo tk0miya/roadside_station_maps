@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlanEntry } from '../lib/plan-api';
-import { buildKey, buildValues, parseArgs, rejectFlags, selectEntry } from './plan';
+import { buildKey, buildUpdate, buildValues, parseArgs, rejectFlags, selectEntry } from './plan';
 
 describe('parseArgs', () => {
     it('takes the command from the first positional', () => {
@@ -33,18 +33,10 @@ describe('parseArgs', () => {
         );
     });
 
-    it('leaves the argument after a valueless flag as a positional', () => {
-        const parsed = parseArgs(['update', '道の駅あ', '--checked_on', '福井県']);
-        expect(parsed.flags).toEqual({ checked_on: '' });
-        expect(parsed.positionals).toEqual(['道の駅あ', '福井県']);
-    });
-
-    // --checked_on= would otherwise arrive as the valueless form and stamp today.
-    it('rejects a valueless flag written with an equals sign', () => {
-        expect(() => parseArgs(['update', '道の駅あ', '--checked_on='])).toThrow('--checked_on takes no value');
-        expect(() => parseArgs(['update', '道の駅あ', '--checked_on=2026-08-10'])).toThrow(
-            '--checked_on takes no value'
-        );
+    // Written ahead of the prefecture, which the bare form would otherwise
+    // swallow as its value and have reported as a missing prefecture.
+    it.each(['--checked_on', '--checked_on=2026-08-10'])('rejects %s, a column the CLI writes itself', (arg) => {
+        expect(() => parseArgs(['update', '道の駅あ', arg, '福井県'])).toThrow('--checked_on cannot be set');
     });
 });
 
@@ -180,25 +172,30 @@ describe('buildValues', () => {
         }
     );
 
-    // Fixed at a moment where Japan and UTC disagree on the date, so the day the
-    // stamp carries can only come out right if it is read in Japan's timezone.
-    it('stamps checked_on with today in Japan, not on the clock of the machine running it', () => {
-        vi.useFakeTimers();
-        vi.setSystemTime(new Date('2026-08-10T23:00:00Z')); // 2026-08-11 08:00 JST
-        try {
-            expect(buildValues({ checked_on: '' })).toEqual({ checked_on: '2026-08-11' });
-        } finally {
-            vi.useRealTimers();
-        }
-    });
-
     it('rejects a non-numeric lat/lng but allows clearing them', () => {
         expect(() => buildValues({ lat: 'north' })).toThrow('Invalid --lat: north');
         expect(() => buildValues({ lng: 'east' })).toThrow('Invalid --lng: east');
         expect(buildValues({ lat: '', lng: '' })).toEqual({ lat: '', lng: '' });
     });
+});
 
-    it('rejects an empty update, which the Apps Script would report as a success', () => {
-        expect(() => buildValues({})).toThrow('No fields to update');
+describe('buildUpdate', () => {
+    // Fixed at a moment where Japan and UTC disagree on the date, so the day the
+    // stamp carries can only come out right if it is read in Japan's timezone.
+    beforeEach(() => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-08-10T23:00:00Z')); // 2026-08-11 08:00 JST
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    it('stamps checked_on with today in Japan, not with the day of the machine running it', () => {
+        expect(buildUpdate({ status: '開業' })).toEqual({ status: '開業', checked_on: '2026-08-11' });
+    });
+
+    it('records a research pass that changed nothing when given no fields', () => {
+        expect(buildUpdate({})).toEqual({ checked_on: '2026-08-11' });
     });
 });

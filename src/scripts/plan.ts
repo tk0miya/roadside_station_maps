@@ -23,16 +23,18 @@ const STATUSES = ['開業', '登録済み', '計画中', '中止'];
 // than describing its progress, driving the map's fallback to the
 // municipality's representative point. Correcting them is done in the
 // spreadsheet, where the change is visible in context.
-const UPDATABLE_FIELDS = ['name', 'status', 'date', 'lat', 'lng', 'memo', 'checked_on'];
+const UPDATABLE_FIELDS = ['name', 'status', 'date', 'lat', 'lng', 'memo'];
 
-// Fields whose value is not the caller's to give. `checked_on` records the day
-// research happened, which is always the day of the run, so the flag is a plain
-// --checked_on and the day comes from the clock. Accepting a value would buy
-// nothing and cost the whole class of wrong ones -- a format the column cannot
-// be ordered by, a day that does not exist, a day yet to come, or simply the
-// wrong day, which nothing could catch. To clear the column, empty the cell in
-// the spreadsheet.
-const VALUELESS_FIELDS = ['checked_on'];
+// Columns the CLI writes itself, which no flag can reach. `checked_on` records
+// the day an entry was last researched, and every update is part of a research
+// pass, so the day is always the day of the run -- there is nothing for the
+// caller to say and several ways to say it wrong. Writing it here also means it
+// cannot be forgotten, which is what the column is worth: research passes take
+// the least recently checked entries, so an update that skipped the stamp would
+// leave that entry at the head of the queue to be researched again, and nothing
+// about it would look like a failure. To clear the column, empty the cell in the
+// spreadsheet.
+const AUTOMATIC_FIELDS = ['checked_on'];
 
 // Today in Japan. The sheet records Japanese days, so the machine running this --
 // often on UTC -- does not get to decide which day it is. en-CA is the locale
@@ -61,7 +63,6 @@ Usage:
                                                [--status=<status>] [--date=<text>]
                                                [--lat=<number>] [--lng=<number>]
                                                [--memo=<text>]
-                                               [--checked_on]
 
 Commands:
   list     Print every entry as JSON. Filter it with jq:
@@ -76,14 +77,16 @@ Commands:
            names are not unique across prefectures.
            Fields left out keep their current content; pass an empty value
            (e.g. --date=) to clear a field -- except --name, which every entry
-           is identified by, and --checked_on, which takes no value at all.
-           pref and city are not writable here -- correct them in the
-           spreadsheet.
+           is identified by. pref and city are not writable here -- correct
+           them in the spreadsheet.
+           Given no fields at all, it records that the entry was researched
+           and nothing about it changed.
 
 Status values: ${STATUSES.join(', ')}
 Date: free text, as precise as is known -- 2026-04-01, 2026-04, 2026, 2026夏
-Checked on: --checked_on takes no value; it stamps the entry with today in Japan,
-            the day it was researched. Clear the column by emptying the cell.
+Checked on: every update stamps checked_on with today in Japan, the day the
+            entry was researched. No flag sets it; clear it by emptying the
+            cell in the spreadsheet.
 
 Requires PLAN_API_URL in .env -- see .env.example.
 `;
@@ -109,23 +112,17 @@ export function parseArgs(args: string[]): ParsedArgs {
         }
 
         const separator = arg.indexOf('=');
-        if (separator !== -1) {
-            const named = arg.slice(2, separator);
-            // Kept out of the empty-value path below, which would read a bare
-            // --checked_on= as the valueless form and stamp today -- the opposite
-            // of the clearing the shape suggests.
-            if (VALUELESS_FIELDS.includes(named)) {
-                throw new Error(`--${named} takes no value: the day comes from the clock. Write it as --${named}.`);
-            }
-            flags[named] = arg.slice(separator + 1);
-            continue;
+        const field = separator === -1 ? arg.slice(2) : arg.slice(2, separator);
+        // Refused here rather than further in, so the flag is named in the error
+        // whichever shape it was written in. Left to the value path below, a bare
+        // --checked_on would swallow the prefecture and be reported as a missing
+        // one instead.
+        if (AUTOMATIC_FIELDS.includes(field)) {
+            throw new Error(`--${field} cannot be set: every update stamps it with the day of the run.`);
         }
 
-        const field = arg.slice(2);
-        // A valueless flag must not swallow what follows it, which is either the
-        // next flag or one of the positional arguments.
-        if (VALUELESS_FIELDS.includes(field)) {
-            flags[field] = '';
+        if (separator !== -1) {
+            flags[field] = arg.slice(separator + 1);
             continue;
         }
 
@@ -213,17 +210,18 @@ export function buildValues(flags: Record<string, string>): Record<string, strin
         // values are validated and written in their trimmed form.
         const trimmed = value.trim();
         validateField(field, trimmed);
-        values[field] = VALUELESS_FIELDS.includes(field) ? todayInJapan() : trimmed;
-    }
-
-    // The Apps Script happily reports updated: true for an empty `values`,
-    // having written nothing, so an empty update is caught here instead.
-    if (Object.keys(values).length === 0) {
-        const valid = UPDATABLE_FIELDS.map((f) => `--${f}`).join(', ');
-        throw new Error(`No fields to update. Give at least one of: ${valid}`);
+        values[field] = trimmed;
     }
 
     return values;
+}
+
+// Everything an update writes: what the caller asked for, plus the columns the
+// CLI keeps itself. No flags at all is a valid update -- it records that the
+// entry was researched and nothing about it changed, which is most of what a
+// research pass finds.
+export function buildUpdate(flags: Record<string, string>): Record<string, string> {
+    return { ...buildValues(flags), checked_on: todayInJapan() };
 }
 
 // Neither read command takes options. An option here is either a filter, which
@@ -275,7 +273,7 @@ async function runShow(parsed: ParsedArgs): Promise<void> {
 
 async function runUpdate(parsed: ParsedArgs): Promise<void> {
     const { name, pref } = buildKey(parsed.positionals, 'update');
-    const values = buildValues(parsed.flags);
+    const values = buildUpdate(parsed.flags);
 
     const result = await update(name, pref, values);
     if (!result.updated) {
