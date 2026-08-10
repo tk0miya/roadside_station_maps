@@ -1,16 +1,16 @@
 // Command-line client for the development-plan spreadsheet API.
 //
 //   npm run --silent plan:list
+//   npm run --silent plan:show -- "道の駅◯◯" 福井県
 //   npm run plan:update -- "道の駅◯◯" 福井県 --status=開業 --date=2026-04-01
 //
-// `list` prints the sheet as JSON and does no filtering or formatting of its
-// own; jq does that far better than any set of flags would. Because of that its
-// stdout is kept to JSON alone, and everything else (progress, success
-// messages, errors) goes to stderr.
+// `list` and `show` take no filtering or formatting options; jq does that far
+// better than any set of flags would. Their stdout is kept to JSON alone, and
+// everything else (progress, success messages, errors) goes to stderr.
 
 import { fileURLToPath } from 'node:url';
 import { config } from 'dotenv';
-import { list, update } from '../lib/plan-api.js';
+import { list, type PlanEntry, update } from '../lib/plan-api.js';
 
 // The sheet's four status values. Out-of-range values are silently rendered as
 // 計画中 by the map, so they are rejected here rather than written. Kept as a
@@ -25,13 +25,22 @@ const STATUSES = ['開業', '登録済み', '計画中', '中止'];
 // spreadsheet, where the change is visible in context.
 const UPDATABLE_FIELDS = ['name', 'status', 'date', 'lat', 'lng', 'memo'];
 
-// The usage line buildKey's errors point at.
-const KEY_USAGE = 'npm run plan:update -- "<name>" <prefecture> --status=開業';
+// The commands that take an entry key -- a name and a prefecture -- rather than
+// operating on the sheet as a whole.
+type KeyedCommand = 'show' | 'update';
+
+// The usage line per keyed command. An error points at whichever command should
+// have been used, which is not always the one that raised it.
+const KEY_USAGE: Record<KeyedCommand, string> = {
+    show: 'npm run --silent plan:show -- "<name>" <prefecture>',
+    update: 'npm run plan:update -- "<name>" <prefecture> --status=開業',
+};
 
 const USAGE = `Read and update the roadside-station development-plan spreadsheet.
 
 Usage:
   npm run --silent plan:list
+  npm run --silent plan:show -- "<name>" <prefecture>
   npm run plan:update -- "<name>" <prefecture> [--name=<new name>]
                                                [--status=<status>] [--date=<text>]
                                                [--lat=<number>] [--lng=<number>]
@@ -42,6 +51,9 @@ Commands:
              npm run --silent plan:list | jq -r '.[] | select(.status == "計画中") | .name'
            Note the --silent: without it npm prints its banner to stdout and jq
            fails to parse the output.
+  show     Print the single entry matched exactly by the name and prefecture
+           given as positional arguments -- the same key update writes by -- as
+           JSON. Takes no options; pipe it through jq to pick fields out.
   update   Overwrite the given fields on the entry matched exactly by the name
            and prefecture given as positional arguments. Both are required:
            names are not unique across prefectures.
@@ -120,10 +132,12 @@ function validateField(field: string, value: string): void {
     }
 }
 
-// The key of the entry to update, taken from the two positional arguments: its
-// name and its prefecture. Both are trimmed, so what is sent and what is printed
-// carry no stray spaces.
-export function buildKey(positionals: string[]): { name: string; pref: string } {
+// The key of the entry to show or update, taken from the two positional
+// arguments: its name and its prefecture. Both are trimmed, so what is sent and
+// what is printed carry no stray spaces. `command` only picks the usage line the
+// errors point at.
+export function buildKey(positionals: string[], command: KeyedCommand): { name: string; pref: string } {
+    const usage = KEY_USAGE[command];
     // Station names hold spaces (道の駅 川崎町), so an unquoted one arrives split
     // across several arguments. The prefecture is the last of them either way.
     const args = positionals.map((positional) => positional.trim());
@@ -131,10 +145,10 @@ export function buildKey(positionals: string[]): { name: string; pref: string } 
     const pref = args.length > 1 ? args[args.length - 1] : '';
 
     if (!name) {
-        throw new Error(`Missing entry name. Usage: ${KEY_USAGE}`);
+        throw new Error(`Missing entry name. Usage: ${usage}`);
     }
     if (!pref) {
-        throw new Error(`Missing prefecture for ${name}. Names are not unique across prefectures. Usage: ${KEY_USAGE}`);
+        throw new Error(`Missing prefecture for ${name}. Names are not unique across prefectures. Usage: ${usage}`);
     }
     // Checked before the argument count, so an unquoted name that also lacks a
     // prefecture is reported as a problem with the prefecture rather than as a
@@ -142,7 +156,7 @@ export function buildKey(positionals: string[]): { name: string; pref: string } 
     if (!/[都道府県]$/.test(pref)) {
         throw new Error(
             `Invalid prefecture: ${pref}. Expected a name ending in 都/道/府/県 -- quote a station name ` +
-                `that holds spaces. Usage: ${KEY_USAGE}`
+                `that holds spaces. Usage: ${usage}`
         );
     }
     if (args.length > 2) {
@@ -177,13 +191,55 @@ export function buildValues(flags: Record<string, string>): Record<string, strin
     return values;
 }
 
-async function runList(): Promise<void> {
+// Neither read command takes options. An option here is either a filter, which
+// jq does, or one of update's fields, so the error points at both.
+export function rejectFlags(command: 'list' | 'show', flags: Record<string, string>): void {
+    const [flag] = Object.keys(flags);
+    if (flag) {
+        throw new Error(
+            `Unknown option: --${flag}. ${command} only reads -- pipe its JSON through jq, ` +
+                `or write with: ${KEY_USAGE.update}`
+        );
+    }
+}
+
+// The one entry a key selects. doGet has no per-entry read and returns the whole
+// sheet, so the key is matched here, by the same exact equality on both columns
+// that gas/plan.js uses for update -- which also refuses to write when the key
+// matches more than one row.
+export function selectEntry(entries: PlanEntry[], name: string, pref: string): PlanEntry {
+    const matched = entries.filter((entry) => entry.name === name && entry.pref === pref);
+
+    if (matched.length === 0) {
+        throw new Error(`No entry named ${name} in ${pref}.`);
+    }
+    if (matched.length > 1) {
+        throw new Error(`${matched.length} entries named ${name} in ${pref}. Remove the duplicate in the sheet.`);
+    }
+
+    return matched[0];
+}
+
+async function runList(parsed: ParsedArgs): Promise<void> {
+    rejectFlags('list', parsed.flags);
+    if (parsed.positionals.length > 0) {
+        throw new Error(`list takes no arguments. To look one entry up: ${KEY_USAGE.show}`);
+    }
+
     const entries = await list();
     process.stdout.write(`${JSON.stringify(entries, null, 2)}\n`);
 }
 
+async function runShow(parsed: ParsedArgs): Promise<void> {
+    rejectFlags('show', parsed.flags);
+    const { name, pref } = buildKey(parsed.positionals, 'show');
+
+    const entry = selectEntry(await list(), name, pref);
+    process.stdout.write(`${JSON.stringify(entry, null, 2)}\n`);
+}
+
 async function runUpdate(parsed: ParsedArgs): Promise<void> {
-    const { name, pref } = buildKey(parsed.positionals);
+    const { name, pref } = buildKey(parsed.positionals, 'update');
     const values = buildValues(parsed.flags);
 
     const result = await update(name, pref, values);
@@ -206,7 +262,10 @@ async function main(): Promise<void> {
 
     switch (parsed.command) {
         case 'list':
-            await runList();
+            await runList(parsed);
+            break;
+        case 'show':
+            await runShow(parsed);
             break;
         case 'update':
             await runUpdate(parsed);

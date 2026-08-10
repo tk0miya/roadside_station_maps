@@ -34,7 +34,7 @@
 - **フロントエンド**: `npm start`（ウォッチビルド） / `npm run serve`（開発サーバー、ポート 8081） / `npm run build`
 - **バックエンド**: `npm run dev:backend`（wrangler dev） / `npm run deploy:backend` / `npm run db:migrate:local` / `npm run db:migrate`
 - **データ生成**: `npm run generate:all`（`generate:stations` → `generate:geojson`）
-- **開発計画データ**: `npm run --silent plan:list` / `npm run plan:update`（`.env` の `PLAN_API_URL` が必要）
+- **開発計画データ**: `npm run --silent plan:list` / `npm run --silent plan:show` / `npm run plan:update`（`.env` の `PLAN_API_URL` が必要）
 - **品質**: `npm test` / `npm run lint` / `npm run format` / `npm run typecheck` / `npm run lint:fix`
 
 ### generate:stations のデバッグモード
@@ -154,17 +154,18 @@ POST https://script.google.com/macros/s/xxx/exec   (Content-Type: text/plain)
 
 ### 開発計画データ CLI（`npm run plan:*`）
 
-上記 API の唯一のクライアント。`src/scripts/plan.ts`（エントリーポイント、引数解析・検証）と `src/lib/plan-api.ts`（通信）。
+上記 API の唯一のクライアント。`src/scripts/plan.ts`（エントリーポイント、引数解析・検証）と `src/lib/plan-api.ts`（通信）。コマンドは `list`（全件）/ `show`（1 件）/ `update`（更新）の 3 つ。
 
 ```
 npm run --silent plan:list | jq -r '.[] | select(.status == "計画中") | .name'
+npm run --silent plan:show -- "道の駅◯◯" 福井県
 npm run plan:update -- "道の駅◯◯" 福井県 --status=開業 --date=2026-04-01
 npm run plan:update -- "道の駅◯◯（仮称）" 福井県 --name=道の駅◯◯
 ```
 
-- **`list` は JSON を出すだけ**で絞り込み・整形のオプションを持たない。`jq` のほうが上手くやれるため
+- **`list` / `show` は JSON を出すだけ**で絞り込み・整形のオプションを持たない。`jq` のほうが上手くやれるため
 - **`npm run` のバナーは stdout に出る**ので、`jq` に流すときは `--silent` が要る
-- **script 名は `plan:list` / `plan:update`**: `db:migrate` / `gas:push` と同じ `<名前空間>:<動詞>` 形式に揃える。サブコマンドを script 側に埋めてあるので、`list` は `--` なしで `jq` に流せる
+- **script 名は `plan:list` / `plan:show` / `plan:update`**: `db:migrate` / `gas:push` と同じ `<名前空間>:<動詞>` 形式に揃える。サブコマンドを script 側に埋めてあるので、`list` は `--` なしで `jq` に流せる
 - **`update` は送信前に検証する**: 更新可能フィールド（`name` / `status` / `date` / `lat` / `lng` / `memo`）以外のフラグ、範囲外の `status`、非数値の座標、空の `name`、フィールド無指定、キー（名前・都道府県）の欠落や不正を弾く。GAS 側にエラー処理がなく、不正入力は HTML のエラーページとして返るため
 - **`date` は検証しない**: シートは判明している粒度をそのまま記録するため、`2026-04-01` / `2026-04` / `2026` / `2026夏` のいずれもありうる。単一のパターンに押し込められない
 - **`pref` / `city` は更新対象外**: エントリーを同定・配置する列で、進捗を表す列ではない（`city` は地図の市区町村代表点フォールバックの引き当てに使う）。修正は文脈の見えるスプレッドシート上で行う
