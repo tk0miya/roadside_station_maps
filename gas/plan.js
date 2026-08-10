@@ -14,18 +14,26 @@
 const NAME_FIELD = 'name';
 const PREF_FIELD = 'pref';
 
-// The plan sheet is the leftmost one, as in the published CSV.
-function getPlanSheet() {
-    return SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+// Whether a cell value is a date, tested by its internal class rather than with
+// `instanceof`: the Spreadsheet service builds its Dates in a context of its
+// own, where the prototype chain does not lead back to this script's `Date`, so
+// `instanceof` misses them and the raw object reaches JSON.stringify, which
+// serializes it as an ISO-8601 string.
+function isDate(value) {
+    return Object.prototype.toString.call(value) === '[object Date]';
 }
 
 // Sheet cell value -> JSON-safe value: a Date becomes yyyy-MM-dd, so the API's
 // shape does not depend on how the column happens to be formatted, and text is
 // trimmed. Everything else is passed through, which keeps numeric columns (lat,
 // lng) numbers in the JSON and empty cells empty strings.
-function toFieldValue(value) {
-    if (value instanceof Date) {
-        return Utilities.formatDate(value, 'Asia/Tokyo', 'yyyy-MM-dd');
+//
+// A date cell holds midnight in the spreadsheet's own timezone, so that is the
+// timezone it has to be read back in: formatting it in any other one can land on
+// the neighbouring day, making the API disagree with what the cell displays.
+function toFieldValue(value, timeZone) {
+    if (isDate(value)) {
+        return Utilities.formatDate(value, timeZone, 'yyyy-MM-dd');
     }
     if (typeof value === 'string') {
         return value.trim();
@@ -44,17 +52,22 @@ function toKeyValue(value) {
 // sheet); and every row below the header, where row N of the sheet is
 // rows[N - 2].
 function readPlanSheet() {
-    const sheet = getPlanSheet();
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    // The plan sheet is the leftmost one, as in the published CSV.
+    const sheet = spreadsheet.getSheets()[0];
     const lastRow = sheet.getLastRow();
     if (lastRow < 1) {
         return { sheet, fields: [], rows: [] };
     }
 
+    const timeZone = spreadsheet.getSpreadsheetTimeZone();
     const values = sheet.getRange(1, 1, lastRow, sheet.getLastColumn()).getValues();
     return {
         sheet,
-        fields: values[0].map(toFieldValue),
-        rows: values.slice(1).map((row) => row.map(toFieldValue)),
+        // Wrapped rather than passed by reference: map hands its callback the
+        // index as a second argument, which toFieldValue takes as a timezone.
+        fields: values[0].map((value) => toFieldValue(value, timeZone)),
+        rows: values.slice(1).map((row) => row.map((value) => toFieldValue(value, timeZone))),
     };
 }
 
