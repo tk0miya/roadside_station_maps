@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlanEntry } from '../lib/plan-api';
-import { buildKey, buildValues, parseArgs, rejectFlags, selectEntry } from './plan';
+import { buildKey, buildUpdate, buildValues, parseArgs, rejectFlags, selectEntry } from './plan';
 
 describe('parseArgs', () => {
     it('takes the command from the first positional', () => {
@@ -155,6 +155,12 @@ describe('buildValues', () => {
         expect(() => buildValues({ [field]: value })).toThrow(`Unknown field: --${field}`);
     });
 
+    // The day is buildUpdate's to write, and a caller-given one would order the
+    // research queue by whatever it said.
+    it('rejects checked_on, which no flag reaches', () => {
+        expect(() => buildValues({ checked_on: '2026-08-10' })).toThrow('Unknown field: --checked_on');
+    });
+
     it("rejects a status outside the sheet's four values", () => {
         expect(() => buildValues({ status: '開業予定' })).toThrow('Invalid --status: 開業予定');
     });
@@ -171,8 +177,25 @@ describe('buildValues', () => {
         expect(() => buildValues({ lng: 'east' })).toThrow('Invalid --lng: east');
         expect(buildValues({ lat: '', lng: '' })).toEqual({ lat: '', lng: '' });
     });
+});
 
-    it('rejects an empty update, which the Apps Script would report as a success', () => {
-        expect(() => buildValues({})).toThrow('No fields to update');
+describe('buildUpdate', () => {
+    // Fixed at a moment where Japan and UTC disagree on the date, so the day the
+    // stamp carries can only come out right if it is read in Japan's timezone.
+    beforeEach(() => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-08-10T23:00:00Z')); // 2026-08-11 08:00 JST
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    it('stamps checked_on with today in Japan, not with the day of the machine running it', () => {
+        expect(buildUpdate({ status: '開業' })).toEqual({ status: '開業', checked_on: '2026-08-11' });
+    });
+
+    it('records a research pass that changed nothing when given no fields', () => {
+        expect(buildUpdate({})).toEqual({ checked_on: '2026-08-11' });
     });
 });

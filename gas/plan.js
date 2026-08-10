@@ -3,7 +3,7 @@
 // The sheet edited here is the same one the plan map reads as published CSV, so
 // the column layout is discovered from the header row instead of being
 // hard-coded: the field names accepted by the API are exactly the CSV headers
-// (name, pref, city, status, date, lat, lng, memo).
+// (name, pref, city, status, date, lat, lng, memo, checked_on).
 //
 // The sheet is read in one place, readPlanSheet, which normalizes every value it
 // hands out, so what listEntries returns is what findRows matches on.

@@ -7,8 +7,8 @@
 // legible error instead of a parse failure surfacing somewhere further out.
 
 // One row of the plan sheet, keyed by the header labels
-// (name / pref / city / status / date / lat / lng / memo). These are the raw
-// cell values, not the frontend's PlannedStation: no fallback to the
+// (name / pref / city / status / date / lat / lng / memo / checked_on). These are
+// the raw cell values, not the frontend's PlannedStation: no fallback to the
 // municipality's representative point, because only what the sheet actually
 // holds can be written back by update().
 export type PlanEntry = Record<string, string | number | boolean>;

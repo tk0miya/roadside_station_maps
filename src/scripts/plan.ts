@@ -25,6 +25,13 @@ const STATUSES = ['開業', '登録済み', '計画中', '中止'];
 // spreadsheet, where the change is visible in context.
 const UPDATABLE_FIELDS = ['name', 'status', 'date', 'lat', 'lng', 'memo'];
 
+// Today in Japan. The sheet records Japanese days, so the machine running this --
+// often on UTC -- does not get to decide which day it is. en-CA is the locale
+// that formats a date as yyyy-mm-dd, the form the column holds.
+function todayInJapan(): string {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+}
+
 // The commands that take an entry key -- a name and a prefecture -- rather than
 // operating on the sheet as a whole.
 type KeyedCommand = 'show' | 'update';
@@ -61,9 +68,14 @@ Commands:
            (e.g. --date=) to clear a field -- except --name, which every entry
            is identified by. pref and city are not writable here -- correct
            them in the spreadsheet.
+           Given no fields at all, it records that the entry was researched
+           and nothing about it changed.
 
 Status values: ${STATUSES.join(', ')}
 Date: free text, as precise as is known -- 2026-04-01, 2026-04, 2026, 2026夏
+Checked on: every update stamps checked_on with today in Japan, the day the
+            entry was researched. No flag sets it; clear it by emptying the
+            cell in the spreadsheet.
 
 Requires PLAN_API_URL in .env -- see .env.example.
 `;
@@ -181,14 +193,24 @@ export function buildValues(flags: Record<string, string>): Record<string, strin
         values[field] = trimmed;
     }
 
-    // The Apps Script happily reports updated: true for an empty `values`,
-    // having written nothing, so an empty update is caught here instead.
-    if (Object.keys(values).length === 0) {
-        const valid = UPDATABLE_FIELDS.map((f) => `--${f}`).join(', ');
-        throw new Error(`No fields to update. Give at least one of: ${valid}`);
-    }
-
     return values;
+}
+
+// Everything an update writes: what the caller asked for, plus `checked_on`.
+//
+// That column records the day an entry was last researched, and every update is
+// part of a research pass, so the day is always the day of the run -- there is
+// nothing for the caller to say and several ways to say it wrong. Writing it here
+// also means it cannot be left out, which is what the column is worth: research
+// passes take the least recently checked entries, so an update that skipped the
+// stamp would leave that entry at the head of the queue to be researched again,
+// and nothing about it would look like a failure.
+//
+// No flags at all is therefore a valid update -- it records that the entry was
+// researched and nothing about it changed, which is most of what a pass finds.
+// To clear the column, empty the cell in the spreadsheet.
+export function buildUpdate(flags: Record<string, string>): Record<string, string> {
+    return { ...buildValues(flags), checked_on: todayInJapan() };
 }
 
 // Neither read command takes options. An option here is either a filter, which
@@ -240,7 +262,7 @@ async function runShow(parsed: ParsedArgs): Promise<void> {
 
 async function runUpdate(parsed: ParsedArgs): Promise<void> {
     const { name, pref } = buildKey(parsed.positionals, 'update');
-    const values = buildValues(parsed.flags);
+    const values = buildUpdate(parsed.flags);
 
     const result = await update(name, pref, values);
     if (!result.updated) {
