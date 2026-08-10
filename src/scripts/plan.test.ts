@@ -32,12 +32,6 @@ describe('parseArgs', () => {
             'Missing value for --status'
         );
     });
-
-    // Written ahead of the prefecture, which the bare form would otherwise
-    // swallow as its value and have reported as a missing prefecture.
-    it.each(['--checked_on', '--checked_on=2026-08-10'])('rejects %s, a column the CLI writes itself', (arg) => {
-        expect(() => parseArgs(['update', '道の駅あ', arg, '福井県'])).toThrow('--checked_on cannot be set');
-    });
 });
 
 describe('buildKey', () => {
@@ -159,6 +153,12 @@ describe('buildValues', () => {
         ['city', '福井市'],
     ])('rejects %s, which is not a column describing progress', (field, value) => {
         expect(() => buildValues({ [field]: value })).toThrow(`Unknown field: --${field}`);
+    });
+
+    // The day is buildUpdate's to write, and a caller-given one would order the
+    // research queue by whatever it said.
+    it('rejects checked_on, which no flag reaches', () => {
+        expect(() => buildValues({ checked_on: '2026-08-10' })).toThrow('Unknown field: --checked_on');
     });
 
     it("rejects a status outside the sheet's four values", () => {

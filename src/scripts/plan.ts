@@ -25,17 +25,6 @@ const STATUSES = ['開業', '登録済み', '計画中', '中止'];
 // spreadsheet, where the change is visible in context.
 const UPDATABLE_FIELDS = ['name', 'status', 'date', 'lat', 'lng', 'memo'];
 
-// Columns the CLI writes itself, which no flag can reach. `checked_on` records
-// the day an entry was last researched, and every update is part of a research
-// pass, so the day is always the day of the run -- there is nothing for the
-// caller to say and several ways to say it wrong. Writing it here also means it
-// cannot be forgotten, which is what the column is worth: research passes take
-// the least recently checked entries, so an update that skipped the stamp would
-// leave that entry at the head of the queue to be researched again, and nothing
-// about it would look like a failure. To clear the column, empty the cell in the
-// spreadsheet.
-const AUTOMATIC_FIELDS = ['checked_on'];
-
 // Today in Japan. The sheet records Japanese days, so the machine running this --
 // often on UTC -- does not get to decide which day it is. en-CA is the locale
 // that formats a date as yyyy-mm-dd, the form the column holds.
@@ -112,17 +101,8 @@ export function parseArgs(args: string[]): ParsedArgs {
         }
 
         const separator = arg.indexOf('=');
-        const field = separator === -1 ? arg.slice(2) : arg.slice(2, separator);
-        // Refused here rather than further in, so the flag is named in the error
-        // whichever shape it was written in. Left to the value path below, a bare
-        // --checked_on would swallow the prefecture and be reported as a missing
-        // one instead.
-        if (AUTOMATIC_FIELDS.includes(field)) {
-            throw new Error(`--${field} cannot be set: every update stamps it with the day of the run.`);
-        }
-
         if (separator !== -1) {
-            flags[field] = arg.slice(separator + 1);
+            flags[arg.slice(2, separator)] = arg.slice(separator + 1);
             continue;
         }
 
@@ -130,7 +110,7 @@ export function parseArgs(args: string[]): ParsedArgs {
         if (value === undefined || value.startsWith('--')) {
             throw new Error(`Missing value for ${arg}`);
         }
-        flags[field] = value;
+        flags[arg.slice(2)] = value;
         index++;
     }
 
@@ -216,10 +196,19 @@ export function buildValues(flags: Record<string, string>): Record<string, strin
     return values;
 }
 
-// Everything an update writes: what the caller asked for, plus the columns the
-// CLI keeps itself. No flags at all is a valid update -- it records that the
-// entry was researched and nothing about it changed, which is most of what a
-// research pass finds.
+// Everything an update writes: what the caller asked for, plus `checked_on`.
+//
+// That column records the day an entry was last researched, and every update is
+// part of a research pass, so the day is always the day of the run -- there is
+// nothing for the caller to say and several ways to say it wrong. Writing it here
+// also means it cannot be left out, which is what the column is worth: research
+// passes take the least recently checked entries, so an update that skipped the
+// stamp would leave that entry at the head of the queue to be researched again,
+// and nothing about it would look like a failure.
+//
+// No flags at all is therefore a valid update -- it records that the entry was
+// researched and nothing about it changed, which is most of what a pass finds.
+// To clear the column, empty the cell in the spreadsheet.
 export function buildUpdate(flags: Record<string, string>): Record<string, string> {
     return { ...buildValues(flags), checked_on: todayInJapan() };
 }
