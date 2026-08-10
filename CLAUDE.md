@@ -113,6 +113,11 @@ data/         生成データ（CSV / GeoJSON）
 - ログイン済み: Workers + D1 と同期する `RemoteStorage`（デバウンス付き）
 - 未ログイン: 空の `MemoryStorage`（ゲストモード、永続化なし）
 
+開発計画マップの情報ウィンドウはシートの `memo` 列を 1 行ずつ描画し、`src/frontend/plan-memo.ts` が行をテキストとリンクに分解する（記法は同ファイルのコメントを参照）。
+
+- **markdown ライブラリを使わず自前で解析する**: memo で要るのはリンクだけで、見出しや強調まで解釈させたいわけではない
+- **`http` / `https` だけをリンク化する**: memo は人手管理のシート由来なので、`javascript:` のようなスキームが `href` に入らないようにする
+
 ### データパイプライン
 
 1. `generate-stationlist.ts` - michi-no-eki.jp を都道府県・駅の階層でたどり `data/stations.csv` を出力（`cheerio` で HTML 解析、`jaconv` でテキスト正規化）
