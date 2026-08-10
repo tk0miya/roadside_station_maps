@@ -46,7 +46,24 @@ describe('buildValues', () => {
         expect(() => buildValues({ nmae: '道の駅あ' })).toThrow('Unknown field: --nmae');
     });
 
-    it.each(['name', 'pref', 'city'])('rejects %s, which identifies an entry rather than describing it', (field) => {
+    it('passes through a rename', () => {
+        expect(buildValues({ name: '道の駅い' })).toEqual({ name: '道の駅い' });
+    });
+
+    it('trims every value, since no column of the sheet carries padding', () => {
+        expect(buildValues({ name: ' 道の駅い ', status: ' 開業 ', lat: ' 36.1 ' })).toEqual({
+            name: '道の駅い',
+            status: '開業',
+            lat: '36.1',
+        });
+    });
+
+    it('rejects an empty name, which no entry could be found by', () => {
+        expect(() => buildValues({ name: '' })).toThrow('Invalid --name');
+        expect(() => buildValues({ name: '  ' })).toThrow('Invalid --name');
+    });
+
+    it.each(['pref', 'city'])('rejects %s, which places an entry rather than describing it', (field) => {
         expect(() => buildValues({ [field]: '福井県' })).toThrow(`Unknown field: --${field}`);
     });
 
