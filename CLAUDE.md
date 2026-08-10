@@ -168,9 +168,9 @@ npm run plan:update -- "道の駅◯◯（仮称）" 福井県 --name=道の駅�
 - **`list` / `show` は JSON を出すだけ**で絞り込み・整形のオプションを持たない。`jq` のほうが上手くやれるため
 - **`npm run` のバナーは stdout に出る**ので、`jq` に流すときは `--silent` が要る
 - **script 名は `plan:list` / `plan:show` / `plan:update`**: `db:migrate` / `gas:push` と同じ `<名前空間>:<動詞>` 形式に揃える。サブコマンドを script 側に埋めてあるので、`list` は `--` なしで `jq` に流せる
-- **`update` は送信前に検証する**: 更新可能フィールド（`name` / `status` / `date` / `lat` / `lng` / `memo` / `checked_on`）以外のフラグ、範囲外の `status`、非数値の座標、空の `name`、不正な `checked_on`、フィールド無指定、キー（名前・都道府県）の欠落や不正を弾く。GAS 側にエラー処理がなく、不正入力は HTML のエラーページとして返るため
+- **`update` は送信前に検証する**: 更新可能フィールド（`name` / `status` / `date` / `lat` / `lng` / `memo` / `checked_on`）以外のフラグ、範囲外の `status`、非数値の座標、空の `name`、`--checked_on` への値、フィールド無指定、キー（名前・都道府県）の欠落や不正を弾く。GAS 側にエラー処理がなく、不正入力は HTML のエラーページとして返るため
 - **`date` は検証しない**: シートは判明している粒度をそのまま記録するため、`2026-04-01` / `2026-04` / `2026` / `2026夏` のいずれもありうる。単一のパターンに押し込められない
-- **`checked_on` は逆に `yyyy-mm-dd` を強制する**: その駅を最後に調査した日を機械が記録する列で、人が育てた他の列とは持ち主が違う。調査は古い順に少しずつ進める（`.claude/skills/michi-no-eki-plan-research/SKILL.md`）ため**この列は並び替えキー**であり、表記がぶれると順序が静かに崩れる（詳細は `plan.ts` の `CHECKED_ON_PATTERN` のコメント）
+- **`--checked_on` は値を取らない**: その駅を最後に調査した日を機械が記録する列で、人が育てた他の列とは持ち主が違う。書く値は常に実行日なので CLI が JST の当日を書き、`--checked_on=<日付>` は弾く。調査は古い順に少しずつ進める（`.claude/skills/michi-no-eki-plan-research/SKILL.md`）ため**この列は並び替えキー**で、値を受け取らないこと自体が誤った値への防御になる（詳細は `plan.ts` の `VALUELESS_FIELDS` のコメント）
 - **`pref` / `city` は更新対象外**: エントリーを同定・配置する列で、進捗を表す列ではない（`city` は地図の市区町村代表点フォールバックの引き当てに使う）。修正は文脈の見えるスプレッドシート上で行う
 - **`PLAN_API_URL`**: `/exec` の URL。`.env`（gitignore 済み、`.env.example` を参照）に置き、`dotenv` で読む
 

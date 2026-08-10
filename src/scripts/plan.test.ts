@@ -32,6 +32,20 @@ describe('parseArgs', () => {
             'Missing value for --status'
         );
     });
+
+    it('leaves the argument after a valueless flag as a positional', () => {
+        const parsed = parseArgs(['update', '道の駅あ', '--checked_on', '福井県']);
+        expect(parsed.flags).toEqual({ checked_on: '' });
+        expect(parsed.positionals).toEqual(['道の駅あ', '福井県']);
+    });
+
+    // --checked_on= would otherwise arrive as the valueless form and stamp today.
+    it('rejects a valueless flag written with an equals sign', () => {
+        expect(() => parseArgs(['update', '道の駅あ', '--checked_on='])).toThrow('--checked_on takes no value');
+        expect(() => parseArgs(['update', '道の駅あ', '--checked_on=2026-08-10'])).toThrow(
+            '--checked_on takes no value'
+        );
+    });
 });
 
 describe('buildKey', () => {
@@ -166,30 +180,16 @@ describe('buildValues', () => {
         }
     );
 
-    it.each(['2026/8/10', '2026-8-10', '2026-08', 'today', '2026-13-45', '2026-02-31'])(
-        'rejects the checked_on stamp %s, which is not a plain day that exists',
-        (checkedOn) => {
-            expect(() => buildValues({ checked_on: checkedOn })).toThrow(`Invalid --checked_on: ${checkedOn}`);
-        }
-    );
-
-    // Fixed at a moment where Japan and UTC disagree on the date, so this covers
-    // which timezone "today" is read in, that today itself is allowed, and that a
-    // day yet to come -- when nothing could have been researched -- is not.
-    it('takes today from Japan rather than from the clock of the machine running it', () => {
+    // Fixed at a moment where Japan and UTC disagree on the date, so the day the
+    // stamp carries can only come out right if it is read in Japan's timezone.
+    it('stamps checked_on with today in Japan, not on the clock of the machine running it', () => {
         vi.useFakeTimers();
         vi.setSystemTime(new Date('2026-08-10T23:00:00Z')); // 2026-08-11 08:00 JST
         try {
-            expect(buildValues({ checked_on: '2026-08-11' })).toEqual({ checked_on: '2026-08-11' });
-            expect(() => buildValues({ checked_on: '2026-08-12' })).toThrow('Invalid --checked_on: 2026-08-12');
+            expect(buildValues({ checked_on: '' })).toEqual({ checked_on: '2026-08-11' });
         } finally {
             vi.useRealTimers();
         }
-    });
-
-    it('passes a full checked_on stamp through, and allows clearing it', () => {
-        expect(buildValues({ checked_on: '2026-08-10' })).toEqual({ checked_on: '2026-08-10' });
-        expect(buildValues({ checked_on: '' })).toEqual({ checked_on: '' });
     });
 
     it('rejects a non-numeric lat/lng but allows clearing them', () => {
