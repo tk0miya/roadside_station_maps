@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlanEntry } from '../lib/plan-api';
-import { buildKey, buildUpdate, buildValues, parseArgs, rejectFlags, selectEntry } from './plan';
+import { buildKey, buildValues, parseArgs, rejectFlags, selectEntry } from './plan';
 
 describe('parseArgs', () => {
     it('takes the command from the first positional', () => {
@@ -118,13 +118,32 @@ describe('selectEntry', () => {
     });
 });
 
+// The day every update stamps, under the clock the tests below run on.
+const CHECKED_ON = '2026-08-11';
+
 describe('buildValues', () => {
+    // Fixed at a moment where Japan and UTC disagree on the date, so the stamped
+    // day can only come out right if it is read in Japan's timezone.
+    beforeEach(() => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-08-10T23:00:00Z')); // 2026-08-11 08:00 JST
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     it('passes through the updatable fields', () => {
         expect(buildValues({ status: '開業', date: '2026-04-01', memo: 'https://example.com' })).toEqual({
             status: '開業',
             date: '2026-04-01',
             memo: 'https://example.com',
+            checked_on: CHECKED_ON,
         });
+    });
+
+    it('records a research pass that changed nothing when given no fields', () => {
+        expect(buildValues({})).toEqual({ checked_on: CHECKED_ON });
     });
 
     it('rejects an unknown field', () => {
@@ -132,7 +151,7 @@ describe('buildValues', () => {
     });
 
     it('passes through a rename', () => {
-        expect(buildValues({ name: '道の駅い' })).toEqual({ name: '道の駅い' });
+        expect(buildValues({ name: '道の駅い' })).toEqual({ name: '道の駅い', checked_on: CHECKED_ON });
     });
 
     it('trims every value, since no column of the sheet carries padding', () => {
@@ -140,6 +159,7 @@ describe('buildValues', () => {
             name: '道の駅い',
             status: '開業',
             lat: '36.1',
+            checked_on: CHECKED_ON,
         });
     });
 
@@ -155,7 +175,7 @@ describe('buildValues', () => {
         expect(() => buildValues({ [field]: value })).toThrow(`Unknown field: --${field}`);
     });
 
-    // The day is buildUpdate's to write, and a caller-given one would order the
+    // The day is this function's to write, and a caller-given one would order the
     // research queue by whatever it said.
     it('rejects checked_on, which no flag reaches', () => {
         expect(() => buildValues({ checked_on: '2026-08-10' })).toThrow('Unknown field: --checked_on');
@@ -168,34 +188,13 @@ describe('buildValues', () => {
     it.each(['2026-04-01', '2026-04', '2026', '2026夏', ''])(
         'passes the date %s through, since the sheet records whatever precision is known',
         (date) => {
-            expect(buildValues({ date })).toEqual({ date });
+            expect(buildValues({ date })).toEqual({ date, checked_on: CHECKED_ON });
         }
     );
 
     it('rejects a non-numeric lat/lng but allows clearing them', () => {
         expect(() => buildValues({ lat: 'north' })).toThrow('Invalid --lat: north');
         expect(() => buildValues({ lng: 'east' })).toThrow('Invalid --lng: east');
-        expect(buildValues({ lat: '', lng: '' })).toEqual({ lat: '', lng: '' });
-    });
-});
-
-describe('buildUpdate', () => {
-    // Fixed at a moment where Japan and UTC disagree on the date, so the day the
-    // stamp carries can only come out right if it is read in Japan's timezone.
-    beforeEach(() => {
-        vi.useFakeTimers();
-        vi.setSystemTime(new Date('2026-08-10T23:00:00Z')); // 2026-08-11 08:00 JST
-    });
-
-    afterEach(() => {
-        vi.useRealTimers();
-    });
-
-    it('stamps checked_on with today in Japan, not with the day of the machine running it', () => {
-        expect(buildUpdate({ status: '開業' })).toEqual({ status: '開業', checked_on: '2026-08-11' });
-    });
-
-    it('records a research pass that changed nothing when given no fields', () => {
-        expect(buildUpdate({})).toEqual({ checked_on: '2026-08-11' });
+        expect(buildValues({ lat: '', lng: '' })).toEqual({ lat: '', lng: '', checked_on: CHECKED_ON });
     });
 });
