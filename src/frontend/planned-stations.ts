@@ -48,7 +48,7 @@ function toStation(record: PlanRecord, cityIndex: Map<string, City>): PlannedSta
         date: record.date,
         lat,
         lng,
-        memo: record.memo,
+        urls: record.urls,
         coordSource,
     };
 }

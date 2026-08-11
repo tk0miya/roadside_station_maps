@@ -13,7 +13,7 @@ function record(overrides: Partial<PlanRecord>): PlanRecord {
         date: '',
         lat: null,
         lng: null,
-        memo: '',
+        urls: [],
         checked_on: '',
         ...overrides,
     };
@@ -23,8 +23,9 @@ function record(overrides: Partial<PlanRecord>): PlanRecord {
 // cases use a single record so the sort cannot reorder what they assert on.
 describe('toPlannedStations', () => {
     it('uses explicit coordinates (coordSource=exact)', () => {
+        const urls = [{ title: '整備計画', url: 'https://example.com/a' }];
         const [s] = toPlannedStations(
-            [record({ status: '開業', date: '2023-04-22', lat: 36.28, lng: 136.25, memo: 'https://a' })],
+            [record({ status: '開業', date: '2023-04-22', lat: 36.28, lng: 136.25, urls })],
             cities
         );
         expect(s.status).toBe('開業');
@@ -32,6 +33,7 @@ describe('toPlannedStations', () => {
         expect(s.lat).toBe(36.28);
         expect(s.lng).toBe(136.25);
         expect(s.coordSource).toBe('exact');
+        expect(s.urls).toEqual(urls);
     });
 
     it('falls back to the city centroid when coordinates are missing (coordSource=city)', () => {

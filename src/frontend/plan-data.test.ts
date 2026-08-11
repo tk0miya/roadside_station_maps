@@ -19,7 +19,8 @@ import { describe, expect, it } from 'vitest';
 import { STATUSES } from './types/plan';
 
 // Not derivable from a type at runtime, so this one is spelled out.
-const KEYS = ['name', 'pref', 'city', 'status', 'date', 'lat', 'lng', 'memo', 'checked_on'];
+const KEYS = ['name', 'pref', 'city', 'status', 'date', 'lat', 'lng', 'urls', 'checked_on'];
+const URL_KEYS = ['title', 'url'];
 
 interface City {
     pref: string;
@@ -111,8 +112,39 @@ describe('data/plans.json', () => {
 
     it('has string fields typed as strings', () => {
         for (const record of plans) {
-            for (const key of ['name', 'pref', 'city', 'status', 'date', 'memo', 'checked_on']) {
+            for (const key of ['name', 'pref', 'city', 'status', 'date', 'checked_on']) {
                 expect(typeof record[key], `${label(record)} / ${key}`).toBe('string');
+            }
+        }
+    });
+
+    it('has an array of {title, url} string pairs as urls on every record', () => {
+        for (const record of plans) {
+            expect(Array.isArray(record.urls), label(record)).toBe(true);
+            for (const link of record.urls as Record<string, unknown>[]) {
+                expect(Object.keys(link), label(record)).toEqual(URL_KEYS);
+                expect(typeof link.title, `${label(record)} / title`).toBe('string');
+                expect(typeof link.url, `${label(record)} / url`).toBe('string');
+            }
+        }
+    });
+
+    // The info window keys its list by `url`, so a record holding the same
+    // source twice would render with duplicate React keys. Two entries for one
+    // page is a data error anyway -- the master keeps one link per source.
+    it('has no url twice within one record', () => {
+        for (const record of plans) {
+            const urls = (record.urls as { url: string }[]).map((link) => link.url);
+            expect(new Set(urls).size, label(record)).toBe(urls.length);
+        }
+    });
+
+    // The map puts `url` straight into an href without re-checking its scheme,
+    // so the master is where the scheme is fixed.
+    it('has only http(s) urls', () => {
+        for (const record of plans) {
+            for (const link of record.urls as { url: string }[]) {
+                expect(/^https?:\/\//i.test(link.url), `${label(record)} / ${link.url}`).toBe(true);
             }
         }
     });
