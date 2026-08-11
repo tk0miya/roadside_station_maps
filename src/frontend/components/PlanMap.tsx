@@ -5,13 +5,15 @@ import { PlanInfoWindow } from './PlanInfoWindow';
 import { PlanMarkers } from './PlanMarkers';
 import { PlanSidebar } from './PlanSidebar';
 
-// Default visibility: focus on upcoming stations, so 開業 (already open) and
-// 中止 (cancelled) start hidden. Users can toggle them on in the sidebar.
+// Default visibility: focus on upcoming stations, so 開業 (already open),
+// 凍結 (suspended) and 中止 (cancelled) start hidden. Users can toggle them on
+// in the sidebar.
 const DEFAULT_VISIBLE: Record<Category, boolean> = {
     開業: false,
     登録済み: true,
     '計画中(予定あり)': true,
     '計画中(未定)': true,
+    凍結: false,
     中止: false,
 };
 

@@ -3,9 +3,11 @@
 // This map is independent from the main scraped-station pipeline: its source of
 // truth is `data/plans.json`, a hand-edited master tracked in this repository.
 
-export type Status = '開業' | '登録済み' | '計画中' | '中止';
+// 凍結 sits between 計画中 and 中止: the municipality has declared the plan
+// suspended, but not abandoned -- it can still resume.
+export type Status = '開業' | '登録済み' | '計画中' | '凍結' | '中止';
 
-export const STATUSES: Status[] = ['開業', '登録済み', '計画中', '中止'];
+export const STATUSES: Status[] = ['開業', '登録済み', '計画中', '凍結', '中止'];
 
 // Where a station's rendered coordinate came from:
 //   exact - explicit lat/lng in the master
@@ -48,11 +50,11 @@ export interface City {
     lng: number;
 }
 
-// Display category used for marker color and the filter/legend. The sheet's
-// `status` stays 4-valued; 計画中 is split here by whether a target date is set.
-export type Category = '開業' | '登録済み' | '計画中(予定あり)' | '計画中(未定)' | '中止';
+// Display category used for marker color and the filter/legend. `status` stays
+// 5-valued; 計画中 is split here by whether a target date is set.
+export type Category = '開業' | '登録済み' | '計画中(予定あり)' | '計画中(未定)' | '凍結' | '中止';
 
-export const CATEGORIES: Category[] = ['開業', '登録済み', '計画中(予定あり)', '計画中(未定)', '中止'];
+export const CATEGORIES: Category[] = ['開業', '登録済み', '計画中(予定あり)', '計画中(未定)', '凍結', '中止'];
 
 // Derive a station's display category. 計画中 splits into スケジュールあり / 未定
 // by the presence of a date; the other statuses map 1:1.

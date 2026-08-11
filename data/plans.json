@@ -564,11 +564,11 @@
         "name": "道の駅 矢吹町",
         "pref": "福島県",
         "city": "西白河郡矢吹町",
-        "status": "中止",
+        "status": "凍結",
         "date": "",
         "lat": 37.2012467,
         "lng": 140.338474,
-        "memo": "【凍結】\nhttps://www.instagram.com/oishiiyabukimarche/\nhttps://www.town.yabuki.fukushima.jp/page/page004568.html\nhttps://www.town.yabuki.fukushima.jp/sp/page/page007128.html",
+        "memo": "https://www.instagram.com/oishiiyabukimarche/\nhttps://www.town.yabuki.fukushima.jp/page/page004568.html\nhttps://www.town.yabuki.fukushima.jp/sp/page/page007128.html",
         "checked_on": "2026-01-01"
     },
     {
@@ -718,22 +718,22 @@
         "name": "道の駅 おおあらい",
         "pref": "茨城県",
         "city": "東茨城郡大洗町",
-        "status": "中止",
+        "status": "凍結",
         "date": "",
         "lat": 36.308449,
         "lng": 140.5680953,
-        "memo": "【凍結】\nhttps://www.town.oarai.lg.jp/wp/wp-content/uploads/2022/02/%E9%81%93%E3%81%AE%E9%A7%85%E3%81%8A%E3%81%8A%E3%81%82%E3%82%89%E3%81%84%EF%BC%88%E4%BB%AE%EF%BC%89%E5%9F%BA%E6%9C%AC%E6%A7%8B%E6%83%B3%EF%BC%88%E6%A1%88%EF%BC%89%EF%BC%88PDF%EF%BC%89.pdf\nhttps://www.nikoukei.co.jp/news/detail/473865",
+        "memo": "https://www.town.oarai.lg.jp/wp/wp-content/uploads/2022/02/%E9%81%93%E3%81%AE%E9%A7%85%E3%81%8A%E3%81%8A%E3%81%82%E3%82%89%E3%81%84%EF%BC%88%E4%BB%AE%EF%BC%89%E5%9F%BA%E6%9C%AC%E6%A7%8B%E6%83%B3%EF%BC%88%E6%A1%88%EF%BC%89%EF%BC%88PDF%EF%BC%89.pdf\nhttps://www.nikoukei.co.jp/news/detail/473865",
         "checked_on": "2026-01-01"
     },
     {
         "name": "道の駅 阿見町",
         "pref": "茨城県",
         "city": "稲敷郡阿見町",
-        "status": "中止",
+        "status": "凍結",
         "date": "",
         "lat": 36.0204974,
         "lng": 140.2518442,
-        "memo": "【凍結】\nhttps://www.town.ami.lg.jp/0000005787.html",
+        "memo": "https://www.town.ami.lg.jp/0000005787.html",
         "checked_on": "2026-01-01"
     },
     {
@@ -1316,7 +1316,7 @@
         "date": "",
         "lat": 34.831384,
         "lng": 137.8120703,
-        "memo": "【断念】\nhttps://www.city.hamamatsu.shizuoka.jp/hk-shinko/event/r02/sounding.html\nhttps://www.city.hamamatsu.shizuoka.jp/documents/105252/kohyo_1.pdf",
+        "memo": "https://www.city.hamamatsu.shizuoka.jp/hk-shinko/event/r02/sounding.html\nhttps://www.city.hamamatsu.shizuoka.jp/documents/105252/kohyo_1.pdf",
         "checked_on": "2026-01-01"
     },
     {
@@ -1327,7 +1327,7 @@
         "date": "",
         "lat": 35.1344106,
         "lng": 138.7787871,
-        "memo": "【見送り】\nhttps://www.at-s.com/news/article/shizuoka/1082946.html",
+        "memo": "https://www.at-s.com/news/article/shizuoka/1082946.html",
         "checked_on": "2026-01-01"
     },
     {
@@ -1635,7 +1635,7 @@
         "date": "",
         "lat": 34.0537666,
         "lng": 134.4772181,
-        "memo": "【休止】\nhttps://www.city.tokushima.tokushima.jp/shisei/machi_keikaku/economy_sightseeing/michinoeki_iinkai/01tiikisinkousisetu.files/06siryou6.pdf\nhttps://mainichi.jp/articles/20180914/ddl/k36/010/551000c",
+        "memo": "https://www.city.tokushima.tokushima.jp/shisei/machi_keikaku/economy_sightseeing/michinoeki_iinkai/01tiikisinkousisetu.files/06siryou6.pdf\nhttps://mainichi.jp/articles/20180914/ddl/k36/010/551000c",
         "checked_on": "2026-01-01"
     },
     {
@@ -1723,7 +1723,7 @@
         "date": "",
         "lat": 33.2075981,
         "lng": 130.3558207,
-        "memo": "【廃止】\nhttps://www.city.okawa.lg.jp/100/050/070/20201019143355.html",
+        "memo": "https://www.city.okawa.lg.jp/100/050/070/20201019143355.html",
         "checked_on": "2026-01-01"
     },
     {

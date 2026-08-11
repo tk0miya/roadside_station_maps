@@ -4,12 +4,14 @@ import type { Category, PlannedStation } from '../types/plan';
 import { categoryOf } from '../types/plan';
 
 // Reuse the main map's marker icon images (no separate marker style).
-// MARKER_ICONS order: [red, blue, purple, yellow, green].
+// MARKER_ICONS order: [red, blue, purple, yellow, green]. Six categories share
+// the five images: 凍結 takes 中止's purple, neither being a plan that moves.
 export const CATEGORY_ICON: Record<Category, string> = {
     開業: MARKER_ICONS[3], // yellow
     登録済み: MARKER_ICONS[4], // green
     '計画中(予定あり)': MARKER_ICONS[0], // red
     '計画中(未定)': MARKER_ICONS[1], // blue
+    凍結: MARKER_ICONS[2], // purple
     中止: MARKER_ICONS[2], // purple
 };
 
