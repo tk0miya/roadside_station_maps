@@ -3,16 +3,13 @@ import { createRoot, type Root } from 'react-dom/client';
 import type { PlannedStation, PlanUrl } from '../types/plan';
 import { categoryOf } from '../types/plan';
 
-// Show the URL rather than an empty link when a source has no title.
-function labelOf(link: PlanUrl): string {
-    return link.title.trim() || link.url;
-}
-
+// `title` is non-blank in the master (checked by plan-data.test.ts), so it can
+// be used as the label without a fallback.
 function urlNodes(urls: PlanUrl[]) {
     return urls.map((link) => (
         <li key={link.url}>
             <a href={link.url} target="_blank" rel="noopener noreferrer">
-                {labelOf(link)}
+                {link.title}
             </a>
         </li>
     ));
