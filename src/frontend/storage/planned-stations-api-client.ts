@@ -7,6 +7,7 @@
 // The pure parse step is exported separately so it can be unit-tested.
 
 import Papa from 'papaparse';
+import { sortPlannedStations } from '../plan-order';
 import type { City, PlannedStation, Status } from '../types/plan';
 import { STATUSES } from '../types/plan';
 
@@ -67,9 +68,11 @@ function toStation(record: Record<string, string>, cityIndex: Map<string, City>)
     };
 }
 
-// Pure transform: CSV text + city table → PlannedStation[]. Kept separate from
-// the network call so it can be unit-tested. papaparse handles quoted fields
-// with embedded newlines/commas (the memo column often holds several URLs).
+// Pure transform: CSV text + city table → PlannedStation[], in display order
+// (see plan-order.ts; the city table doubles as the prefecture ordering). Kept
+// separate from the network call so it can be unit-tested. papaparse handles
+// quoted fields with embedded newlines/commas (the memo column often holds
+// several URLs).
 export function parsePlannedStations(csvText: string, cities: City[]): PlannedStation[] {
     const cityIndex = new Map<string, City>();
     for (const c of cities) {
@@ -82,7 +85,8 @@ export function parsePlannedStations(csvText: string, cities: City[]): PlannedSt
         transformHeader: (h) => h.trim(),
     });
 
-    return parsed.data.map((record) => toStation(record, cityIndex)).filter((s) => s.name !== '');
+    const stations = parsed.data.map((record) => toStation(record, cityIndex)).filter((s) => s.name !== '');
+    return sortPlannedStations(stations, cities);
 }
 
 // Google returns an HTML error page (not CSV) when the sheet is unpublished or
