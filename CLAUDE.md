@@ -124,6 +124,8 @@ data/         生成データ（CSV / GeoJSON）と開発計画マスタ（plans
 - **並び替えるのは読み込み直後（`toPlannedStations()`）**: サイドバーはカテゴリごとに push するだけなので配列の順序がそのまま表示順になる。並び順をレンダリングなしでテストできる
 - **都道府県順は `data/cities.json` の並びから引く**: 全国地方公共団体コード順のテーブルそのもので、地図が既に読み込んでいる。47 件のリストをコード側に持つと二重管理になる
 
+開発計画マップは地図の右クリックでその地点の座標を `[lat, lng]` 形式でクリップボードにコピーする（`src/frontend/components/PlanCoordCopy.tsx`）。座標が未記入の駅を調査するとき、地図で位置を当てて `data/plans.json` の `lat` / `lng` に貼るための機能。丸め桁とブラウザの右クリックメニューを抑止する理由は同ファイルのコメントを参照。
+
 ### データパイプライン
 
 1. `generate-stationlist.ts` - michi-no-eki.jp を都道府県・駅の階層でたどり `data/stations.csv` を出力（`cheerio` で HTML 解析、`jaconv` でテキスト正規化）
