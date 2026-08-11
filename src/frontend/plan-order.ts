@@ -108,9 +108,9 @@ function prefectureRanks(cities: City[]): Map<string, number> {
 }
 
 // Categories whose date carries no order: 計画中(未定) has none by definition,
-// and a cancelled plan's date is a schedule that will not happen. Both fall back
-// to prefecture order.
-const ORDERED_BY_PREFECTURE = new Set<Category>(['計画中(未定)', '中止']);
+// and the date left on a frozen or cancelled plan is a schedule that is not
+// being worked towards. All three fall back to prefecture order.
+const ORDERED_BY_PREFECTURE = new Set<Category>(['計画中(未定)', '凍結', '中止']);
 
 function sortKey(station: PlannedStation, prefectureRank: Map<string, number>): number[] {
     const category = categoryOf(station);

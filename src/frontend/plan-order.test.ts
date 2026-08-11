@@ -118,9 +118,18 @@ describe('sortPlannedStations', () => {
         expect(sortPlannedStations(stations, cities).map((s) => s.pref)).toEqual(['北海道', '福岡県']);
     });
 
+    it('orders 凍結 by prefecture, since its date is not being worked towards', () => {
+        const stations = [
+            station({ status: '凍結', pref: '福岡県', city: '田川郡川崎町', date: '2020-04-01' }),
+            station({ status: '凍結', pref: '北海道', city: '札幌市中央区', date: '2024-04-01' }),
+        ];
+        expect(sortPlannedStations(stations, cities).map((s) => s.pref)).toEqual(['北海道', '福岡県']);
+    });
+
     it('groups the list by category, in sidebar order', () => {
         const stations = [
             station({ name: '中止', status: '中止' }),
+            station({ name: '凍結', status: '凍結' }),
             station({ name: '未定', status: '計画中' }),
             station({ name: '予定あり', status: '計画中', date: '2027' }),
             station({ name: '登録済み', status: '登録済み', date: '2026-10-01' }),
@@ -131,6 +140,7 @@ describe('sortPlannedStations', () => {
             '登録済み',
             '予定あり',
             '未定',
+            '凍結',
             '中止',
         ]);
     });
