@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { PlannedStationsApiClient } from '../storage/planned-stations-api-client';
+import { PlannedStationsApiClient } from '../planned-stations';
 import type { Category, PlannedStation } from '../types/plan';
 import { PlanInfoWindow } from './PlanInfoWindow';
 import { PlanMarkers } from './PlanMarkers';

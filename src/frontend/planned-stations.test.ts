@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { City } from '../types/plan';
-import { parsePlannedStations } from './planned-stations-api-client';
+import type { City } from './types/plan';
+import { parsePlannedStations } from './planned-stations';
 
 const cities: City[] = [{ pref: '長野県', city: '上伊那郡箕輪町', lat: 35.9, lng: 137.9 }];
 

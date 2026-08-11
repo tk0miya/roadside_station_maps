@@ -7,9 +7,9 @@
 // The pure parse step is exported separately so it can be unit-tested.
 
 import Papa from 'papaparse';
-import { sortPlannedStations } from '../plan-order';
-import type { City, PlannedStation, Status } from '../types/plan';
-import { STATUSES } from '../types/plan';
+import { sortPlannedStations } from './plan-order';
+import type { City, PlannedStation, Status } from './types/plan';
+import { STATUSES } from './types/plan';
 
 // Published Google Spreadsheet CSV (File → Share → Publish to web → CSV).
 // Editing the sheet is reflected on the next page reload.
