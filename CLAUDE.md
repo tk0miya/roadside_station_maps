@@ -144,7 +144,7 @@ data/         生成データ（CSV / GeoJSON）と開発計画マスタ（plans
 
 #### 形式
 
-1 要素 1 駅の JSON 配列（現在 175 件）。キー順は固定で `name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `urls` / `checked_on`。型は `lat` / `lng` が number または null、`urls` が `{ title, url }`（キー順も固定）の配列、残りは string（空は `""`）。レコード順も固定で `pref` → `city` → `name`（`pref` と `city` は `data/cities.json` の出現順 = 全国地方公共団体コード順。`cities.json` に引き当たらない `city` はその `pref` の末尾に文字列順）。
+1 要素 1 駅の JSON 配列（現在 177 件）。キー順は固定で `name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `urls` / `checked_on`。型は `lat` / `lng` が number または null、`urls` が `{ title, url }`（キー順も固定）の配列、残りは string（空は `""`）。レコード順も固定で `pref` → `city` → `name`（`pref` と `city` は `data/cities.json` の出現順 = 全国地方公共団体コード順。`cities.json` に引き当たらない `city` はその `pref` の末尾に文字列順）。
 
 - **キー順を固定する**: 差分の安定のためだけでなく、`name` が一意でない（「道の駅 川崎町」が福岡県と宮城県にある）ため、レコードを特定するには `name` の直後に `pref` が来る必要がある
 - **レコード順を固定する**: 順序が動くと差分が壊れる。都道府県順にすると GitHub の編集 UI で目的の駅に当たりが付く（表示順は別物で、`plan-order.ts` が読み込み後に決める）
