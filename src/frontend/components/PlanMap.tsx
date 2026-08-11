@@ -35,9 +35,8 @@ export function PlanMap() {
             const mapInstance = new google.maps.Map(mapContainerRef.current, {
                 center: { lat: 37.5, lng: 137.5 },
                 zoom: 6,
-                mapTypeControl: false,
-                streetViewControl: false,
                 fullscreenControl: false,
+                cameraControl: false,
             });
             mapInstance.addListener('click', () => setSelected(null));
             setMap(mapInstance);
