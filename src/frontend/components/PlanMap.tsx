@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadPlannedStations } from '../planned-stations';
 import type { Category, PlannedStation } from '../types/plan';
+import { PlanCoordCopy } from './PlanCoordCopy';
 import { PlanInfoWindow } from './PlanInfoWindow';
 import { PlanMarkers } from './PlanMarkers';
 import { PlanSidebar } from './PlanSidebar';
@@ -92,6 +93,7 @@ export function PlanMap() {
                     onSelect={setSelected}
                 />
                 <PlanInfoWindow map={map} selected={selected} />
+                <PlanCoordCopy map={map} />
             </div>
         </div>
     );

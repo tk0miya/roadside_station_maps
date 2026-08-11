@@ -1,6 +1,30 @@
 import { vi } from 'vitest';
 
-// Create mock Google Maps instance with controls and Data layer
+// Event plumbing shared by the mock map and its mock Data layer: `addListener`
+// records the handler (and can unregister it), `_emit` fires what is registered.
+const createListenerRegistry = () => {
+    const listeners: Record<string, ((event: unknown) => void)[]> = {};
+
+    return {
+        addListener: vi.fn((eventName: string, cb: (event: unknown) => void) => {
+            const list = listeners[eventName] ?? [];
+            list.push(cb);
+            listeners[eventName] = list;
+            return {
+                remove: vi.fn(() => {
+                    listeners[eventName] = (listeners[eventName] ?? []).filter((c) => c !== cb);
+                }),
+            };
+        }),
+        _emit: (eventName: string, event: unknown) => {
+            for (const cb of listeners[eventName] ?? []) {
+                cb(event);
+            }
+        },
+    };
+};
+
+// Create mock Google Maps instance with controls, events and Data layer
 export const createMockMap = () => {
     const topLeftControls: HTMLElement[] = [];
     const topCenterControls: HTMLElement[] = [];
@@ -35,19 +59,10 @@ export const createMockMap = () => {
     };
 
     let features: google.maps.Data.Feature[] = [];
-    const listeners: Record<string, ((event: unknown) => void)[]> = {};
+    const dataEvents = createListenerRegistry();
     const data = {
         addGeoJson: vi.fn(),
-        addListener: vi.fn((eventName: string, cb: (event: unknown) => void) => {
-            const list = listeners[eventName] ?? [];
-            list.push(cb);
-            listeners[eventName] = list;
-            return {
-                remove: vi.fn(() => {
-                    listeners[eventName] = (listeners[eventName] ?? []).filter((c) => c !== cb);
-                }),
-            };
-        }),
+        addListener: dataEvents.addListener,
         setStyle: vi.fn(),
         overrideStyle: vi.fn(),
         forEach: vi.fn((cb: (f: google.maps.Data.Feature) => void) => features.forEach(cb)),
@@ -57,17 +72,17 @@ export const createMockMap = () => {
         _setFeatures: (fs: google.maps.Data.Feature[]) => {
             features = fs;
         },
-        _emit: (eventName: string, event: unknown) => {
-            for (const cb of listeners[eventName] ?? []) {
-                cb(event);
-            }
-        },
+        _emit: dataEvents._emit,
     };
+
+    const mapEvents = createListenerRegistry();
 
     return {
         controls,
         data,
-    } as unknown as google.maps.Map & { data: typeof data };
+        addListener: mapEvents.addListener,
+        _emit: mapEvents._emit,
+    } as unknown as google.maps.Map & { data: typeof data; _emit: typeof mapEvents._emit };
 };
 
 // Create mock Google Maps Data Feature
