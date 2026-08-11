@@ -1,14 +1,14 @@
 // Domain types for the roadside-station development-plan map.
 //
 // This map is independent from the main scraped-station pipeline: its source of
-// truth is a human-managed Google Spreadsheet (published as CSV).
+// truth is `data/plans.json`, a hand-edited master tracked in this repository.
 
 export type Status = '開業' | '登録済み' | '計画中' | '中止';
 
 export const STATUSES: Status[] = ['開業', '登録済み', '計画中', '中止'];
 
 // Where a station's rendered coordinate came from:
-//   exact - explicit lat/lng in the sheet
+//   exact - explicit lat/lng in the master
 //   city  - fell back to the municipality (市区町村) representative point
 //   none  - could not be resolved (not rendered)
 export type CoordSource = 'exact' | 'city' | 'none';
@@ -23,6 +23,21 @@ export interface PlannedStation {
     lng: number | null;
     memo: string;
     coordSource: CoordSource;
+}
+
+// One record of the master file (`data/plans.json`), as written on disk. Its
+// key order is fixed and validated by `src/lib/plan-data.test.ts`. `status` is
+// a plain string here and is narrowed at load time (see planned-stations.ts).
+export interface PlanRecord {
+    name: string;
+    pref: string;
+    city: string;
+    status: string;
+    date: string;
+    lat: number | null;
+    lng: number | null;
+    memo: string;
+    checked_on: string;
 }
 
 // One row of the city (市区町村) representative-point table.

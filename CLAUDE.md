@@ -34,7 +34,6 @@
 - **フロントエンド**: `npm start`（ウォッチビルド） / `npm run serve`（開発サーバー、ポート 8081） / `npm run build`
 - **バックエンド**: `npm run dev:backend`（wrangler dev） / `npm run deploy:backend` / `npm run db:migrate:local` / `npm run db:migrate`
 - **データ生成**: `npm run generate:all`（`generate:stations` → `generate:geojson`）
-- **開発計画データ**: `npm run --silent plan:list` / `npm run --silent plan:show` / `npm run plan:update`（`.env` の `PLAN_API_URL` が必要）
 - **品質**: `npm test` / `npm run lint` / `npm run format` / `npm run typecheck` / `npm run lint:fix`
 
 ### generate:stations のデバッグモード
@@ -58,14 +57,14 @@ src/
 ├── backend/     Cloudflare Workers（Hono）API。auth / handlers / db / middleware
 ├── frontend/    React 19 フロントエンド。components / auth / storage / types
 ├── shared/      フロント・バック共通の型定義
-├── lib/         scripts が使うモジュール（CSV パース、Station 型、開発計画 API クライアント）
+├── lib/         scripts が使うモジュール（CSV パース、Station 型）
 ├── scripts/     CLI のエントリーポイント（npm script から実行する）
 └── test-utils/  テスト用ヘルパー
 
-gas/          開発計画スプレッドシート API（Google Apps Script）
+docs/         人が読むドキュメント（Pages には配信されない）
 migrations/   Cloudflare D1 マイグレーション（SQL）
 html/         静的アセット（index.html、CSS、ビルド成果物 bundle.js）
-data/         生成データ（CSV / GeoJSON）
+data/         生成データ（CSV / GeoJSON）と開発計画マスタ（plans.json）
 ```
 
 ### バックエンド（Cloudflare Workers + Hono + D1）
@@ -113,14 +112,16 @@ data/         生成データ（CSV / GeoJSON）
 - ログイン済み: Workers + D1 と同期する `RemoteStorage`（デバウンス付き）
 - 未ログイン: 空の `MemoryStorage`（ゲストモード、永続化なし）
 
-開発計画マップの情報ウィンドウはシートの `memo` 列を 1 行ずつ描画し、`src/frontend/plan-memo.ts` が行をテキストとリンクに分解する（記法は同ファイルのコメントを参照）。
+開発計画マップは `data/plans.json` を `src/frontend/planned-stations.ts` の `loadPlannedStations()` で読む。純粋変換 `toPlannedStations(records, cities)` を分離してあり、`lat` / `lng` が `null` のレコードは `data/cities.json` の市区町村代表点にフォールバックする（`coordSource` の 3 値 `exact` / `city` / `none`）。
+
+情報ウィンドウは `memo` 列を 1 行ずつ描画し、`src/frontend/plan-memo.ts` が行をテキストとリンクに分解する（記法は同ファイルのコメントを参照）。
 
 - **markdown ライブラリを使わず自前で解析する**: memo で要るのはリンクだけで、見出しや強調まで解釈させたいわけではない
-- **`http` / `https` だけをリンク化する**: memo は人手管理のシート由来なので、`javascript:` のようなスキームが `href` に入らないようにする
+- **`http` / `https` だけをリンク化する**: memo は人手管理のマスタ由来なので、`javascript:` のようなスキームが `href` に入らないようにする
 
 開発計画マップの並び順は `src/frontend/plan-order.ts` が決める。カテゴリ順に並べ、`開業` / `登録済み` / `計画中(予定あり)` は開業（予定）日順、`計画中(未定)` と `中止` は都道府県順（どちらも同着は都道府県 → 市区町村 → 名前で決める）。粒度の混在した `date` をどう順序に落とすかは同ファイルのコメントを参照。
 
-- **並び替えるのはパース直後（`parsePlannedStations()`）**: サイドバーはカテゴリごとに push するだけなので配列の順序がそのまま表示順になる。並び順をレンダリングなしでテストできる
+- **並び替えるのは読み込み直後（`toPlannedStations()`）**: サイドバーはカテゴリごとに push するだけなので配列の順序がそのまま表示順になる。並び順をレンダリングなしでテストできる
 - **都道府県順は `data/cities.json` の並びから引く**: 全国地方公共団体コード順のテーブルそのもので、地図が既に読み込んでいる。47 件のリストをコード側に持つと二重管理になる
 
 ### データパイプライン
@@ -129,66 +130,51 @@ data/         生成データ（CSV / GeoJSON）
 2. `generate-geojson.ts` - CSV を Point Feature の GeoJSON（`data/stations.geojson`）へ変換
 3. フロントエンドが GeoJSON を読み込んで描画
 
-### 開発計画スプレッドシート API（Google Apps Script）
+### 開発計画マスタ（`data/plans.json`）
 
-開発計画マップ（`html/plan.html`）のデータ元は人手管理の Google スプレッドシート。`gas/` はそのスプレッドシートに紐づく GAS プロジェクトで、**一覧取得（`doGet`）と更新（`doPost`、Slack 通知つき）**を Web App として公開する。行の追加・削除はスプレッドシート上で人手が行うため公開しない。
+開発計画マップ（`html/plan.html`）のデータ元。人手と調査セッションが育てる台帳で、**このリポジトリが唯一のマスタ**。地図はこのファイルをそのまま読む（`deploy.yml` が `data/` をまるごと GitHub Pages に載せるので、マスタがそのまま配信ファイルになる）。
 
-**読み取り経路は 2 つある**:
+もとは Google スプレッドシートに置き、GAS の Web App（`doGet` / `doPost`）と公開 CSV で読み書きしていた。git に移した理由:
 
-- **地図（`html/plan.html`）は CSV 公開版を読む** — 地図の表示を GAS の実行時間・クォータに依存させないため
-- **CLI（`npm run plan`）は `doGet` を読む** — 必要なデータ形が地図と違うため。地図は `data/cities.json` で市区町村代表点にフォールバックした `PlannedStation` を使うが、CLI が扱うのは `update` で書き戻せるシートの生の値。加えて公開 CSV は Google 側で数分キャッシュされるので、`update` 直後の確認に使えない
+- **承認ゲートが約束から仕組みになる**: 「報告して承認を得てから書く」という運用上の約束が PR レビューになる。誤った上書きは revert できる
+- **書き込み口が push 権限になる**: GAS Web App は `ANYONE_ANONYMOUS` で公開された無認証の書き込み口だった
+- **読み取り経路が 1 つになる**: 地図は公開 CSV、CLI は `doGet` という二重性がなくなる
+- **外部サービスへの依存が読み書きの両方から消える**
 
-どちらもヘッダ行から列を引くので形は揃う。
+#### 形式
 
-- **TypeScript ではなく JavaScript**: 個人利用の小さなスクリプトで、ビルド工程を挟まずそのまま GAS に反映することを優先
-- **`doGet` / `doPost` で分ける**: verb 分岐は Apps Script が提供しているので、`doPost({ action })` のような分岐を自前で作らない。読み取りは副作用がなく冪等で、`/exec` をブラウザで開けばデプロイの確認もできる
-- **値の正規化**: `doGet` は Date セルを `yyyy-MM-dd` に揃え、文字列セルは前後の空白を落として返す。セルの表示書式や余分な空白に API の応答が左右されず、一覧で見た値をそのまま `update` の一致キーに使えるようにするため。数値は素通しするので `lat` / `lng` は JSON の数値、空セルは空文字になる
-    - 整形にはスプレッドシート自身のタイムゾーンを使う。Date セルはそのタイムゾーンの午前 0 時なので、他のタイムゾーンで整形すると隣の日に落ちて、API の応答がセルの表示と食い違う
-    - Date の判定は `instanceof` ではなく内部クラス（`Object.prototype.toString.call`）で行う。Spreadsheet サービスが返す Date はスクリプト側の `Date` にプロトタイプが繋がっておらず、`instanceof` では取りこぼして ISO-8601 の文字列として応答に出てしまう
-- **列の解決**: 列位置はハードコードせずヘッダ行（`name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `memo` / `checked_on`）から引く。API のフィールド名は公開 CSV のヘッダ名と一致する
-- **エントリーの特定**: `name` 列と `pref` 列の完全一致。`name` は一意ではない（「道の駅 川崎町」が福岡県と宮城県にある）ので、`pref` はキーの片割れとして必須にする。**一致が 1 件のときだけ書き込む** — 複数一致で先頭行を書くと取り違えに気づけないため
-- **`Content-Type: text/plain`**: CORS プリフライトを避けるため（Apps Script は preflight に応答しない）
-- **公開範囲**: `ANYONE_ANONYMOUS`。個人利用前提の割り切りなので URL は共有しない
-- **`doPost` は書き込みに続けて Slack に投稿する**（`gas/slack.js`）: スプレッドシートを見ていない人に、台帳が動いたことと調査で分かったことが届く経路が他にないため。投稿は GAS 側で行う — Incoming Webhook URL を調査を走らせる環境（`npm run plan` と Claude Code）に置かないため、スクリプトプロパティ `SLACK_WEBHOOK_URL` が唯一の置き場所になる（リポジトリにも `.env` にも増えない）
-- **`report` は Slack にだけ流す**: 調査の結果にはシートに書ける値（`values`）と書けないもの（`pref` / `city` の誤り、リンク切れ、却下された提案など）がある。どちらも同じ調査から出るので、報告用の別コマンドを作らず `update` に添える。シートには残らないので、人が対応しなければ次の周回で再度報告される
-- **Biome**: `gas/` は GAS のグローバルスコープ前提（`export` を持たない）のため `biome.json` の `overrides` で `noUnusedVariables` を無効化
+1 要素 1 駅の JSON 配列（現在 175 件）。キー順は固定で `name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `memo` / `checked_on`。型は `lat` / `lng` が number または null、残りは string（空は `""`）。レコード順も固定で `pref` → `city` → `name`（`pref` と `city` は `data/cities.json` の出現順 = 全国地方公共団体コード順。`cities.json` に引き当たらない `city` はその `pref` の末尾に文字列順）。
 
-リクエスト・レスポンス:
+- **キー順を固定する**: 差分の安定のためだけでなく、`name` が一意でない（「道の駅 川崎町」が福岡県と宮城県にある）ため、レコードを特定するには `name` の直後に `pref` が来る必要がある
+- **レコード順を固定する**: 順序が動くと差分が壊れる。都道府県順にすると GitHub の編集 UI で目的の駅に当たりが付く（表示順は別物で、`plan-order.ts` が読み込み後に決める）
+- **単一ファイルにする**: マスタがそのまま配信ファイルになりビルド工程が増えない。1 駅 1 ファイルにするとバンドル生成が必要になり、生成物のコミット漏れという失敗モードを新たに作る。この規模ならコンフリクト耐性のためにそれを払う価値はない
+- **pretty-print（1 行 1 フィールド）にする**: 差分が読め、コンフリクトが同一レコードに限定される。JSONL は `memo` が `\n` エスケープで 1 行に潰れて GitHub の編集 UI で扱いづらい
+- **`date` は形式を決めない**: 判明している粒度をそのまま記録するため、`2026-04-01` / `2026-04` / `2026` / `2026夏` のいずれもありうる
+- **`checked_on` はその駅を最後に調査した日**: 調査は古い順に少しずつ進めるため**この列は調査キューの並び替えキー**で、書き忘れるとキューが進まなくなる
 
-```
-GET https://script.google.com/macros/s/xxx/exec
-→ [{ "name": "道の駅◯◯", "pref": "福井県", "status": "計画中", "date": "", "lat": 36.1, ... }, ...]
+#### 更新は Edit ツールではなく jq で行う
 
-POST https://script.google.com/macros/s/xxx/exec   (Content-Type: text/plain)
-{ "name": "道の駅◯◯", "pref": "福井県", "values": { "status": "開業", "date": "2026-04-01" },
-  "report": "city が誤り（実際は◯◯町）" }
-→ { "updated": true, "row": 12, "matched": 1 }
-```
+1900 行の JSON では `old_string` の一意性を取るのが難しく（`"name": "道の駅 川崎町"` は 2 件ある）、`memo` の書き換えでは長大になる。jq は既存キーの順序を保持するのでキー順も崩れない。
 
-`name` と `pref` は両方必須。`values` に含めたフィールドのみ上書きし、含めなかったフィールドは現在値を保つ。`values.name` を含めるとエントリーを改名する。`matched` は一致件数で、1 件でなければ何も書かず `{ "updated": false, "row": null, "matched": <件数> }` を返す。`report` は任意。
+手順（レコードの引き方、`memo` の足し方、`checked_on` の押印、PR の出し方）は `.claude/skills/michi-no-eki-plan-research/SKILL.md` にある。**同じことをここに書き足さない** — 手順が変わったとき片方だけ直されて、残った側が嘘になる。
 
-### 開発計画データ CLI（`npm run plan:*`）
+#### 整形は Biome、構造は vitest
 
-上記 API の唯一のクライアント。`src/scripts/plan.ts`（エントリーポイント、引数解析・検証）と `src/lib/plan-api.ts`（通信）。コマンドは `list`（全件）/ `show`（1 件）/ `update`（更新）の 3 つ。
+整形は Biome に任せ、正規形のための専用コマンドは作らない。`.gitignore` の例外により `data/plans.json` だけが Biome の対象になる（`vcs.useIgnoreFile: true`）。Biome の JSON 整形は展開方向にのみ正規化するので（4 スペースの pretty JSON は無変更、2 スペースや 1 行に潰れたものは 4 スペースに展開）、編集の道具と争わない。整形崩れは `npm run lint` が検出し `npm run lint:fix` が直す。
 
-```
-npm run --silent plan:list | jq -r '.[] | select(.status == "計画中") | .name'
-npm run --silent plan:show -- "道の駅◯◯" 福井県
-npm run plan:update -- "道の駅◯◯" 福井県 --status=開業 --date=2026-04-01
-npm run plan:update -- "道の駅◯◯（仮称）" 福井県 --name=道の駅◯◯
-npm run plan:update -- "道の駅◯◯" 福井県 --report="city が誤り（実際は◯◯町）"
-```
+構造の検証は `src/frontend/plan-data.test.ts` が実データを読んで行う（キーの集合と順序、`status` の 4 値、`pref` の実在、`name` の非空、`name` + `pref` の一意性、座標の型、レコード順）。**インデントやバイト一致は検証しない** — 前者は Biome の担当で、後者は数値のレンダリングが書き手によって揺れる（座標がちょうど整数のとき `36.0` と `36` のどちらもありうる）ため、原因の分かりにくい赤になる。
 
-- **`list` / `show` は JSON を出すだけ**で絞り込み・整形のオプションを持たない。`jq` のほうが上手くやれるため
-- **`npm run` のバナーは stdout に出る**ので、`jq` に流すときは `--silent` が要る
-- **script 名は `plan:list` / `plan:show` / `plan:update`**: `db:migrate` / `gas:push` と同じ `<名前空間>:<動詞>` 形式に揃える。サブコマンドを script 側に埋めてあるので、`list` は `--` なしで `jq` に流せる
-- **`update` は送信前に検証する**: 更新可能フィールド（`name` / `status` / `date` / `lat` / `lng` / `memo`）以外のフラグ、範囲外の `status`、非数値の座標、空の `name`、キー（名前・都道府県）の欠落や不正を弾く。GAS 側にエラー処理がなく、不正入力は HTML のエラーページとして返るため
-- **`date` は検証しない**: シートは判明している粒度をそのまま記録するため、`2026-04-01` / `2026-04` / `2026` / `2026夏` のいずれもありうる。単一のパターンに押し込められない
-- **`checked_on` は `update` が自動で書く**: その駅を最後に調査した日を機械が記録する列で、人が育てた他の列とは持ち主が違う。`plan:update` はすべて調査の一環なので、成功するたび CLI が JST の当日を書き、フラグからは設定できない。調査は古い順に少しずつ進める（`.claude/skills/michi-no-eki-plan-research/SKILL.md`）ため**この列は並び替えキー**で、書き忘れるとキューが進まなくなる
-- **フィールド無指定の `update` が有効**: 「調査したが変更はなかった」の記録になる。`checked_on` を必ず書くので、空更新が何も書かずに成功する余地はない
-- **`--report` は列ではない**: 上記の Slack 通知に添える報告で、シートには書かない。**空の `--report=` は弾く** — どこにも保存されないので、空文字を送れば空行が投稿されて消える。報告することがなければオプション自体を付けない
-- **`pref` / `city` は更新対象外**: エントリーを同定・配置する列で、進捗を表す列ではない（`city` は地図の市区町村代表点フォールバックの引き当てに使う）。修正は文脈の見えるスプレッドシート上で行う
-- **`PLAN_API_URL`**: `/exec` の URL。`.env`（gitignore 済み、`.env.example` を参照）に置き、`dotenv` で読む
+**`checked_on` の更新は CI で強制しない。** 「差分に現れた駅は `checked_on` が更新されている」を CI ルールにすると、GitHub UI で `city` の誤字を直しただけの PR が落ちる。押印忘れのコスト（再調査 1 枠）より誤検知のコストが大きいので、押印はスキルの責務に置く。
+
+#### 相談事項は `docs/plan-reports.md` に書く
+
+調査で出た、データの列に書けない相談事項（所在地の食い違い、代替の見つからないリンク切れ、判断を仰ぎたい事項）の置き場所。旧経路では `plan:update --report` が GAS 経由で Slack に流していたが、その経路も GAS と一緒に消えた。
+
+Issue にしないのは、ファイルなら contents 権限だけで扱えて、GitHub API に到達できないセッションでも調査ループが完結するため。リポジトリの既存の作法（App トークンに `permission-contents: write` と `permission-pull-requests: write` だけを明示）とも揃う。PR の差分に出るのでレビューで必ず目に入る。
+
+**調査セッションは追記するだけ**で、対応と消し込みはメンテナが行う。読んで判断する責務を調査側に持たせない。
+
+`deploy.yml` は `html/` と `data/` だけを Pages にコピーするので `docs/` は配信されない。
 
 ### ビルド・デプロイ
 
@@ -199,4 +185,4 @@ npm run plan:update -- "道の駅◯◯" 福井県 --report="city が誤り（�
 
 ### 主要技術
 
-Cloudflare Workers / Hono / D1 / jose、React 19 / Google Maps API / `@react-oauth/google`、cheerio / jaconv、esbuild、Vitest（`@testing-library/react` + jsdom）、Biome。
+Cloudflare Workers / Hono / D1 / jose、React 19 / Google Maps API / `@react-oauth/google`、cheerio / jaconv、esbuild、Vitest（`@testing-library/react` + jsdom）、Biome。CSV / JSON のパースに外部ライブラリは使わない（CSV は `src/lib/station-csv.ts` の手書き、JSON は標準の `JSON.parse` / `Response.json()`）。

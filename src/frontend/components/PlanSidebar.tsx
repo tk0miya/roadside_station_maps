@@ -3,9 +3,9 @@ import type { Category, PlannedStation } from '../types/plan';
 import { CATEGORIES, categoryOf } from '../types/plan';
 import { CATEGORY_ICON } from './PlanMarkers';
 
-// The human-managed source spreadsheet (edit view), linked from the heading.
-const SHEET_EDIT_URL =
-    'https://docs.google.com/spreadsheets/d/11O7I3qN2_afuUsLy40YAZtGNCv_6jz2MYc-KkT_VeXQ/edit?usp=sharing';
+// The master file on GitHub, linked from the heading. Doubles as the editing
+// entry point: GitHub's file view offers an editor that opens a pull request.
+const PLANS_FILE_URL = 'https://github.com/tk0miya/roadside_station_maps/blob/master/data/plans.json';
 
 interface PlanSidebarProps {
     stations: PlannedStation[];
@@ -50,7 +50,7 @@ export function PlanSidebar({ stations, visibleCategories, selected, onToggle, o
     return (
         <div className="plan-sidebar">
             <div className="plan-sidebar-title">
-                <a href={SHEET_EDIT_URL} target="_blank" rel="noopener noreferrer">
+                <a href={PLANS_FILE_URL} target="_blank" rel="noopener noreferrer">
                     道の駅 整備計画
                 </a>
                 <button
