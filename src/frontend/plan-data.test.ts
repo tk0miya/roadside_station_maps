@@ -129,6 +129,14 @@ describe('data/plans.json', () => {
         }
     });
 
+    // A record with no source is a claim with nothing behind it: the master
+    // exists so that `status` / `date` / `name` can be traced back to a page.
+    it('has at least one url on every record', () => {
+        for (const record of plans) {
+            expect((record.urls as unknown[]).length, label(record)).toBeGreaterThan(0);
+        }
+    });
+
     // The map renders `title` as the link's label, so a blank one would draw an
     // unclickable-looking empty link. Guaranteeing it here means the renderer
     // needs no fallback to the raw url.
