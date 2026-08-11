@@ -51,16 +51,18 @@ function formatChange(change) {
 }
 
 // memo holds one source per line -- a markdown link, or a bare URL for the older
-// entries -- and is appended to rather than replaced, so it reads as a
+// entries -- and most updates touch a line or two of it, so it reads as a
 // line-by-line diff: showing it as a before and after would fill the message with
 // sources that were already there. The links are left as they are written, which
 // Slack shows literally; what this has to make obvious is which lines moved, not
 // which page each one points at.
 //
-// Removed lines are listed as well, even though an append should never produce
-// one. Appending means reading the column and writing it back, which quietly
-// drops every existing source if the read came back empty -- a write that succeeds
-// and looks ordinary, so nothing about it gives the loss away.
+// Removed lines are listed because a line leaves the column two ways that look
+// identical here. One is meant: a source whose page has gone is replaced or
+// dropped. The other is not: every update rewrites the whole column, so a read
+// that came back empty drops every existing source at once -- a write that
+// succeeds and looks ordinary, giving nothing else away. Listing what left is
+// what lets the second be spotted.
 function formatMemoChange(change) {
     const before = toLines(change.from);
     const after = toLines(change.to);
