@@ -1,14 +1,12 @@
 *.swp
 *.js.map
 
-# clasp local settings (holds the script and spreadsheet ids)
-.clasp.json
-
-# Local CLI settings (holds the GAS web app /exec URL)
+# Local settings
 .env
 
 dist/
-/data/
+/data/*
+!/data/plans.json
 node_modules
 html/js/bundle.js
 html/js/plan.js

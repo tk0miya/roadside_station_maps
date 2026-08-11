@@ -1,53 +1,38 @@
-// Client for the planned-stations data source.
+// Loader for the development-plan data.
 //
-// The source is the human-managed Google Spreadsheet published as CSV. It is
-// modeled here as a read-only "CSV API" client so its interface matches the
-// other storage/ clients (a class exposing `list()`), even though it is
-// unauthenticated and hits an external CSV endpoint rather than our backend.
-// The pure parse step is exported separately so it can be unit-tested.
+// The master is `data/plans.json`, tracked in this repository and served as-is
+// by GitHub Pages (deploy.yml copies `data/` verbatim), so loading is a plain
+// fetch of two static files. The pure transform is exported separately so it
+// can be unit-tested without the network.
 
-import Papa from 'papaparse';
 import { sortPlannedStations } from './plan-order';
-import type { City, PlannedStation, Status } from './types/plan';
+import type { City, PlannedStation, PlanRecord, Status } from './types/plan';
 import { STATUSES } from './types/plan';
 
-// Published Google Spreadsheet CSV (File → Share → Publish to web → CSV).
-// Editing the sheet is reflected on the next page reload.
-const CSV_URL =
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vT2qrp8OEprW-P4t75_L1uz0tqvwlv0pCn_nq6zGfMaWJ1HoDcozmCdw5TRvgjNTMScdkg_tgY0WbRW/pub?output=csv';
-
-// City (市区町村) representative points, relative to html/plan.html.
+// Both paths are relative to html/plan.html.
+const PLANS_URL = '../data/plans.json';
 const CITIES_URL = '../data/cities.json';
 
 function cityKey(pref: string, city: string): string {
     return `${pref} ${city}`;
 }
 
+// `npm run ci` rejects an unknown status, so this only ever fires on a copy of
+// the file older than that check -- a stale deployment, or a browser cache. It
+// is worth the one line: an unexpected value would otherwise leave the station
+// out of every category, dropping it from the sidebar and the map at once.
 function toStatus(value: string): Status {
     return (STATUSES as string[]).includes(value) ? (value as Status) : '計画中';
 }
 
-function toNumber(value: string): number | null {
-    const t = value.trim();
-    if (t === '') {
-        return null;
-    }
-    const n = Number(t);
-    return Number.isNaN(n) ? null : n;
-}
-
-function toStation(record: Record<string, string>, cityIndex: Map<string, City>): PlannedStation {
-    const pref = (record.pref ?? '').trim();
-    const city = (record.city ?? '').trim();
-
-    let lat = toNumber(record.lat ?? '');
-    let lng = toNumber(record.lng ?? '');
+function toStation(record: PlanRecord, cityIndex: Map<string, City>): PlannedStation {
+    let { lat, lng } = record;
     let coordSource: PlannedStation['coordSource'] = 'none';
 
     if (lat !== null && lng !== null) {
         coordSource = 'exact';
     } else {
-        const match = pref && city ? cityIndex.get(cityKey(pref, city)) : undefined;
+        const match = record.pref && record.city ? cityIndex.get(cityKey(record.pref, record.city)) : undefined;
         if (match) {
             lat = match.lat;
             lng = match.lng;
@@ -56,56 +41,42 @@ function toStation(record: Record<string, string>, cityIndex: Map<string, City>)
     }
 
     return {
-        name: (record.name ?? '').trim(),
-        pref,
-        city,
-        status: toStatus((record.status ?? '').trim()),
-        date: (record.date ?? '').trim(),
+        name: record.name,
+        pref: record.pref,
+        city: record.city,
+        status: toStatus(record.status),
+        date: record.date,
         lat,
         lng,
-        memo: record.memo ?? '',
+        memo: record.memo,
         coordSource,
     };
 }
 
-// Pure transform: CSV text + city table → PlannedStation[], in display order
-// (see plan-order.ts; the city table doubles as the prefecture ordering). Kept
-// separate from the network call so it can be unit-tested. papaparse handles
-// quoted fields with embedded newlines/commas (the memo column often holds
-// several URLs).
-export function parsePlannedStations(csvText: string, cities: City[]): PlannedStation[] {
+// Pure transform: master records + city table → PlannedStation[], in display
+// order (see plan-order.ts; the city table doubles as the prefecture ordering).
+export function toPlannedStations(records: PlanRecord[], cities: City[]): PlannedStation[] {
     const cityIndex = new Map<string, City>();
     for (const c of cities) {
         cityIndex.set(cityKey(c.pref, c.city), c);
     }
 
-    const parsed = Papa.parse<Record<string, string>>(csvText, {
-        header: true,
-        skipEmptyLines: true,
-        transformHeader: (h) => h.trim(),
-    });
-
-    const stations = parsed.data.map((record) => toStation(record, cityIndex)).filter((s) => s.name !== '');
+    const stations = records.map((record) => toStation(record, cityIndex)).filter((s) => s.name !== '');
     return sortPlannedStations(stations, cities);
 }
 
-// Google returns an HTML error page (not CSV) when the sheet is unpublished or
-// unavailable, so a non-OK status must be rejected here; otherwise it would be
-// parsed as an empty CSV and shown as a station-less map.
-async function fetchOk(url: string): Promise<Response> {
+// A missing or misdeployed file returns an HTML error page, which would not
+// parse as the expected array; reject on a non-OK status so the map reports the
+// failure instead of rendering as station-less.
+async function fetchJson<T>(url: string): Promise<T> {
     const response = await fetch(url);
     if (!response.ok) {
         throw new Error(`Failed to fetch ${url}: ${response.status}`);
     }
-    return response;
+    return response.json() as Promise<T>;
 }
 
-export class PlannedStationsApiClient {
-    async list(): Promise<PlannedStation[]> {
-        const [csvText, cities] = await Promise.all([
-            fetchOk(CSV_URL).then((r) => r.text()),
-            fetchOk(CITIES_URL).then((r) => r.json()) as Promise<City[]>,
-        ]);
-        return parsePlannedStations(csvText, cities);
-    }
+export async function loadPlannedStations(): Promise<PlannedStation[]> {
+    const [records, cities] = await Promise.all([fetchJson<PlanRecord[]>(PLANS_URL), fetchJson<City[]>(CITIES_URL)]);
+    return toPlannedStations(records, cities);
 }

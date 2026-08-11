@@ -61,17 +61,5 @@
     },
     "files": {
         "includes": ["**", "!**/node_modules", "!**/dist", "!**/html/js/**/*", "!**/bin", "!.claude"]
-    },
-    "overrides": [
-        {
-            "includes": ["gas/**"],
-            "linter": {
-                "rules": {
-                    "correctness": {
-                        "noUnusedVariables": "off"
-                    }
-                }
-            }
-        }
-    ]
+    }
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { PlannedStationsApiClient } from '../planned-stations';
+import { loadPlannedStations } from '../planned-stations';
 import type { Category, PlannedStation } from '../types/plan';
 import { PlanInfoWindow } from './PlanInfoWindow';
 import { PlanMarkers } from './PlanMarkers';
@@ -44,8 +44,7 @@ export function PlanMap() {
     }, []);
 
     useEffect(() => {
-        new PlannedStationsApiClient()
-            .list()
+        loadPlannedStations()
             .then(setStations)
             .catch((error) => setLoadError(error instanceof Error ? error.message : String(error)));
     }, []);
