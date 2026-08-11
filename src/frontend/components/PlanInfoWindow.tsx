@@ -1,26 +1,20 @@
-import { Fragment, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { parseMemo } from '../plan-memo';
-import type { PlannedStation } from '../types/plan';
+import type { PlannedStation, PlanUrl } from '../types/plan';
 import { categoryOf } from '../types/plan';
 
-function memoNodes(memo: string) {
-    return parseMemo(memo).map((segments, lineIndex) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: memo lines are static per selection
-        <div key={lineIndex}>
-            {segments.map((segment, segmentIndex) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: memo segments are static per selection
-                <Fragment key={segmentIndex}>
-                    {segment.type === 'link' ? (
-                        <a href={segment.href} target="_blank" rel="noopener noreferrer">
-                            {segment.text}
-                        </a>
-                    ) : (
-                        segment.text
-                    )}
-                </Fragment>
-            ))}
-        </div>
+// Show the URL rather than an empty link when a source has no title.
+function labelOf(link: PlanUrl): string {
+    return link.title.trim() || link.url;
+}
+
+function urlNodes(urls: PlanUrl[]) {
+    return urls.map((link) => (
+        <li key={link.url}>
+            <a href={link.url} target="_blank" rel="noopener noreferrer">
+                {labelOf(link)}
+            </a>
+        </li>
     ));
 }
 
@@ -60,7 +54,7 @@ export function PlanInfoWindow({ map, selected }: PlanInfoWindowProps) {
                         {categoryOf(selected)}
                         {area ? ` / ${area}` : ''}
                     </div>
-                    {selected.memo.trim() && <div className="plan-memo">{memoNodes(selected.memo)}</div>}
+                    {selected.urls.length > 0 && <ul className="plan-urls">{urlNodes(selected.urls)}</ul>}
                 </div>
             );
             infoWindow.setOptions({

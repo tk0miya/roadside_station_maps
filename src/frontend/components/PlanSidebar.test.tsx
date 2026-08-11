@@ -17,7 +17,7 @@ const stations: PlannedStation[] = [
         date: '2026-04-01',
         lat: 35.9,
         lng: 137.9,
-        memo: '',
+        urls: [],
         coordSource: 'exact',
     },
 ];

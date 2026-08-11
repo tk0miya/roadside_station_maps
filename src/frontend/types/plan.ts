@@ -15,6 +15,13 @@ export const STATUSES: Status[] = ['開業', '登録済み', '計画中', '凍�
 //   none  - could not be resolved (not rendered)
 export type CoordSource = 'exact' | 'city' | 'none';
 
+// One source link backing a record's values: `title` is the source page's own
+// heading, `url` the page it points at.
+export interface PlanUrl {
+    title: string;
+    url: string;
+}
+
 export interface PlannedStation {
     name: string;
     pref: string;
@@ -23,12 +30,12 @@ export interface PlannedStation {
     date: string;
     lat: number | null;
     lng: number | null;
-    memo: string;
+    urls: PlanUrl[];
     coordSource: CoordSource;
 }
 
 // One record of the master file (`data/plans.json`), as written on disk. Its
-// key order is fixed and validated by `src/lib/plan-data.test.ts`. `status` is
+// key order is fixed and validated by `src/frontend/plan-data.test.ts`. `status` is
 // a plain string here and is narrowed at load time (see planned-stations.ts).
 export interface PlanRecord {
     name: string;
@@ -38,7 +45,7 @@ export interface PlanRecord {
     date: string;
     lat: number | null;
     lng: number | null;
-    memo: string;
+    urls: PlanUrl[];
     checked_on: string;
 }
 

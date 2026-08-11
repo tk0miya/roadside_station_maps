@@ -19,7 +19,7 @@ function station(overrides: Partial<PlannedStation>): PlannedStation {
         date: '',
         lat: null,
         lng: null,
-        memo: '',
+        urls: [],
         coordSource: 'none',
         ...overrides,
     };

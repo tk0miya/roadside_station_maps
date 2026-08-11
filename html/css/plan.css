@@ -163,12 +163,14 @@ body,
     color: #555;
 }
 
-.plan-memo {
-    margin-top: 6px;
+.plan-urls {
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
     word-break: break-all;
 }
 
-.plan-memo a {
+.plan-urls a {
     color: #1565c0;
 }
 
