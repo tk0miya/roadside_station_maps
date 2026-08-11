@@ -1,4 +1,3 @@
-import Clipboard from 'clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { useAuthManager } from '../auth/auth-context';
 import { SharesApiClient } from '../storage';
@@ -34,7 +33,9 @@ interface ShareButtonProps {
 
 export function ShareButton(props: ShareButtonProps) {
     const authManager = useAuthManager();
-    const [lastCopiedAt, setLastCopiedAt] = useState<number | null>(null);
+    // Outcome of the last copy attempt. Wrapped in an object so that repeating
+    // the same message still counts as a new state and shows up again.
+    const [notice, setNotice] = useState<{ text: string } | null>(null);
     const [shareId, setShareId] = useState<string | null>(null);
     const shareIdRef = useRef<string | null>(null);
 
@@ -45,7 +46,7 @@ export function ShareButton(props: ShareButtonProps) {
         shareIdRef.current = shareId;
     }, [shareId]);
 
-    // Pre-fetch (or create) the share id so the click handler can copy synchronously.
+    // Fetch (or create) the share id up front, before a click needs it.
     useEffect(() => {
         if (!isSignedIn) {
             setShareId(null);
@@ -78,25 +79,28 @@ export function ShareButton(props: ShareButtonProps) {
         div.className = 'share';
         div.innerText = 'シェア';
 
-        // Initialize clipboard functionality with direct element reference
-        const clipboard = new Clipboard(div, {
-            text: (_trigger: Element) => {
-                const id = shareIdRef.current;
-                return id ? buildShareURL(id) : '';
-            },
-        });
+        // The share id is pre-fetched, so `writeText` is reached without an
+        // await in between: Safari rejects a clipboard write that lands after
+        // one. Nothing happens while the id is still on its way.
+        const copy = async () => {
+            const id = shareIdRef.current;
+            if (!id) return;
 
-        // Handle copy success with state update
-        clipboard.on('success', () => {
-            setLastCopiedAt(Date.now());
-        });
+            try {
+                await navigator.clipboard.writeText(buildShareURL(id));
+                setNotice({ text: 'クリップボードにコピーしました。' });
+            } catch {
+                setNotice({ text: 'クリップボードにコピーできませんでした。' });
+            }
+        };
+        div.addEventListener('click', copy);
 
         // Add to map controls
         const controls = props.map.controls[google.maps.ControlPosition.TOP_LEFT];
         controls.push(div);
 
         return () => {
-            clipboard.destroy();
+            div.removeEventListener('click', copy);
             const index = controls.getArray().indexOf(div);
             if (index >= 0) {
                 controls.removeAt(index);
@@ -104,9 +108,9 @@ export function ShareButton(props: ShareButtonProps) {
         };
     }, [props.map, isSignedIn]);
 
-    // Handle copy success message display
+    // Handle copy outcome message display
     useEffect(() => {
-        if (!lastCopiedAt || !props.map) return;
+        if (!notice || !props.map) return;
 
         const showMessage = async () => {
             if (!props.map) return;
@@ -114,17 +118,23 @@ export function ShareButton(props: ShareButtonProps) {
             const topControls = props.map.controls[google.maps.ControlPosition.TOP_CENTER];
             const messageDiv = document.createElement('div');
             messageDiv.className = 'share-message';
-            messageDiv.innerText = 'クリップボードにコピーしました。';
+            messageDiv.innerText = notice.text;
 
             topControls.push(messageDiv);
 
             // Fade out after 3 seconds
             await fadeOut(messageDiv, 3000);
-            topControls.pop();
+
+            // Remove this message, not whatever is last: a second copy within
+            // those 3 seconds stacks another one on top.
+            const index = topControls.getArray().indexOf(messageDiv);
+            if (index >= 0) {
+                topControls.removeAt(index);
+            }
         };
 
         showMessage();
-    }, [lastCopiedAt, props.map]);
+    }, [notice, props.map]);
 
     // This component doesn't render anything directly
     return null;
