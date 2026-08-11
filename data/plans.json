@@ -1773,8 +1773,8 @@
         "city": "入間郡三芳町",
         "status": "計画中",
         "date": "2030年度",
-        "lat": 35.8283861,
-        "lng": 139.5264752,
+        "lat": 35.841199,
+        "lng": 139.501032,
         "urls": [
             {
                 "title": "https://www.town.saitama-miyoshi.lg.jp/town/keikaku/documents/00_dai5ji_digest.pdf",
@@ -1783,9 +1783,13 @@
             {
                 "title": "関越道の近くに「道の駅」建設へ 世界農業遺産をPRできる農と健康のミュージアムなどの施設を設置する基本計画を策定 供用開始は2030年を目指す 埼玉・三芳",
                 "url": "https://www.saitama-np.co.jp/articles/149529"
+            },
+            {
+                "title": "（仮称）地域活性化発信交流拠点",
+                "url": "https://www.town.saitama-miyoshi.lg.jp/bousai/douro/chiikikasseikahassinkouryuukyoten.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-12"
     },
     {
         "name": "道の駅 おがわまち (リニューアル)",
@@ -3145,8 +3149,8 @@
         "city": "観音寺市",
         "status": "計画中",
         "date": "2028年度",
-        "lat": 34.1284357,
-        "lng": 133.6628477,
+        "lat": 34.084512,
+        "lng": 133.644,
         "urls": [
             {
                 "title": "https://www.city.kanonji.kagawa.jp/soshiki/54/43717.html",
@@ -3157,7 +3161,7 @@
                 "url": "https://news.ksb.co.jp/article/15801489"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-12"
     },
     {
         "name": "道の駅 上島町",
