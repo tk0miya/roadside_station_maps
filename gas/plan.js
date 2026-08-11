@@ -47,20 +47,25 @@ function toKeyValue(value) {
     return String(value === undefined || value === null ? '' : value).trim();
 }
 
+// The plan sheet is the leftmost one, as in the published CSV. Picked here alone
+// so that a sheet added to its left moves every reader at once, notification
+// links included.
+function getPlanSheet() {
+    return SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+}
+
 // The sheet in one read: the sheet itself, to write back to; its header labels
 // in column order, which give a field its column (0-based here, 1-based in the
 // sheet); and every row below the header, where row N of the sheet is
 // rows[N - 2].
 function readPlanSheet() {
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    // The plan sheet is the leftmost one, as in the published CSV.
-    const sheet = spreadsheet.getSheets()[0];
+    const sheet = getPlanSheet();
     const lastRow = sheet.getLastRow();
     if (lastRow < 1) {
         return { sheet, fields: [], rows: [] };
     }
 
-    const timeZone = spreadsheet.getSpreadsheetTimeZone();
+    const timeZone = sheet.getParent().getSpreadsheetTimeZone();
     const values = sheet.getRange(1, 1, lastRow, sheet.getLastColumn()).getValues();
     return {
         sheet,
@@ -69,6 +74,13 @@ function readPlanSheet() {
         fields: values[0].map((value) => toFieldValue(value, timeZone)),
         rows: values.slice(1).map((row) => row.map((value) => toFieldValue(value, timeZone))),
     };
+}
+
+// A link to one row of the sheet, so a notification can point at the entry it is
+// about. The gid identifies the sheet, and `range` selects the row's first cell.
+function rowUrl(row) {
+    const sheet = getPlanSheet();
+    return `${sheet.getParent().getUrl()}#gid=${sheet.getSheetId()}&range=A${row}`;
 }
 
 // Positions in `rows` of every entry with the given name and prefecture, both
@@ -100,6 +112,22 @@ function listEntries() {
         .filter((entry) => entry[NAME_FIELD] !== '');
 }
 
+// What a write actually alters: for every field of `values` whose cell holds
+// something else, the old and the new content. Compared as text because the
+// request carries each value as a string while the sheet hands back numbers for
+// lat and lng -- and because a value equal to what is already there is not a
+// change anyone needs to hear about.
+function collectChanges(fields, row, values) {
+    const changes = {};
+    Object.keys(values).forEach((field) => {
+        const current = row[fields.indexOf(field)];
+        if (String(current) !== String(values[field])) {
+            changes[field] = { from: current, to: values[field] };
+        }
+    });
+    return changes;
+}
+
 // Overwrite the fields given in `values` on the entry identified by `name` and
 // `pref`. Fields left out of `values` keep their current content.
 //
@@ -107,17 +135,21 @@ function listEntries() {
 // several rows would update the wrong one unnoticed. `matched` tells the two
 // failures apart -- 0 is a miss, more than 1 means the sheet holds duplicate
 // rows, which the key cannot split.
+//
+// `changes` describes what the write altered, which the sheet no longer holds
+// once it is written; the Slack notification is built from it (see slack.js).
 function updateEntry(name, pref, values) {
     const { sheet, fields, rows } = readPlanSheet();
     const found = findRows(fields, rows, toKeyValue(name), toKeyValue(pref));
     if (found.length !== 1) {
-        return { updated: false, row: null, matched: found.length };
+        return { updated: false, row: null, matched: found.length, changes: {} };
     }
 
+    const changes = collectChanges(fields, rows[found[0]], values);
     const row = found[0] + 2;
     Object.keys(values).forEach((field) => {
         sheet.getRange(row, fields.indexOf(field) + 1).setValue(values[field]);
     });
 
-    return { updated: true, row, matched: 1 };
+    return { updated: true, row, matched: 1, changes };
 }

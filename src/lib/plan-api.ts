@@ -1,10 +1,14 @@
 // Client for the development-plan spreadsheet API (gas/Code.js), a Google Apps
 // Script web app bound to the human-managed plan spreadsheet.
 //
-// Both operations hit the same /exec URL: GET lists every entry, POST updates
-// one. Neither doGet nor doPost catches exceptions, so an Apps Script failure
-// comes back as an HTML error page rather than JSON; readJson turns that into a
-// legible error instead of a parse failure surfacing somewhere further out.
+// Both operations hit the same /exec URL: GET lists every entry, POST records one
+// as having been researched. Announcing the research on Slack is the Apps
+// Script's part of that (gas/slack.js), not this client's.
+//
+// Only the Slack relay is guarded on the far side, so a failure anywhere else in
+// the Apps Script comes back as an HTML error page rather than JSON; readJson
+// turns that into a legible error instead of a parse failure surfacing somewhere
+// further out.
 
 // One row of the plan sheet, keyed by the header labels
 // (name / pref / city / status / date / lat / lng / memo / checked_on). These are
@@ -55,15 +59,26 @@ export async function list(): Promise<PlanEntry[]> {
     return (await readJson(response, 'list')) as PlanEntry[];
 }
 
-// Overwrite the given fields on the entry keyed by `name` and `pref`, both of
-// which are required (see gas/plan.js). Fields left out keep their current
-// content.
-export async function update(name: string, pref: string, values: Record<string, string>): Promise<UpdateResult> {
+// Record the entry keyed by `name` and `pref` -- both required, see gas/plan.js --
+// as having been researched: overwrite the given fields, leaving the rest with
+// their current content, and relay what the research found to Slack.
+//
+// `report` -- what the research turned up that no column can hold -- is left out
+// of the request entirely when there is none: whether the research is worth
+// announcing is the Apps Script's to decide.
+export async function update(
+    name: string,
+    pref: string,
+    values: Record<string, string>,
+    report?: string
+): Promise<UpdateResult> {
     const response = await fetch(getApiUrl(), {
         method: 'POST',
         // text/plain keeps this a CORS simple request; see gas/Code.js.
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ name, pref, values }),
+        // An absent report leaves no key behind rather than being sent as null:
+        // JSON.stringify drops a property whose value is undefined.
+        body: JSON.stringify({ name, pref, values, report }),
     });
     return (await readJson(response, 'update')) as UpdateResult;
 }

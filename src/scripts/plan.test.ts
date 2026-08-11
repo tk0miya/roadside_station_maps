@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlanEntry } from '../lib/plan-api';
-import { buildKey, buildValues, parseArgs, rejectFlags, selectEntry } from './plan';
+import { buildKey, buildReport, buildValues, parseArgs, rejectFlags, selectEntry } from './plan';
 
 describe('parseArgs', () => {
     it('takes the command from the first positional', () => {
@@ -146,8 +146,13 @@ describe('buildValues', () => {
         expect(buildValues({})).toEqual({ checked_on: CHECKED_ON });
     });
 
-    it('rejects an unknown field', () => {
-        expect(() => buildValues({ nmae: '道の駅あ' })).toThrow('Unknown field: --nmae');
+    // --report is offered among the valid options although it is not a field: a
+    // typo in it lands here too, and an option missing from the list reads as one
+    // that does not exist.
+    it('rejects an unknown field, listing every option update takes', () => {
+        expect(() => buildValues({ nmae: '道の駅あ' })).toThrow(
+            /Unknown field: --nmae\. Valid fields: .*--memo, --report/
+        );
     });
 
     it('passes through a rename', () => {
@@ -196,5 +201,33 @@ describe('buildValues', () => {
         expect(() => buildValues({ lat: 'north' })).toThrow('Invalid --lat: north');
         expect(() => buildValues({ lng: 'east' })).toThrow('Invalid --lng: east');
         expect(buildValues({ lat: '', lng: '' })).toEqual({ lat: '', lng: '', checked_on: CHECKED_ON });
+    });
+
+    // buildReport takes it, and the sheet has no column to write it to.
+    it('leaves the report out of the values instead of rejecting it as unknown', () => {
+        expect(buildValues({ status: '開業', report: 'city が誤り' })).toEqual({
+            status: '開業',
+            checked_on: CHECKED_ON,
+        });
+    });
+});
+
+describe('buildReport', () => {
+    it('passes the report through', () => {
+        expect(buildReport({ report: 'city が誤り（実際は◯◯町）' })).toBe('city が誤り（実際は◯◯町）');
+    });
+
+    it('trims it, as the sheet values are trimmed', () => {
+        expect(buildReport({ report: ' 出典 URL が切れている ' })).toBe('出典 URL が切れている');
+    });
+
+    it('has nothing to report when the option is absent', () => {
+        expect(buildReport({ status: '開業' })).toBeUndefined();
+    });
+
+    // Unlike a field, a report is not stored anywhere, so an empty one would be
+    // posted to Slack as a blank line and then be gone.
+    it.each(['', '  '])('rejects the empty report %j rather than posting it', (report) => {
+        expect(() => buildReport({ report })).toThrow('Invalid --report');
     });
 });

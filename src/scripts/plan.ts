@@ -3,6 +3,7 @@
 //   npm run --silent plan:list
 //   npm run --silent plan:show -- "道の駅◯◯" 福井県
 //   npm run plan:update -- "道の駅◯◯" 福井県 --status=開業 --date=2026-04-01
+//   npm run plan:update -- "道の駅◯◯" 福井県 --report="city が誤り（実際は◯◯町）"
 //
 // `list` and `show` take no filtering or formatting options; jq does that far
 // better than any set of flags would. Their stdout is kept to JSON alone, and
@@ -51,7 +52,7 @@ Usage:
   npm run plan:update -- "<name>" <prefecture> [--name=<new name>]
                                                [--status=<status>] [--date=<text>]
                                                [--lat=<number>] [--lng=<number>]
-                                               [--memo=<text>]
+                                               [--memo=<text>] [--report=<text>]
 
 Commands:
   list     Print every entry as JSON. Filter it with jq:
@@ -70,12 +71,20 @@ Commands:
            them in the spreadsheet.
            Given no fields at all, it records that the entry was researched
            and nothing about it changed.
+           What the update changed is announced on Slack, along with --report
+           if one is given.
 
 Status values: ${STATUSES.join(', ')}
 Date: free text, as precise as is known -- 2026-04-01, 2026-04, 2026, 2026夏
 Checked on: every update stamps checked_on with today in Japan, the day the
             entry was researched. No flag sets it; clear it by emptying the
             cell in the spreadsheet.
+Report: --report says what the research turned up that no column can hold, for
+        whoever curates the sheet to decide on. It is posted to Slack with
+        whatever the update changed and is written nowhere, so make it a
+        sentence that stands on its own.
+        An update carrying only a report is a normal one; an update carrying
+        neither a report nor a change is silent on Slack.
 
 Requires PLAN_API_URL in .env -- see .env.example.
 `;
@@ -186,8 +195,15 @@ export function buildValues(flags: Record<string, string>): Record<string, strin
     const values: Record<string, string> = { checked_on: todayInJapan() };
 
     for (const [field, value] of Object.entries(flags)) {
+        // Not a column of the sheet, and not written; buildReport takes it.
+        if (field === 'report') {
+            continue;
+        }
         if (!UPDATABLE_FIELDS.includes(field)) {
-            const valid = UPDATABLE_FIELDS.map((f) => `--${f}`).join(', ');
+            // --report is listed too, even though it is not a field: a typo in it
+            // lands here, and an option missing from the list reads as one that
+            // does not exist -- enough for a caller to drop the report entirely.
+            const valid = [...UPDATABLE_FIELDS, 'report'].map((f) => `--${f}`).join(', ');
             throw new Error(`Unknown field: --${field}. Valid fields: ${valid}`);
         }
         // No column of the sheet is meant to carry surrounding whitespace, so
@@ -198,6 +214,25 @@ export function buildValues(flags: Record<string, string>): Record<string, strin
     }
 
     return values;
+}
+
+// What to say about the entry beyond the values, if anything. An empty report is
+// refused rather than posted as a blank line, since nothing holds it afterwards to
+// notice it by; leaving the option out is how a research pass with nothing to
+// raise is expressed.
+export function buildReport(flags: Record<string, string>): string | undefined {
+    if (!('report' in flags)) {
+        return undefined;
+    }
+
+    const report = flags.report.trim();
+    if (report === '') {
+        throw new Error(
+            'Invalid --report: the report must not be empty. Leave it out to record only that the entry ' +
+                'was researched.'
+        );
+    }
+    return report;
 }
 
 // Neither read command takes options. An option here is either a filter, which
@@ -250,8 +285,9 @@ async function runShow(parsed: ParsedArgs): Promise<void> {
 async function runUpdate(parsed: ParsedArgs): Promise<void> {
     const { name, pref } = buildKey(parsed.positionals, 'update');
     const values = buildValues(parsed.flags);
+    const report = buildReport(parsed.flags);
 
-    const result = await update(name, pref, values);
+    const result = await update(name, pref, values, report);
     if (!result.updated) {
         throw new Error(`Update error: ${name} (${pref}) (matched: ${result.matched})`);
     }
