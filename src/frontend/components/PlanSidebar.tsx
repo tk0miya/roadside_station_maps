@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Category, PlannedStation } from '../types/plan';
 import { CATEGORIES, categoryOf } from '../types/plan';
 import { CATEGORY_ICON } from './PlanMarkers';
@@ -17,7 +18,27 @@ interface PlanSidebarProps {
 // Left panel listing stations grouped by category, mirroring the Google My Maps
 // sidebar: each category has a show/hide checkbox and, when visible, the list of
 // its stations. Clicking an item focuses it on the map.
+//
+// The panel collapses to a narrow strip to give the map the full width. The
+// collapsed/expanded state is component-local and not persisted: nothing else
+// depends on it, and reopening is a single click.
 export function PlanSidebar({ stations, visibleCategories, selected, onToggle, onSelect }: PlanSidebarProps) {
+    const [open, setOpen] = useState(true);
+
+    if (!open) {
+        return (
+            <button
+                type="button"
+                className="plan-sidebar-reopen"
+                title="サイドバーを開く"
+                aria-label="サイドバーを開く"
+                onClick={() => setOpen(true)}
+            >
+                »
+            </button>
+        );
+    }
+
     const byCategory = new Map<Category, PlannedStation[]>();
     for (const c of CATEGORIES) {
         byCategory.set(c, []);
@@ -32,6 +53,15 @@ export function PlanSidebar({ stations, visibleCategories, selected, onToggle, o
                 <a href={SHEET_EDIT_URL} target="_blank" rel="noopener noreferrer">
                     道の駅 整備計画
                 </a>
+                <button
+                    type="button"
+                    className="plan-sidebar-collapse"
+                    title="サイドバーを閉じる"
+                    aria-label="サイドバーを閉じる"
+                    onClick={() => setOpen(false)}
+                >
+                    «
+                </button>
             </div>
             {CATEGORIES.map((category) => {
                 const items = byCategory.get(category) ?? [];

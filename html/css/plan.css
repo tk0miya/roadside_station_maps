@@ -38,11 +38,54 @@ body,
     border-right: 1px solid #e0e0e0;
 }
 
+/* Sticks to the top so the collapse button stays reachable while the station
+   list below it scrolls. */
 .plan-sidebar-title {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     padding: 14px 16px;
+    background: #ffffff;
     font-size: 16px;
     font-weight: bold;
     border-bottom: 1px solid #eeeeee;
+}
+
+.plan-sidebar-collapse,
+.plan-sidebar-reopen {
+    flex: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #555;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.plan-sidebar-collapse {
+    padding: 0 2px;
+}
+
+/* Collapsed sidebar: a narrow full-height strip holding the reopen arrow. */
+.plan-sidebar-reopen {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    width: 26px;
+    height: 100%;
+    /* Line the arrow up with the title bar it replaces. */
+    padding: 14px 0 0;
+    box-sizing: border-box;
+    background: #ffffff;
+    border-right: 1px solid #e0e0e0;
+}
+
+.plan-sidebar-collapse:hover,
+.plan-sidebar-reopen:hover {
+    color: #000000;
 }
 
 .plan-cat {
