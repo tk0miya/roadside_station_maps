@@ -3100,6 +3100,46 @@
         "checked_on": "2026-01-01"
     },
     {
+        "name": "道の駅 公方の郷なかがわ (リニューアル)",
+        "pref": "徳島県",
+        "city": "阿南市",
+        "status": "開業",
+        "date": "2026-04-11",
+        "lat": 33.9529323,
+        "lng": 134.6678143,
+        "urls": [
+            {
+                "title": "令和７年度「公共施設の再編・最適化」の主な検討状況について",
+                "url": "https://www.city.anan.tokushima.jp/docs/2025120200015/"
+            },
+            {
+                "title": "阿南市の道の駅「公方の郷なかがわ」、11日にリニューアル　産直市に鮮魚などのコーナー新設",
+                "url": "https://www.topics.or.jp/articles/-/1413196"
+            },
+            {
+                "title": "道の駅『公方の郷なかがわ』",
+                "url": "https://www.city.anan.tokushima.jp/docs/2010120900096/"
+            }
+        ],
+        "checked_on": "2026-08-12"
+    },
+    {
+        "name": "道の駅 阿南市",
+        "pref": "徳島県",
+        "city": "阿南市",
+        "status": "凍結",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "新「道の駅」計画凍結　阿南市",
+                "url": "https://www.topics.or.jp/articles/-/325644"
+            }
+        ],
+        "checked_on": "2026-08-12"
+    },
+    {
         "name": "道の駅 箸蔵",
         "pref": "徳島県",
         "city": "三好市",
