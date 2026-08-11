@@ -126,7 +126,7 @@ data/         生成データ（CSV / GeoJSON）
 
 ### 開発計画スプレッドシート API（Google Apps Script）
 
-開発計画マップ（`html/plan.html`）のデータ元は人手管理の Google スプレッドシート。`gas/` はそのスプレッドシートに紐づく GAS プロジェクトで、**一覧取得（`doGet`）と更新（`doPost`）**を Web App として公開する。行の追加・削除はスプレッドシート上で人手が行うため公開しない。
+開発計画マップ（`html/plan.html`）のデータ元は人手管理の Google スプレッドシート。`gas/` はそのスプレッドシートに紐づく GAS プロジェクトで、**一覧取得（`doGet`）と更新（`doPost`、Slack 通知つき）**を Web App として公開する。行の追加・削除はスプレッドシート上で人手が行うため公開しない。
 
 **読み取り経路は 2 つある**:
 
@@ -144,6 +144,8 @@ data/         生成データ（CSV / GeoJSON）
 - **エントリーの特定**: `name` 列と `pref` 列の完全一致。`name` は一意ではない（「道の駅 川崎町」が福岡県と宮城県にある）ので、`pref` はキーの片割れとして必須にする。**一致が 1 件のときだけ書き込む** — 複数一致で先頭行を書くと取り違えに気づけないため
 - **`Content-Type: text/plain`**: CORS プリフライトを避けるため（Apps Script は preflight に応答しない）
 - **公開範囲**: `ANYONE_ANONYMOUS`。個人利用前提の割り切りなので URL は共有しない
+- **`doPost` は書き込みに続けて Slack に投稿する**（`gas/slack.js`）: スプレッドシートを見ていない人に、台帳が動いたことと調査で分かったことが届く経路が他にないため。投稿は GAS 側で行う — Incoming Webhook URL を調査を走らせる環境（`npm run plan` と Claude Code）に置かないため、スクリプトプロパティ `SLACK_WEBHOOK_URL` が唯一の置き場所になる（リポジトリにも `.env` にも増えない）
+- **`report` は Slack にだけ流す**: 調査の結果にはシートに書ける値（`values`）と書けないもの（`pref` / `city` の誤り、リンク切れ、却下された提案など）がある。どちらも同じ調査から出るので、報告用の別コマンドを作らず `update` に添える。シートには残らないので、人が対応しなければ次の周回で再度報告される
 - **Biome**: `gas/` は GAS のグローバルスコープ前提（`export` を持たない）のため `biome.json` の `overrides` で `noUnusedVariables` を無効化
 
 リクエスト・レスポンス:
@@ -153,11 +155,12 @@ GET https://script.google.com/macros/s/xxx/exec
 → [{ "name": "道の駅◯◯", "pref": "福井県", "status": "計画中", "date": "", "lat": 36.1, ... }, ...]
 
 POST https://script.google.com/macros/s/xxx/exec   (Content-Type: text/plain)
-{ "name": "道の駅◯◯", "pref": "福井県", "values": { "status": "開業", "date": "2026-04-01" } }
+{ "name": "道の駅◯◯", "pref": "福井県", "values": { "status": "開業", "date": "2026-04-01" },
+  "report": "city が誤り（実際は◯◯町）" }
 → { "updated": true, "row": 12, "matched": 1 }
 ```
 
-`name` と `pref` は両方必須。`values` に含めたフィールドのみ上書きし、含めなかったフィールドは現在値を保つ。`values.name` を含めるとエントリーを改名する。`matched` は一致件数で、1 件でなければ何も書かず `{ "updated": false, "row": null, "matched": <件数> }` を返す。
+`name` と `pref` は両方必須。`values` に含めたフィールドのみ上書きし、含めなかったフィールドは現在値を保つ。`values.name` を含めるとエントリーを改名する。`matched` は一致件数で、1 件でなければ何も書かず `{ "updated": false, "row": null, "matched": <件数> }` を返す。`report` は任意。
 
 ### 開発計画データ CLI（`npm run plan:*`）
 
@@ -168,6 +171,7 @@ npm run --silent plan:list | jq -r '.[] | select(.status == "計画中") | .name
 npm run --silent plan:show -- "道の駅◯◯" 福井県
 npm run plan:update -- "道の駅◯◯" 福井県 --status=開業 --date=2026-04-01
 npm run plan:update -- "道の駅◯◯（仮称）" 福井県 --name=道の駅◯◯
+npm run plan:update -- "道の駅◯◯" 福井県 --report="city が誤り（実際は◯◯町）"
 ```
 
 - **`list` / `show` は JSON を出すだけ**で絞り込み・整形のオプションを持たない。`jq` のほうが上手くやれるため
@@ -177,6 +181,7 @@ npm run plan:update -- "道の駅◯◯（仮称）" 福井県 --name=道の駅�
 - **`date` は検証しない**: シートは判明している粒度をそのまま記録するため、`2026-04-01` / `2026-04` / `2026` / `2026夏` のいずれもありうる。単一のパターンに押し込められない
 - **`checked_on` は `update` が自動で書く**: その駅を最後に調査した日を機械が記録する列で、人が育てた他の列とは持ち主が違う。`plan:update` はすべて調査の一環なので、成功するたび CLI が JST の当日を書き、フラグからは設定できない。調査は古い順に少しずつ進める（`.claude/skills/michi-no-eki-plan-research/SKILL.md`）ため**この列は並び替えキー**で、書き忘れるとキューが進まなくなる
 - **フィールド無指定の `update` が有効**: 「調査したが変更はなかった」の記録になる。`checked_on` を必ず書くので、空更新が何も書かずに成功する余地はない
+- **`--report` は列ではない**: 上記の Slack 通知に添える報告で、シートには書かない。**空の `--report=` は弾く** — どこにも保存されないので、空文字を送れば空行が投稿されて消える。報告することがなければオプション自体を付けない
 - **`pref` / `city` は更新対象外**: エントリーを同定・配置する列で、進捗を表す列ではない（`city` は地図の市区町村代表点フォールバックの引き当てに使う）。修正は文脈の見えるスプレッドシート上で行う
 - **`PLAN_API_URL`**: `/exec` の URL。`.env`（gitignore 済み、`.env.example` を参照）に置き、`dotenv` で読む
 

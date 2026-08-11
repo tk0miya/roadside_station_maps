@@ -62,6 +62,8 @@ describe('plan-api', () => {
     });
 
     describe('update', () => {
+        // The expected body has no `report` key at all -- that absence is the
+        // assertion.
         it('POSTs the key and values as text/plain', async () => {
             fetchMock.mockResolvedValueOnce(jsonResponse({ updated: true, row: 12, matched: 1 }));
 
@@ -77,6 +79,24 @@ describe('plan-api', () => {
                         name: '道の駅 川崎町',
                         pref: '福岡県',
                         values: { status: '開業', date: '2026-04-01' },
+                    }),
+                })
+            );
+        });
+
+        it('sends a report alongside the values when there is one', async () => {
+            fetchMock.mockResolvedValueOnce(jsonResponse({ updated: true, row: 12, matched: 1 }));
+
+            await update('道の駅あ', '福井県', { checked_on: '2026-08-11' }, 'city が誤り');
+
+            expect(fetchMock).toHaveBeenCalledWith(
+                API_URL,
+                expect.objectContaining({
+                    body: JSON.stringify({
+                        name: '道の駅あ',
+                        pref: '福井県',
+                        values: { checked_on: '2026-08-11' },
+                        report: 'city が誤り',
                     }),
                 })
             );
