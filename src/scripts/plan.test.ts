@@ -11,6 +11,7 @@ import {
     coordinatePatch,
     coordinateWarning,
     describeChange,
+    describeQueue,
     describeRecord,
     findRecord,
     insertRecord,
@@ -21,8 +22,7 @@ import {
     replaceRecord,
     setFields,
     todayInJst,
-    updateUrl,
-} from './plan-edit';
+} from './plan';
 
 const TODAY = '2026-08-12';
 
@@ -115,50 +115,6 @@ describe('addUrl', () => {
     it('rejects a blank title, which the map would draw as an empty link', () => {
         expect(() => addUrl(record(), { title: '  ', url: 'https://example.jp/news' }, TODAY)).toThrow(/no title/);
     });
-
-    it('refuses an eleventh source', () => {
-        const full = record({
-            urls: Array.from({ length: 10 }, (_, i) => ({ title: `出典${i}`, url: `https://example.jp/${i}` })),
-        });
-        expect(() => addUrl(full, { title: '新しい記事', url: 'https://example.jp/new' }, TODAY)).toThrow(
-            /already cites 10 sources/
-        );
-    });
-});
-
-describe('updateUrl', () => {
-    it('replaces a dead source with its successor', () => {
-        const updated = updateUrl(
-            record(),
-            'https://example.jp/plan',
-            { title: '開業しました', to: 'https://example.jp/opened' },
-            TODAY
-        );
-        expect(updated.urls).toEqual([{ title: '開業しました', url: 'https://example.jp/opened' }]);
-    });
-
-    it('sets a title without touching the url', () => {
-        const bare = record({ urls: [{ title: 'https://example.jp/plan', url: 'https://example.jp/plan' }] });
-        expect(updateUrl(bare, 'https://example.jp/plan', { title: '整備基本計画' }, TODAY).urls).toEqual([
-            { title: '整備基本計画', url: 'https://example.jp/plan' },
-        ]);
-    });
-
-    it('rejects a replacement the record already cites', () => {
-        const two = record({
-            urls: [
-                { title: '整備計画', url: 'https://example.jp/plan' },
-                { title: '開業しました', url: 'https://example.jp/opened' },
-            ],
-        });
-        expect(() => updateUrl(two, 'https://example.jp/plan', { to: 'https://example.jp/opened' }, TODAY)).toThrow(
-            /already cites/
-        );
-    });
-
-    it('fails on a url the record does not cite', () => {
-        expect(() => updateUrl(record(), 'https://example.jp/plan/', { title: 'x' }, TODAY)).toThrow(/cites no source/);
-    });
 });
 
 describe('removeUrl', () => {
@@ -174,8 +130,15 @@ describe('removeUrl', () => {
         ]);
     });
 
-    it('refuses to leave a record with no source', () => {
-        expect(() => removeUrl(record(), 'https://example.jp/plan', TODAY)).toThrow(/no source/);
+    // A source is swapped by removing it and adding its successor, so the
+    // list is allowed to be empty in between; plan-data.test.ts checks the
+    // count once, on the finished file.
+    it('allows the last source to be removed', () => {
+        expect(removeUrl(record(), 'https://example.jp/plan', TODAY).urls).toEqual([]);
+    });
+
+    it('fails on a url the record does not cite', () => {
+        expect(() => removeUrl(record(), 'https://example.jp/plan/', TODAY)).toThrow(/cites no source/);
     });
 });
 
@@ -206,8 +169,10 @@ describe('buildRecord', () => {
         ]);
     });
 
-    it('refuses a record with no source', () => {
-        expect(() => buildRecord({ ...fields, urls: [] })).toThrow(/at least one source/);
+    it('rejects a source the map could not link', () => {
+        expect(() => buildRecord({ ...fields, urls: [{ title: 'x', url: 'ftp://example.jp' }] })).toThrow(
+            /not an http/
+        );
     });
 });
 
@@ -305,34 +270,22 @@ describe('coordinateWarning', () => {
 describe('describeChange', () => {
     it('reports changed fields and moved sources', () => {
         const before = record();
-        const after = updateUrl(
-            setFields(before, { status: '登録済み' }, TODAY),
-            'https://example.jp/plan',
-            { to: 'https://example.jp/registered' },
+        const swapped = addUrl(
+            removeUrl(setFields(before, { status: '登録済み' }, TODAY), 'https://example.jp/plan', TODAY),
+            { title: '登録されました', url: 'https://example.jp/registered' },
             TODAY
         );
-        expect(describeChange(before, after)).toEqual([
+        expect(describeChange(before, swapped)).toEqual([
             '  status     "計画中" -> "登録済み"',
             '  checked_on "2026-06-02" -> "2026-08-12"',
-            '  + 整備計画  https://example.jp/registered',
+            '  + 登録されました  https://example.jp/registered',
             '  - 整備計画  https://example.jp/plan',
-        ]);
-    });
-
-    // Retitling a bare link is a documented step of the source review, and it
-    // moves nothing else, so it needs its own marker.
-    it('marks a source whose title changed', () => {
-        const before = record({ urls: [{ title: 'https://example.jp/plan', url: 'https://example.jp/plan' }] });
-        const after = updateUrl(before, 'https://example.jp/plan', { title: '整備基本計画' }, TODAY);
-        expect(describeChange(before, after)).toEqual([
-            '  checked_on "2026-06-02" -> "2026-08-12"',
-            '  ~ 整備基本計画  https://example.jp/plan',
         ]);
     });
 });
 
 describe('describeRecord', () => {
-    it('lists every field of a new record', () => {
+    it('lists every field, without the markers of a change summary', () => {
         expect(describeRecord(record())).toEqual([
             '  name       "道の駅 石川町"',
             '  pref       "福島県"',
@@ -342,8 +295,31 @@ describe('describeRecord', () => {
             '  lat        null',
             '  lng        null',
             '  checked_on "2026-06-02"',
-            '  + 整備計画  https://example.jp/plan',
+            '  urls       整備計画  https://example.jp/plan',
         ]);
+    });
+});
+
+describe('describeQueue', () => {
+    const queue = [
+        record({ name: '道の駅 A', status: '計画中', checked_on: '2026-01-01' }),
+        record({ name: '道の駅 B', status: '開業', checked_on: '2020-01-01' }),
+        record({ name: '道の駅 C', status: '凍結', checked_on: '2026-01-01' }),
+        record({ name: '道の駅 D', status: '中止', checked_on: '2019-01-01' }),
+        record({ name: '道の駅 E', status: '登録済み', checked_on: '2026-05-05' }),
+    ];
+
+    // 開業 and 中止 are finished stories, so their older stamps must not pull
+    // them to the front of a queue they are not in.
+    it('lists the oldest page of the statuses that can still move', () => {
+        const lines = describeQueue(queue, 2);
+        expect(lines.slice(0, 2).map((line) => line.split('\t')[4])).toEqual(['道の駅 A', '道の駅 C']);
+    });
+
+    // The totals are what tell the skill whether another session is worth
+    // running, so they cover the whole queue rather than the page.
+    it('counts the whole queue, not just the page', () => {
+        expect(describeQueue(queue, 2).at(-1)).toBe('3 queued; oldest checked_on 2026-01-01, shared by 2');
     });
 });
 

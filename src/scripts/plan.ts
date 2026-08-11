@@ -1,29 +1,34 @@
-// Writer for the development-plan master (`data/plans.json`).
+// Reader and writer for the development-plan master (`data/plans.json`).
 //
-// The research skill edits the master one station at a time, and used to do it
-// with jq. jq reads the file well, but three of the skill's rules could only be
-// followed by remembering them:
+// One module behind seven npm scripts (`plan:list`, `plan:show`, `plan:edit`,
+// `plan:touch`, `plan:add`, `plan:url:add`, `plan:url:rm`); each passes its verb
+// as the first argument, so the research skill types a command name rather than
+// a subcommand. Every verb but `plan:list` takes the station as two positional
+// arguments -- the name and prefecture it is filed under today -- and every
+// option carries a new value for the field it names.
 //
-//   - a `select` (or a `.url ==` match) that hits nothing still exits 0 and
-//     rewrites the file unchanged, so a mistyped key looks exactly like a
-//     successful edit
+// The master was edited with jq before. jq reads the file well, but three of
+// the skill's rules could only be followed by remembering them:
+//
+//   - a `select` that hits nothing still exits 0 and rewrites the file
+//     unchanged, so a mistyped station name looks exactly like a successful
+//     edit
 //   - `checked_on` is deliberately not enforced by CI (see CLAUDE.md), and a
 //     station that misses its stamp is handed out by the queue again
 //   - a new record's position needs `data/cities.json`, which jq cannot reach
 //     from the expression, so records were appended and moved by hand
 //
-// This CLI makes the first two structural -- every operation matches exactly
-// one record or exits non-zero, and every write stamps `checked_on` -- and does
-// the third itself.
+// This makes the first two structural -- every verb resolves exactly one record
+// or exits non-zero, and every write stamps `checked_on` -- and does the third
+// itself. `checked_on` is not a field any verb accepts: the stamp is a
+// consequence of writing, not something the writer decides.
 //
-// It deliberately does not read. Listing the queue, counting what is left and
-// dumping a record stay jq's job: those queries change shape every time, and a
-// fixed set of subcommands would only cover some of them.
-//
-// The checks below restate rules `src/frontend/plan-data.test.ts` also owns,
-// and that duplication is deliberate: the check there is what guards the file
-// however it was edited, while these exist to fail *before* the write, with a
-// message naming the station. Changing a rule means changing both.
+// What it does not check is how many sources a record ends up with. A record
+// holds one to ten, and a source is replaced by removing it before adding its
+// successor -- so a record legitimately passes through zero mid-edit, and
+// enforcing the range on every write would block the replacement. The count is
+// left to the writer and verified once, by `src/frontend/plan-data.test.ts`,
+// on the finished file.
 
 import * as fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -32,6 +37,13 @@ import { createPlanRecordComparator, knownPrefectures } from '../lib/plan-record
 
 const PLANS_FILENAME = 'data/plans.json';
 const CITIES_FILENAME = 'data/cities.json';
+
+// The statuses a station can still move away from, and so the ones worth
+// re-checking. 開業 and 中止 are finished stories. 凍結 is not (see `Status`), and
+// research is the only thing that would notice a plan resuming, so dropping it
+// from the queue would remove the only path by which it ever comes back.
+const QUEUED = ['登録済み', '計画中', '凍結'];
+const QUEUE_PAGE = 10;
 
 // The scalar keys in record order, for the change summary. Not the record's key
 // order -- `urls` sits between `lng` and `checked_on` and is diffed separately.
@@ -53,9 +65,6 @@ export function todayInJst(now: Date): string {
     }).format(now);
 }
 
-// The ceiling the master keeps on sources; why it exists is in CLAUDE.md.
-const MAX_URLS = 10;
-
 function assertLink(link: PlanUrl): void {
     if (!/^https?:\/\//i.test(link.url)) {
         throw new Error(`not an http(s) url: ${link.url}`);
@@ -67,9 +76,9 @@ function assertLink(link: PlanUrl): void {
     }
 }
 
-// Locates the one record an operation applies to. Anything other than a single
-// hit is an error: zero means the key is wrong (a renamed station is still
-// filed under its old name), and more than one should be impossible.
+// Locates the one record a command applies to. Anything other than a single hit
+// is an error: zero means the key is wrong (a renamed station is still filed
+// under its old name), and more than one should be impossible.
 export function findRecord(records: PlanRecord[], name: string, pref: string): number {
     const found = records.flatMap((record, index) => (record.name === name && record.pref === pref ? [index] : []));
     if (found.length === 0) {
@@ -111,63 +120,21 @@ export function addUrl(record: PlanRecord, link: PlanUrl, today: string): PlanRe
     if (record.urls.some((existing) => existing.url === link.url)) {
         throw new Error(`${label(record)} already cites ${link.url}`);
     }
-    // Which of the ten to drop is a judgement the skill makes, not this tool --
-    // so the ceiling is refused rather than enforced by evicting something.
-    if (record.urls.length >= MAX_URLS) {
-        throw new Error(
-            `${label(record)} already cites ${MAX_URLS} sources; swap the weakest one out with url-set ` +
-                'instead of adding an eleventh'
-        );
-    }
     return { ...record, urls: [...record.urls, { title: link.title, url: link.url }], checked_on: today };
 }
 
-// Covers both replacing a dead source with its successor (`to`) and copying a
-// page's heading onto a link whose title is still its url (`title`).
-export function updateUrl(
-    record: PlanRecord,
-    target: string,
-    patch: { title?: string; to?: string },
-    today: string
-): PlanRecord {
-    requireCitedUrl(record, target);
-    if (patch.to !== undefined && patch.to !== target && record.urls.some((link) => link.url === patch.to)) {
-        throw new Error(`${label(record)} already cites ${patch.to}`);
-    }
-    const urls = record.urls.map((link) =>
-        link.url === target ? { title: patch.title ?? link.title, url: patch.to ?? link.url } : link
-    );
-    // Checked on the result rather than the patch, so a swap that keeps the
-    // old title is held to the same rules as one that replaces it.
-    for (const link of urls) {
-        assertLink(link);
-    }
-    return { ...record, urls, checked_on: today };
-}
-
+// The match is exact, so a url retyped instead of copied hits nothing -- the
+// same failure as a mistyped station name, and worth the same error. Emptying
+// the list is allowed: a source is replaced by removing it and adding its
+// successor, and the count is checked on the finished file.
 export function removeUrl(record: PlanRecord, target: string, today: string): PlanRecord {
-    requireCitedUrl(record, target);
-    // The zero-source guard from the skill: a record with no source left states
-    // a date and a status nothing backs. An unreachable url can still be pulled
-    // out of a web archive, so it is the better of the two.
-    if (record.urls.length === 1) {
-        throw new Error(
-            `removing ${target} would leave ${label(record)} with no source; keep it and ` +
-                'note the dead link in docs/plan-reports.md'
-        );
-    }
-    return { ...record, urls: record.urls.filter((link) => link.url !== target), checked_on: today };
-}
-
-// The match is exact, so a url retyped instead of copied silently hits nothing
-// -- the same failure as a mistyped station name, and worth the same error.
-function requireCitedUrl(record: PlanRecord, target: string): void {
     if (!record.urls.some((link) => link.url === target)) {
         throw new Error(
-            `${label(record)} cites no source with url ${target}; copy the url from the record ` +
+            `${label(record)} cites no source with url ${target}; copy the url from plan:show ` +
                 '(the match is exact, and query strings make near-misses easy)'
         );
     }
+    return { ...record, urls: record.urls.filter((link) => link.url !== target), checked_on: today };
 }
 
 export function buildRecord(fields: {
@@ -186,12 +153,6 @@ export function buildRecord(fields: {
     }
     if (!(STATUSES as string[]).includes(fields.status)) {
         throw new Error(`unknown status ${fields.status}; expected one of ${STATUSES.join(' / ')}`);
-    }
-    if (fields.urls.length === 0) {
-        throw new Error('a new record needs at least one source; the master does not hold unsourced stations');
-    }
-    if (fields.urls.length > MAX_URLS) {
-        throw new Error(`a record holds at most ${MAX_URLS} sources`);
     }
     for (const link of fields.urls) {
         assertLink(link);
@@ -265,12 +226,13 @@ export function coordinateWarning(record: PlanRecord, cities: City[]): string | 
     );
 }
 
-// Every field of a new record. `describeChange` would show none of them -- a
-// new record has no previous value to differ from -- and the added station is
-// exactly where the values are worth reading back.
+// Every field of a record, for `show` and for a record `add` just created --
+// `describeChange` would show none of the latter's fields, since a new record
+// has no previous value to differ from. Sources are listed without the +/- of a
+// change summary, because nothing here moved.
 export function describeRecord(record: PlanRecord): string[] {
     const lines = SCALAR_KEYS.map((key) => `  ${key.padEnd(10)} ${JSON.stringify(record[key])}`);
-    return [...lines, ...record.urls.map((link) => `  + ${link.title}  ${link.url}`)];
+    return [...lines, ...record.urls.map((link) => `  urls       ${link.title}  ${link.url}`)];
 }
 
 // What changed, so the edit can be checked without reading the whole record.
@@ -283,12 +245,10 @@ export function describeChange(before: PlanRecord, after: PlanRecord): string[] 
             lines.push(`  ${key.padEnd(10)} ${JSON.stringify(before[key])} -> ${JSON.stringify(after[key])}`);
         }
     }
-    const seen = new Map(before.urls.map((link) => [link.url, link.title]));
+    const seen = new Set(before.urls.map((link) => link.url));
     for (const link of after.urls) {
         if (!seen.has(link.url)) {
             lines.push(`  + ${link.title}  ${link.url}`);
-        } else if (seen.get(link.url) !== link.title) {
-            lines.push(`  ~ ${link.title}  ${link.url}`);
         }
     }
     const kept = new Set(after.urls.map((link) => link.url));
@@ -298,6 +258,30 @@ export function describeChange(before: PlanRecord, after: PlanRecord): string[] 
         }
     }
     return lines;
+}
+
+// The oldest page of the queue, plus how big the queue is. The totals matter
+// as much as the page: one session clears ten, so they are how the skill
+// reports whether another session is worth running.
+export function describeQueue(records: PlanRecord[], page: number): string[] {
+    // Sorted by stamp alone, and stably, so records sharing a stamp keep the
+    // order the file has them in (`plan-record-order.ts`). That fallback is not
+    // a corner case: a session stamps a whole page with one date, so stations
+    // tie in page-sized groups and the tie is what picks the next page.
+    const queued = records
+        .filter((record) => QUEUED.includes(record.status))
+        .sort((a, b) => (a.checked_on < b.checked_on ? -1 : a.checked_on > b.checked_on ? 1 : 0));
+    if (queued.length === 0) {
+        return ['nothing queued'];
+    }
+    const oldest = queued[0].checked_on;
+    const atOldest = queued.filter((record) => record.checked_on === oldest).length;
+    const rows = queued
+        .slice(0, page)
+        .map((record) =>
+            [record.checked_on, record.status, record.pref, record.city, record.name, record.date].join('\t')
+        );
+    return [...rows, '', `${queued.length} queued; oldest checked_on ${oldest}, shared by ${atOldest}`];
 }
 
 type Flags = Record<string, string>;
@@ -314,9 +298,7 @@ export function parseFlags(argv: string[], allowed: string[]): Flags {
         }
         const name = flag.slice(2);
         if (!allowed.includes(name)) {
-            throw new Error(
-                `unknown flag ${flag} here; this subcommand takes ${allowed.map((f) => `--${f}`).join(' ')}`
-            );
+            throw new Error(`unknown flag ${flag} here; this command takes ${allowed.map((f) => `--${f}`).join(' ')}`);
         }
         if (name in flags) {
             throw new Error(`${flag} given twice`);
@@ -398,34 +380,64 @@ function writePlans(records: PlanRecord[]): void {
     fs.renameSync(temporary, PLANS_FILENAME);
 }
 
-const USAGE = `usage: npm run plan:edit -- <subcommand> [flags]
+const USAGE = `usage: npm run plan:<verb> -- <name> <prefecture> [options]
 
-  set      --name N --pref P [--status S] [--date D] [--city C]
-           [--new-name N] [--new-pref P] [--lat X --lng Y]   (--lat null --lng null clears them)
-  touch    --name N --pref P
-  url-add  --name N --pref P --title T --url U
-  url-set  --name N --pref P --url U [--title T] [--to NEW-URL]
-  url-rm   --name N --pref P --url U
-  add      --name N --pref P --city C --status S --title T --url U [--date D] [--lat X --lng Y]
+  plan:list                          the oldest page of the research queue
+  plan:show    <name> <pref>         one record, with its sources
+  plan:edit    <name> <pref>         [--name N] [--pref P] [--city C] [--status S]
+                                     [--date D] [--lat X --lng Y]
+  plan:touch   <name> <pref>         record that it was checked, nothing else
+  plan:add     <name> <pref>         --city C --status S --title T --url U
+                                     [--date D] [--lat X --lng Y]
+  plan:url:add <name> <pref>         --title T --url U
+  plan:url:rm  <name> <pref>         --url U
 
-Every subcommand stamps checked_on with today's date in JST.
-Reading the master (the queue, a record's sources) stays jq's job.`;
+The two positional arguments are the name and prefecture the station is filed
+under now; every option carries a new value. Writing stamps checked_on.`;
 
-const SELECTORS = ['name', 'pref'];
+// Options that name a field carry its new value, so the flag names are the
+// field names -- `--name` renames, `--pref` refiles.
+const EDIT_FLAGS = ['name', 'pref', 'city', 'status', 'date', 'lat', 'lng'];
 
 function run(argv: string[]): void {
-    const [subcommand, ...rest] = argv;
-    const today = todayInJst(new Date());
+    const [verb, ...rest] = argv;
     const records = readJson<PlanRecord[]>(PLANS_FILENAME);
+
+    if (verb === 'list') {
+        parseFlags(rest, []);
+        for (const line of describeQueue(records, QUEUE_PAGE)) {
+            console.log(line);
+        }
+        return;
+    }
+
+    const [name, pref, ...options] = rest;
+    if (!verb || !name || !pref) {
+        throw new Error(`${verb ? 'missing the station name and prefecture' : 'no command'}\n\n${USAGE}`);
+    }
+
+    if (verb === 'show') {
+        parseFlags(options, []);
+        const record = records[findRecord(records, name, pref)];
+        console.log(label(record));
+        for (const line of describeRecord(record)) {
+            console.log(line);
+        }
+        return;
+    }
+
+    const today = todayInJst(new Date());
     const cities = readJson<City[]>(CITIES_FILENAME);
 
-    if (subcommand === 'add') {
-        const flags = parseFlags(rest, [...SELECTORS, 'city', 'status', 'date', 'lat', 'lng', 'title', 'url']);
-        requireFlags(flags, 'name', 'pref', 'city', 'status', 'title', 'url');
+    if (verb === 'add') {
+        // Not EDIT_FLAGS: `name` and `pref` arrive positionally here, so
+        // accepting them as options too would let one be silently ignored.
+        const flags = parseFlags(options, ['city', 'status', 'date', 'lat', 'lng', 'title', 'url']);
+        requireFlags(flags, 'city', 'status', 'title', 'url');
         const coordinates = coordinatePatch(flags);
         const record = buildRecord({
-            name: flags.name,
-            pref: flags.pref,
+            name,
+            pref,
             city: flags.city,
             status: flags.status,
             date: flags.date ?? '',
@@ -440,71 +452,44 @@ function run(argv: string[]): void {
         for (const line of describeRecord(record)) {
             console.log(line);
         }
-        const warning = coordinateWarning(record, cities);
-        if (warning) {
-            console.warn(`warning: ${warning}`);
-        }
+        warn(coordinateWarning(record, cities));
         return;
     }
 
-    const flagsBySubcommand: Record<string, string[]> = {
-        set: [...SELECTORS, 'status', 'date', 'city', 'new-name', 'new-pref', 'lat', 'lng'],
-        touch: SELECTORS,
-        'url-add': [...SELECTORS, 'title', 'url'],
-        'url-set': [...SELECTORS, 'url', 'title', 'to'],
-        'url-rm': [...SELECTORS, 'url'],
-    };
-    const allowed = flagsBySubcommand[subcommand];
-    if (!allowed) {
-        throw new Error(`unknown subcommand ${subcommand ?? '(none)'}\n\n${USAGE}`);
-    }
-    const flags = parseFlags(rest, allowed);
-    requireFlags(flags, ...SELECTORS);
-
-    const index = findRecord(records, flags.name, flags.pref);
+    const index = findRecord(records, name, pref);
     const before = records[index];
     let after: PlanRecord;
 
-    switch (subcommand) {
+    switch (verb) {
         case 'touch':
+            parseFlags(options, []);
             after = setFields(before, {}, today);
             break;
-        case 'set': {
+        case 'edit': {
+            const flags = parseFlags(options, EDIT_FLAGS);
             const patch: FieldPatch = coordinatePatch(flags);
-            for (const key of ['status', 'date', 'city'] as const) {
+            for (const key of ['name', 'pref', 'city', 'status', 'date'] as const) {
                 if (key in flags) {
                     patch[key] = flags[key];
                 }
             }
-            // A name already taken in the target prefecture is caught when the
-            // record is placed below, which is also where the record it would
-            // collide with is still in the list to compare against.
-            if ('new-name' in flags) {
-                patch.name = flags['new-name'];
-            }
-            if ('new-pref' in flags) {
-                patch.pref = flags['new-pref'];
-            }
             after = setFields(before, patch, today);
             break;
         }
-        case 'url-add':
+        case 'url:add': {
+            const flags = parseFlags(options, ['title', 'url']);
             requireFlags(flags, 'title', 'url');
             after = addUrl(before, { title: flags.title, url: flags.url }, today);
             break;
-        case 'url-set':
-            requireFlags(flags, 'url');
-            if (!('title' in flags) && !('to' in flags)) {
-                throw new Error('url-set needs --title or --to');
-            }
-            after = updateUrl(before, flags.url, { title: flags.title, to: flags.to }, today);
-            break;
-        case 'url-rm':
+        }
+        case 'url:rm': {
+            const flags = parseFlags(options, ['url']);
             requireFlags(flags, 'url');
             after = removeUrl(before, flags.url, today);
             break;
+        }
         default:
-            throw new Error(`unknown subcommand ${subcommand}`);
+            throw new Error(`unknown command ${verb}\n\n${USAGE}`);
     }
 
     const changes = describeChange(before, after);
@@ -517,19 +502,36 @@ function run(argv: string[]): void {
     for (const line of changes.length > 0 ? changes : ['  no change']) {
         console.log(line);
     }
-    const warning = coordinateWarning(after, cities);
-    if (warning) {
-        console.warn(`warning: ${warning}`);
+    warn(coordinateWarning(after, cities));
+    if (after.urls.length === 0) {
+        console.warn(`warning: ${label(after)} now cites no source; add one before committing`);
+    }
+}
+
+function warn(message: string | null): void {
+    if (message) {
+        console.warn(`warning: ${message}`);
     }
 }
 
 // Only run when invoked as a script, so the tests can import the transforms
 // without the CLI reading the master and parsing vitest's own arguments.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+    // `npm run plan:list | head -3` closes stdout while the page is still being
+    // written. Node has no listener for that, so the EPIPE surfaces as an
+    // unhandled 'error' event: exit 1 and a stack trace over an ordinary read.
+    // It only shows through the npm wrapper (which pipes the child's stdout)
+    // and depends on the write losing the race, so it cannot be left to chance.
+    process.stdout.on('error', (error: NodeJS.ErrnoException) => {
+        if (error.code !== 'EPIPE') {
+            throw error;
+        }
+        process.exit(0);
+    });
     try {
         run(process.argv.slice(2));
     } catch (error) {
-        console.error(`plan-edit: ${error instanceof Error ? error.message : String(error)}`);
+        console.error(`plan: ${error instanceof Error ? error.message : String(error)}`);
         process.exit(1);
     }
 }

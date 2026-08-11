@@ -1,9 +1,13 @@
 // Validator for the development-plan master (`data/plans.json`).
 //
-// Reads the real file, so that however the edit was made -- `plan-edit`, or a
+// Reads the real file, so that however the edit was made -- `plan.ts`, or a
 // human in GitHub's editor -- a broken one fails `npm run ci` on the pull
-// request before it can be merged. `plan-edit` checks the same rules before it
-// writes; why that duplication is deliberate is in its header.
+// request before it can be merged.
+//
+// Most rules are checked here and again by `plan.ts` before it writes, which
+// only costs a clearer error message. The count of `urls` is the exception:
+// `plan.ts` deliberately leaves it alone (its header says why), so this is the
+// only place it is enforced.
 //
 // Formatting (indent, key spacing) is deliberately NOT checked -- Biome owns
 // that. Neither is a byte-for-byte match against a re-serialization, because

@@ -34,7 +34,7 @@
 - **フロントエンド**: `npm start`（ウォッチビルド） / `npm run serve`（開発サーバー、ポート 8081） / `npm run build`
 - **バックエンド**: `npm run dev:backend`（wrangler dev） / `npm run deploy:backend` / `npm run db:migrate:local` / `npm run db:migrate`
 - **データ生成**: `npm run generate:all`（`generate:stations` → `generate:geojson`）
-- **開発計画マスタの更新**: `npm run plan:edit -- <subcommand>`（引数なしで実行すると使い方が出る）
+- **開発計画マスタ**: `npm run plan:list`（調査キュー） / `plan:show` / `plan:edit` / `plan:touch` / `plan:add` / `plan:url:add` / `plan:url:rm`（`plan:list` 以外は引数を渡さずに実行すると使い方が出る）
 - **品質**: `npm test` / `npm run lint` / `npm run format` / `npm run typecheck` / `npm run lint:fix`
 
 ### generate:stations のデバッグモード
@@ -155,15 +155,18 @@ data/         生成データ（CSV / GeoJSON）と開発計画マスタ（plans
 - **`checked_on` はその駅を最後に調査した日**: 調査は古い順に少しずつ進めるため**この列は調査キューの並び替えキー**で、書き忘れるとキューが進まなくなる
 - **`urls` は 1 レコード 10 件まで**: 上限がないと古い記事が積もり、新しい出典がその中に埋もれる。上限があれば 10 件に達した駅では 1 本足すたびにいちばん弱い 1 本を見直すことになり、出典が新陳代謝する。どの 1 本を落とすかの基準はスキル側にある（本数だけを `npm run ci` が検証する）
 
-#### 書き込みは `npm run plan:edit`、読み取りは jq
+#### 読み書きは `npm run plan:*`
 
-更新に Edit ツールは使わない。3600 行の JSON では `old_string` の一意性を取るのが難しく（`"name": "道の駅 川崎町"` は 2 件ある）、`urls` の書き換えでは長大になる。
+Edit ツールでも jq でもなく `src/scripts/plan.ts` が引き受ける（`plan:list` / `plan:show` / `plan:edit` / `plan:touch` / `plan:add` / `plan:url:add` / `plan:url:rm`）。**どの規則がなぜ jq では守れなかったかは `plan.ts` 冒頭のコメントにある。**
 
-書き込みは `src/scripts/plan-edit.ts`（`npm run plan:edit`）が引き受ける。jq でも書けるが、マスタの規則のいくつかは jq では表現できず、書き手が覚えているかどうかに委ねられていた。**どの規則がなぜ失敗になったかは `plan-edit.ts` 冒頭のコメントにある。**
+- **1 モジュールを 7 つの npm script から呼ぶ**: 呼ぶ側にはサブコマンドがなくコマンド名だけがある。verb は npm script が渡す
+- **駅は位置引数、オプションは新しい値**: `plan:edit "道の駅 石川町" "福島県" --name "道の駅石川"` は「いまこの名前で入っている駅の名前を変える」と読める。位置引数とオプションで役割が割れているので、`--new-` のような prefix が要らない
+- **`checked_on` はコマンドが押す**: 書き手に見えるフィールドではなく、書き込みの結果として付く（下記「`checked_on` の更新は CI で強制しない」）
+- **出典の件数だけは検証しない**: 書き手が管理し、`plan-data.test.ts` が最後に 1 度だけ検証する（理由は `plan.ts` 冒頭）
 
-**読み取りは jq のまま。** レコード順の定義は `src/lib/plan-record-order.ts` に 1 つだけ置く。
+レコード順の定義は `src/lib/plan-record-order.ts` に 1 つだけ置く。
 
-手順（レコードの引き方、`urls` の足し方、PR の出し方）は `.claude/skills/michi-no-eki-plan-research/SKILL.md` にある。**同じことをここに書き足さない** — 手順が変わったとき片方だけ直されて、残った側が嘘になる。
+手順（調査の進め方、出典の選び方、PR の出し方）は `.claude/skills/michi-no-eki-plan-research/SKILL.md` にある。**同じことをここに書き足さない** — 手順が変わったとき片方だけ直されて、残った側が嘘になる。
 
 #### 整形は Biome、構造は vitest
 
@@ -171,7 +174,7 @@ data/         生成データ（CSV / GeoJSON）と開発計画マスタ（plans
 
 構造の検証は `src/frontend/plan-data.test.ts` が実データを読んで行う（キーの集合と順序、`status` の 5 値、`pref` の実在、`name` の非空、`name` + `pref` の一意性、座標の型、`urls` の形（1 件以上 10 件以下、`title` の非空、`url` の重複なし、`http` / `https` スキーム）、レコード順）。**インデントやバイト一致は検証しない** — 前者は Biome の担当で、後者は数値のレンダリングが書き手によって揺れる（座標がちょうど整数のとき `36.0` と `36` のどちらもありうる）ため、原因の分かりにくい赤になる。
 
-**`checked_on` の更新は CI で強制しない。** 「差分に現れた駅は `checked_on` が更新されている」を CI ルールにすると、GitHub UI で `city` の誤字を直しただけの PR が落ちる。押印忘れのコスト（再調査 1 枠）より誤検知のコストが大きいので、検証ではなく `plan-edit` の既定動作に置く（どの書き込みでも押す）。
+**`checked_on` の更新は CI で強制しない。** 「差分に現れた駅は `checked_on` が更新されている」を CI ルールにすると、GitHub UI で `city` の誤字を直しただけの PR が落ちる。押印忘れのコスト（再調査 1 枠）より誤検知のコストが大きいので、検証ではなく `plan.ts` の既定動作に置く（どの書き込みでも押す）。
 
 #### 相談事項は `docs/plan-reports.md` に書く
 

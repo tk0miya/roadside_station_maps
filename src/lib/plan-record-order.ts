@@ -6,7 +6,7 @@
 // after loading. This one is about the order of records in the file, and lives
 // here because two places have to agree on it: the check that rejects a
 // misplaced record (`src/frontend/plan-data.test.ts`) and the writer that has
-// to put a new one in the right place (`src/scripts/plan-edit.ts`). Stating it
+// to put a new one in the right place (`src/scripts/plan.ts`). Stating it
 // twice would let one of them drift.
 //
 // The parameters are structural on purpose -- the full `City` and `PlanRecord`
@@ -72,7 +72,7 @@ export function createPlanRecordComparator(
     };
 }
 
-// The prefectures the table knows, in order. `plan-edit` uses it to reject a
+// The prefectures the table knows, in order. `plan.ts` uses it to reject a
 // prefecture the master could not hold, before writing rather than in CI.
 export function knownPrefectures(cities: CityOrderRow[]): string[] {
     const seen: string[] = [];
