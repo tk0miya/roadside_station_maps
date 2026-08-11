@@ -1,6 +1,7 @@
 ---
 description: 道の駅の整備計画マスタ（data/plans.json）のレコードを Web 調査して、開業日・登録状況・正式名称・出典 URL を最新化し、PR を出す。「道の駅の整備計画を調べて」「計画中の道の駅の情報を更新して」「plans.json の内容が古いか確認して」「新しく登録された道の駅がないか調べて」のような依頼で必ず使う。個別の駅 1 件だけの調査でも、開業日や登録状況をマスタに反映する意図が読み取れるなら使う。
 license: Apache-2.0
+model: sonnet
 name: michi-no-eki-plan-research
 ---
 
