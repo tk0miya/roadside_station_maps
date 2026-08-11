@@ -137,6 +137,13 @@ describe('data/plans.json', () => {
         }
     });
 
+    // Why the column has a ceiling at all is in CLAUDE.md (開発計画マスタ).
+    it('has at most ten urls on every record', () => {
+        for (const record of plans) {
+            expect((record.urls as unknown[]).length, label(record)).toBeLessThanOrEqual(10);
+        }
+    });
+
     // The map renders `title` as the link's label, so a blank one would draw an
     // unclickable-looking empty link. Guaranteeing it here means the renderer
     // needs no fallback to the raw url.
