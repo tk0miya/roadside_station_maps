@@ -73,12 +73,6 @@ describe('PlanInfoWindow', () => {
         expect(links.every((a) => a.getAttribute('target') === '_blank')).toBe(true);
     });
 
-    it('labels a link with its url when the title is blank', async () => {
-        const element = await content([{ title: '  ', url: 'https://example.com/plan' }]);
-
-        expect(element.querySelector('a')?.textContent).toBe('https://example.com/plan');
-    });
-
     it('omits the list when a station has no urls', async () => {
         const element = await content([]);
 

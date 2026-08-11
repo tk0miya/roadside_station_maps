@@ -129,6 +129,17 @@ describe('data/plans.json', () => {
         }
     });
 
+    // The map renders `title` as the link's label, so a blank one would draw an
+    // unclickable-looking empty link. Guaranteeing it here means the renderer
+    // needs no fallback to the raw url.
+    it('has a non-blank title on every url', () => {
+        for (const record of plans) {
+            for (const link of record.urls as { title: string; url: string }[]) {
+                expect(link.title.trim(), `${label(record)} / ${link.url}`).not.toBe('');
+            }
+        }
+    });
+
     // The info window keys its list by `url`, so a record holding the same
     // source twice would render with duplicate React keys. Two entries for one
     // page is a data error anyway -- the master keeps one link per source.
