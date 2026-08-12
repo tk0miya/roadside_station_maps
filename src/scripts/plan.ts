@@ -35,10 +35,6 @@ const CITIES_FILENAME = 'data/cities.json';
 const QUEUED = ['登録済み', '計画中', '凍結'];
 const QUEUE_PAGE = 10;
 
-// The scalar keys in record order, for the change summary. Not the record's key
-// order -- `urls` sits between `lng` and `checked_on` and is diffed separately.
-const SCALAR_KEYS = ['name', 'pref', 'city', 'status', 'date', 'lat', 'lng', 'checked_on'] as const;
-
 export function label(record: { name: string; pref: string }): string {
     return `${record.name} (${record.pref})`;
 }
@@ -204,36 +200,12 @@ export function coordinateWarning(record: PlanRecord, cities: City[]): string | 
     );
 }
 
-// Every field of a record. Sources are listed without the +/- of a change
-// summary, because nothing here moved.
+// A record as the master holds it, rendered with the indent `writePlans` uses
+// so that what a command prints and what lands in the file cannot drift apart.
+// It is the whole record rather than a summary of the edit: `git diff` already
+// answers "what changed", in the form the pull request will carry.
 export function describeRecord(record: PlanRecord): string[] {
-    const lines = SCALAR_KEYS.map((key) => `  ${key.padEnd(10)} ${JSON.stringify(record[key])}`);
-    return [...lines, ...record.urls.map((link) => `  urls       ${link.title}  ${link.url}`)];
-}
-
-// What changed, so the edit can be checked without reading the whole record.
-// It does not replace `git diff data/plans.json` -- that is what shows the
-// change in the form the pull request will carry it.
-export function describeChange(before: PlanRecord, after: PlanRecord): string[] {
-    const lines: string[] = [];
-    for (const key of SCALAR_KEYS) {
-        if (before[key] !== after[key]) {
-            lines.push(`  ${key.padEnd(10)} ${JSON.stringify(before[key])} -> ${JSON.stringify(after[key])}`);
-        }
-    }
-    const seen = new Set(before.urls.map((link) => link.url));
-    for (const link of after.urls) {
-        if (!seen.has(link.url)) {
-            lines.push(`  + ${link.title}  ${link.url}`);
-        }
-    }
-    const kept = new Set(after.urls.map((link) => link.url));
-    for (const link of before.urls) {
-        if (!kept.has(link.url)) {
-            lines.push(`  - ${link.title}  ${link.url}`);
-        }
-    }
-    return lines;
+    return JSON.stringify(record, null, 4).split('\n');
 }
 
 // The oldest page of the queue, plus how big the queue is. The totals matter
@@ -386,27 +358,19 @@ export interface Outcome {
     warnings?: string[];
 }
 
-// The tail the five writing verbs share, once they have decided what the
-// record should become.
+// The tail the five writing verbs share, once they have decided what the record
+// should become. A new record gets a line saying where it landed -- the one
+// thing about it that the record itself does not show.
 function written(records: PlanRecord[], index: number, after: PlanRecord, cities: City[]): Outcome {
     const placed = placeRecord(records, index, after, cities);
-    const before = index === -1 ? null : records[index];
-    // A new record has no previous value to differ from, so it is listed in
-    // full. An edit prints what moved -- and says so when nothing did, since an
-    // edit that changed no field (the same value set twice, a second touch on
-    // one day) would otherwise print as silence.
-    const changes = before === null ? describeRecord(after) : describeChange(before, after);
     const warnings = [
         coordinateWarning(after, cities),
         after.urls.length === 0 ? `${label(after)} now cites no source; add one before committing` : null,
     ];
+    const heading =
+        index === -1 ? [`added ${label(after)} at record ${placed.indexOf(after) + 1} of ${placed.length}`] : [];
     return {
-        lines: [
-            before === null
-                ? `added ${label(after)} at record ${placed.indexOf(after) + 1} of ${placed.length}`
-                : label(after),
-            ...(changes.length > 0 ? changes : ['  no change']),
-        ],
+        lines: [...heading, ...describeRecord(after)],
         records: placed,
         warnings: warnings.filter((warning) => warning !== null),
     };
@@ -435,8 +399,7 @@ export function execute(argv: string[], records: PlanRecord[], cities: City[], t
 
         case 'show': {
             parseFlags(options, []);
-            const record = records[getRecordIndex()];
-            return { lines: [label(record), ...describeRecord(record)] };
+            return { lines: describeRecord(records[getRecordIndex()]) };
         }
 
         case 'add': {

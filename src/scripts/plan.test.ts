@@ -9,7 +9,6 @@ import {
     buildRecord,
     coordinatePatch,
     coordinateWarning,
-    describeChange,
     describeQueue,
     describeRecord,
     execute,
@@ -302,10 +301,9 @@ describe('execute', () => {
             expect(execute(argv, records, CITIES, TODAY).records).toBeUndefined();
         });
 
-        it('show reports the record it names', () => {
-            expect(execute(['show', '道の駅 石川町', '福島県'], records, CITIES, TODAY).lines[0]).toBe(
-                '道の駅 石川町 (福島県)'
-            );
+        it('show answers with the record it names', () => {
+            const lines = execute(['show', '道の駅 石川町', '福島県'], records, CITIES, TODAY).lines;
+            expect(lines.join('\n')).toBe(JSON.stringify(record(), null, 4));
         });
     });
 
@@ -360,13 +358,14 @@ describe('execute', () => {
             );
             expect(outcome.records).toHaveLength(4);
             expect(at(outcome, '道の駅 あさひかわ').checked_on).toBe(TODAY);
-            expect(outcome.lines[0]).toMatch(/^added 道の駅 あさひかわ \(北海道\) at record 1 of 4$/);
+            expect(outcome.lines[0]).toBe('added 道の駅 あさひかわ (北海道) at record 1 of 4');
         });
 
-        it('says so when a write moved nothing', () => {
-            const stamped = [record({ checked_on: TODAY })];
-            const outcome = execute(['touch', '道の駅 石川町', '福島県'], stamped, CITIES, TODAY);
-            expect(outcome.lines).toEqual(['道の駅 石川町 (福島県)', '  no change']);
+        // Every verb that touches a record answers with the record, so a value
+        // just written can be read back without a second command.
+        it('answers with the whole record, not a summary of the edit', () => {
+            const outcome = execute(['edit', '道の駅 石川町', '福島県', '--status', '開業'], records, CITIES, TODAY);
+            expect(outcome.lines.join('\n')).toBe(JSON.stringify(at(outcome, '道の駅 石川町'), null, 4));
         });
 
         // The record arrives positionally, so the same value as an option would
@@ -401,40 +400,18 @@ describe('coordinateWarning', () => {
     });
 });
 
-describe('describeChange', () => {
-    it('reports changed fields and moved sources', () => {
-        const before = record();
-        const swapped = addUrl(
-            removeUrl(setFields(before, { status: '登録済み' }, TODAY), 'https://example.jp/plan', TODAY),
-            { title: '登録されました', url: 'https://example.jp/registered' },
-            TODAY
-        );
-        expect(describeChange(before, swapped)).toEqual([
-            '  status     "計画中" -> "登録済み"',
-            '  checked_on "2026-06-02" -> "2026-08-12"',
-            '  + 登録されました  https://example.jp/registered',
-            '  - 整備計画  https://example.jp/plan',
-        ]);
-    });
-
-    it('reports nothing when every field kept its value', () => {
-        expect(describeChange(record(), record())).toEqual([]);
-    });
-});
-
 describe('describeRecord', () => {
-    it('lists every field, without the markers of a change summary', () => {
-        expect(describeRecord(record())).toEqual([
-            '  name       "道の駅 石川町"',
-            '  pref       "福島県"',
-            '  city       "石川郡石川町"',
-            '  status     "計画中"',
-            '  date       "2026-09"',
-            '  lat        null',
-            '  lng        null',
-            '  checked_on "2026-06-02"',
-            '  urls       整備計画  https://example.jp/plan',
-        ]);
+    it('renders the record exactly as the file holds it', () => {
+        expect(describeRecord(record()).join('\n')).toBe(JSON.stringify(record(), null, 4));
+    });
+
+    // The rendering is what a reader compares against `data/plans.json`, so the
+    // indent has to be the one `writePlans` writes.
+    it('indents with four spaces, one field per line', () => {
+        const lines = describeRecord(record());
+        expect(lines[0]).toBe('{');
+        expect(lines[1]).toBe('    "name": "道の駅 石川町",');
+        expect(lines.at(-1)).toBe('}');
     });
 });
 
