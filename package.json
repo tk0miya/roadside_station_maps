@@ -29,6 +29,7 @@
         "deploy:backend": "wrangler deploy --env production",
         "db:migrate:local": "wrangler d1 migrations apply DB --local",
         "db:migrate": "wrangler d1 migrations apply DB --remote --env production",
+        "plan": "node --import tsx src/scripts/plan.ts",
         "generate:geojson": "node --import tsx src/scripts/generate-geojson.ts",
         "generate:stations": "NODE_USE_ENV_PROXY=1 node --import tsx src/scripts/generate-stationlist.ts",
         "generate:all": "npm run generate:stations && npm run generate:geojson",

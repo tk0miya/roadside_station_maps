@@ -1,9 +1,9 @@
 // Validator for the development-plan master (`data/plans.json`).
 //
-// The master is hand-edited (by a research session via jq, or by a human in
-// GitHub's editor), so the checks that used to live in the CLI's argument
-// parsing live here instead: this reads the real file, which means a broken
-// edit fails `npm run ci` on the pull request before it can be merged.
+// The master is written by `npm run plan` and edited by hand in GitHub's editor,
+// so validation lives here rather than in whatever wrote it: this reads the real
+// file, which means a broken edit from either source fails `npm run ci` on the
+// pull request before it can be merged.
 //
 // Formatting (indent, key spacing) is deliberately NOT checked -- Biome owns
 // that. Neither is a byte-for-byte match against a re-serialization, because
@@ -12,6 +12,12 @@
 // structure.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+// The comparator that decides record order, and the source ceiling, live with the
+// CLI that writes the file: one definition both places the records and checks
+// where they landed, and one number both refuses an eleventh source and fails the
+// build if one gets in another way.
+import { createPlanComparator, MAX_URLS } from '../lib/plan-master';
+import type { City, PlanRecord } from './types/plan';
 // The status vocabulary is defined once, where the map narrows it. Importing it
 // rather than restating it means adding a Status also allows it in the data --
 // otherwise the type would accept a value the master could not hold, and the
@@ -22,56 +28,18 @@ import { STATUSES } from './types/plan';
 const KEYS = ['name', 'pref', 'city', 'status', 'date', 'lat', 'lng', 'urls', 'checked_on'];
 const URL_KEYS = ['title', 'url'];
 
-interface City {
-    pref: string;
-    city: string;
-}
-
 function read<T>(path: string): T {
     return JSON.parse(readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8'));
 }
 
+// Held untyped on purpose: what these tests check is that the file's records ARE
+// PlanRecords, so typing them as such up front would assume the answer.
 const plans = read<Record<string, unknown>[]>('data/plans.json');
 const cities = read<City[]>('data/cities.json');
 
-// Order keys by first appearance in cities.json (全国地方公共団体コード順).
-const prefOrder = new Map<string, number>();
-const cityOrder = new Map<string, number>();
-for (const c of cities) {
-    if (!prefOrder.has(c.pref)) {
-        prefOrder.set(c.pref, prefOrder.size);
-    }
-    const key = `${c.pref} ${c.city}`;
-    if (!cityOrder.has(key)) {
-        cityOrder.set(key, cityOrder.size);
-    }
-}
-
-const LAST = Number.MAX_SAFE_INTEGER;
-
-function compare(a: string, b: string): number {
-    if (a < b) {
-        return -1;
-    }
-    return a > b ? 1 : 0;
-}
-
-// Mirrors the documented record order: pref, then city, then name. Cities that
-// cities.json does not know go to the end of their prefecture, in string order.
-function compareRecords(a: Record<string, unknown>, b: Record<string, unknown>): number {
-    const prefs = [prefOrder.get(a.pref as string) ?? LAST, prefOrder.get(b.pref as string) ?? LAST];
-    if (prefs[0] !== prefs[1]) {
-        return prefs[0] - prefs[1];
-    }
-    const keys = [cityOrder.get(`${a.pref} ${a.city}`) ?? LAST, cityOrder.get(`${b.pref} ${b.city}`) ?? LAST];
-    if (keys[0] !== keys[1]) {
-        return keys[0] - keys[1];
-    }
-    if (keys[0] === LAST && a.city !== b.city) {
-        return compare(a.city as string, b.city as string);
-    }
-    return compare(a.name as string, b.name as string);
-}
+const prefs = new Set(cities.map((city) => city.pref));
+const municipalities = new Set(cities.map((city) => `${city.pref} ${city.city}`));
+const compareRecords = createPlanComparator(cities);
 
 function label(record: Record<string, unknown>): string {
     return `${record.name} (${record.pref})`;
@@ -106,18 +74,18 @@ describe('data/plans.json', () => {
 
     it('has a prefecture known to cities.json on every record', () => {
         for (const record of plans) {
-            expect([...prefOrder.keys()], label(record)).toContain(record.pref);
+            expect([...prefs], label(record)).toContain(record.pref);
         }
     });
 
     // A `city` cities.json cannot resolve costs the record both its coordinate
     // fallback and its order key, while still reading as a correct address.
     // Unlike the prefecture check above, the failure names the offending value
-    // instead of listing the haystack -- cities.json holds every municipality.
+    // instead of listing the haystack, which runs to every municipality in Japan.
     it('has a municipality known to cities.json on every record', () => {
         for (const record of plans) {
             const key = `${record.pref} ${record.city}`;
-            expect(cityOrder.has(key), `${label(record)} / ${record.city}`).toBe(true);
+            expect(municipalities.has(key), `${label(record)} / ${record.city}`).toBe(true);
         }
     });
 
@@ -151,7 +119,7 @@ describe('data/plans.json', () => {
     // Why the column has a ceiling at all is in CLAUDE.md (開発計画マスタ).
     it('has at most ten urls on every record', () => {
         for (const record of plans) {
-            expect((record.urls as unknown[]).length, label(record)).toBeLessThanOrEqual(10);
+            expect((record.urls as unknown[]).length, label(record)).toBeLessThanOrEqual(MAX_URLS);
         }
     });
 
@@ -205,9 +173,12 @@ describe('data/plans.json', () => {
     });
 
     it('is sorted by prefecture, city, then name', () => {
-        for (let i = 1; i < plans.length; i++) {
+        // The tests above have established that the three ordering columns are
+        // strings, so the comparator can be handed the records as typed here.
+        const ordered = plans as unknown as PlanRecord[];
+        for (let i = 1; i < ordered.length; i++) {
             expect(
-                compareRecords(plans[i - 1], plans[i]),
+                compareRecords(ordered[i - 1], ordered[i]),
                 `${label(plans[i - 1])} before ${label(plans[i])}`
             ).toBeLessThanOrEqual(0);
         }
