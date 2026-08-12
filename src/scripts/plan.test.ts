@@ -64,6 +64,13 @@ describe('findRecord', () => {
     it('fails instead of matching nothing', () => {
         expect(() => findRecord(records, '道の駅 石川町', '宮城県')).toThrow(/no record matches/);
     });
+
+    // plan-data.test.ts keeps the master free of these, so this only fires on
+    // input from somewhere else -- but writing to one of two matches at random
+    // is the one outcome worse than refusing.
+    it('fails instead of picking one of several matches', () => {
+        expect(() => findRecord([record(), record()], '道の駅 石川町', '福島県')).toThrow(/2 records match/);
+    });
 });
 
 describe('setFields', () => {
@@ -71,23 +78,25 @@ describe('setFields', () => {
         expect(setFields(record(), {}, TODAY).checked_on).toBe(TODAY);
     });
 
-    it('keeps the key order when a field is overwritten', () => {
+    it('writes each field it is given and leaves the rest alone', () => {
         const updated = setFields(record(), { status: '登録済み', date: '2026-09-18' }, TODAY);
-        expect(Object.keys(updated)).toEqual([
-            'name',
-            'pref',
-            'city',
-            'status',
-            'date',
-            'lat',
-            'lng',
-            'urls',
-            'checked_on',
-        ]);
+        expect(updated.status).toBe('登録済み');
+        expect(updated.date).toBe('2026-09-18');
+        expect(updated.name).toBe('道の駅 石川町');
+        expect(updated.urls).toEqual(record().urls);
+    });
+
+    it('clears the coordinates when given null', () => {
+        const placed = record({ lat: 37.15, lng: 140.44 });
+        expect(setFields(placed, { lat: null, lng: null }, TODAY)).toMatchObject({ lat: null, lng: null });
     });
 
     it('rejects a status the map cannot render', () => {
         expect(() => setFields(record(), { status: '着工' }, TODAY)).toThrow(/unknown status/);
+    });
+
+    it('rejects a rename to an empty name', () => {
+        expect(() => setFields(record(), { name: '' }, TODAY)).toThrow(/empty name/);
     });
 });
 
@@ -107,8 +116,16 @@ describe('addUrl', () => {
         );
     });
 
-    it('rejects a scheme the info window would not link', () => {
-        expect(() => addUrl(record(), { title: 'x', url: 'javascript:alert(1)' }, TODAY)).toThrow(/not an http/);
+    it.each(['javascript:alert(1)', 'ftp://example.jp/plan', 'example.jp/plan', ''])(
+        'rejects %j, which the info window would not link',
+        (url) => {
+            expect(() => addUrl(record(), { title: 'x', url }, TODAY)).toThrow(/not an http/);
+        }
+    );
+
+    it('accepts both http and https', () => {
+        expect(addUrl(record(), { title: 'x', url: 'http://example.jp/a' }, TODAY).urls).toHaveLength(2);
+        expect(addUrl(record(), { title: 'x', url: 'HTTPS://example.jp/b' }, TODAY).urls).toHaveLength(2);
     });
 
     it('rejects a blank title, which the map would draw as an empty link', () => {
@@ -127,13 +144,6 @@ describe('removeUrl', () => {
         expect(removeUrl(two, 'https://example.jp/dead', TODAY).urls).toEqual([
             { title: '生きている', url: 'https://example.jp/live' },
         ]);
-    });
-
-    // A source is swapped by removing it and adding its successor, so the
-    // list is allowed to be empty in between; plan-data.test.ts checks the
-    // count once, on the finished file.
-    it('allows the last source to be removed', () => {
-        expect(removeUrl(record(), 'https://example.jp/plan', TODAY).urls).toEqual([]);
     });
 
     it('fails on a url the record does not cite', () => {
@@ -168,10 +178,18 @@ describe('buildRecord', () => {
         ]);
     });
 
-    it('rejects a source the map could not link', () => {
+    it('validates the sources it is given', () => {
         expect(() => buildRecord({ ...fields, urls: [{ title: 'x', url: 'ftp://example.jp' }] })).toThrow(
             /not an http/
         );
+    });
+
+    it('rejects a record with no name', () => {
+        expect(() => buildRecord({ ...fields, name: '' })).toThrow(/needs a name/);
+    });
+
+    it('rejects a status the map cannot render', () => {
+        expect(() => buildRecord({ ...fields, status: '着工' })).toThrow(/unknown status/);
     });
 });
 
@@ -257,6 +275,10 @@ describe('replaceRecord', () => {
 });
 
 describe('coordinateWarning', () => {
+    it('says nothing when the station has its own coordinates', () => {
+        expect(coordinateWarning(record({ city: '石川町', lat: 37.15, lng: 140.44 }), CITIES)).toBeNull();
+    });
+
     it('says nothing when the city carries the fallback point', () => {
         expect(coordinateWarning(record(), CITIES)).toBeNull();
     });
@@ -280,6 +302,10 @@ describe('describeChange', () => {
             '  + 登録されました  https://example.jp/registered',
             '  - 整備計画  https://example.jp/plan',
         ]);
+    });
+
+    it('reports nothing when every field kept its value', () => {
+        expect(describeChange(record(), record())).toEqual([]);
     });
 });
 
@@ -336,6 +362,14 @@ describe('parseFlags', () => {
 
     it('rejects a flag with no value', () => {
         expect(() => parseFlags(['--status'], ['status'])).toThrow(/needs a value/);
+    });
+
+    it('rejects the same flag twice', () => {
+        expect(() => parseFlags(['--status', '開業', '--status', '中止'], ['status'])).toThrow(/given twice/);
+    });
+
+    it('rejects a bare value where a flag belongs', () => {
+        expect(() => parseFlags(['開業'], ['status'])).toThrow(/expected a --flag/);
     });
 });
 
