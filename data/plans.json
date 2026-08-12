@@ -1129,15 +1129,11 @@
                 "url": "https://www.instagram.com/oishiiyabukimarche/"
             },
             {
-                "title": "https://www.town.yabuki.fukushima.jp/page/page004568.html",
-                "url": "https://www.town.yabuki.fukushima.jp/page/page004568.html"
-            },
-            {
-                "title": "https://www.town.yabuki.fukushima.jp/sp/page/page007128.html",
+                "title": "（特別版）町長談話　令和4年3月号",
                 "url": "https://www.town.yabuki.fukushima.jp/sp/page/page007128.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-12"
     },
     {
         "name": "道の駅 矢祭町",
@@ -1445,47 +1441,35 @@
         "lng": 140.5680953,
         "urls": [
             {
-                "title": "https://www.town.oarai.lg.jp/wp/wp-content/uploads/2022/02/%E9%81%93%E3%81%AE%E9%A7%85%E3%81%8A%E3%81%8A%E3%81%82%E3%82%89%E3%81%84%EF%BC%88%E4%BB%AE%EF%BC%89%E5%9F%BA%E6%9C%AC%E6%A7%8B%E6%83%B3%EF%BC%88%E6%A1%88%EF%BC%89%EF%BC%88PDF%EF%BC%89.pdf",
+                "title": "道の駅おおあらい（仮）基本構想（案）",
                 "url": "https://www.town.oarai.lg.jp/wp/wp-content/uploads/2022/02/%E9%81%93%E3%81%AE%E9%A7%85%E3%81%8A%E3%81%8A%E3%81%82%E3%82%89%E3%81%84%EF%BC%88%E4%BB%AE%EF%BC%89%E5%9F%BA%E6%9C%AC%E6%A7%8B%E6%83%B3%EF%BC%88%E6%A1%88%EF%BC%89%EF%BC%88PDF%EF%BC%89.pdf"
             },
             {
-                "title": "https://www.nikoukei.co.jp/news/detail/473865",
+                "title": "道の駅、一時凍結／大型２事業を優先整備",
                 "url": "https://www.nikoukei.co.jp/news/detail/473865"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-12"
     },
     {
         "name": "道の駅 阿見町",
         "pref": "茨城県",
         "city": "稲敷郡阿見町",
-        "status": "凍結",
+        "status": "中止",
         "date": "",
         "lat": 36.0204974,
         "lng": 140.2518442,
         "urls": [
             {
-                "title": "https://www.town.ami.lg.jp/0000005787.html",
+                "title": "阿見町道の駅整備事業検証委員会",
                 "url": "https://www.town.ami.lg.jp/0000005787.html"
-            }
-        ],
-        "checked_on": "2026-01-01"
-    },
-    {
-        "name": "道の駅 栄町",
-        "pref": "茨城県",
-        "city": "猿島郡境町",
-        "status": "計画中",
-        "date": "",
-        "lat": 35.859526,
-        "lng": 140.2541102,
-        "urls": [
+            },
             {
-                "title": "http://www.town.sakae.chiba.jp/cms/data/doc/1621911754_doc_81_0.pdf",
-                "url": "http://www.town.sakae.chiba.jp/cms/data/doc/1621911754_doc_81_0.pdf"
+                "title": "道の駅整備事業の中止について",
+                "url": "https://www.town.ami.lg.jp/0000009137.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-12"
     },
     {
         "name": "道の駅 足利市",
@@ -1913,7 +1897,7 @@
         "lng": 139.8741798,
         "urls": [
             {
-                "title": "https://www.city.noda.chiba.jp/shisei/shingikai/1008854/1024943.html",
+                "title": "野田市道の駅整備検討委員会",
                 "url": "https://www.city.noda.chiba.jp/shisei/shingikai/1008854/1024943.html"
             },
             {
@@ -1921,39 +1905,47 @@
                 "url": "https://www.city.noda.chiba.jp/_res/projects/default_project/_page_/001/007/641/nodashisougoukeikaku230327.pdf"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-12"
     },
     {
         "name": "道の駅 茂原市",
         "pref": "千葉県",
         "city": "茂原市",
         "status": "計画中",
-        "date": "",
+        "date": "2030年度",
         "lat": 35.4285509,
         "lng": 140.2881398,
         "urls": [
             {
                 "title": "https://www.nikoukei.co.jp/news/detail/387619",
                 "url": "https://www.nikoukei.co.jp/news/detail/387619"
+            },
+            {
+                "title": "茂原市道の駅基本構想を策定",
+                "url": "https://www.city.mobara.chiba.jp/0000009405.html"
+            },
+            {
+                "title": "茂原北ＩＣ周辺に道の駅　３０年度開業見据え茂原市が基本構想案",
+                "url": "https://www.chibanippo.co.jp/articles/1572831"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-12"
     },
     {
         "name": "道の駅 勝浦市",
         "pref": "千葉県",
         "city": "勝浦市",
-        "status": "計画中",
+        "status": "中止",
         "date": "",
         "lat": 35.2030875,
         "lng": 140.2691267,
         "urls": [
             {
-                "title": "https://www.city.katsuura.lg.jp/div/soumu/pdf/public-comment/mitinoeki_kihonkeikakuan.pdf",
-                "url": "https://www.city.katsuura.lg.jp/div/soumu/pdf/public-comment/mitinoeki_kihonkeikakuan.pdf"
+                "title": "計画中の道の駅 千葉県の各市町村の状況",
+                "url": "https://michinoeki.around-japan.jp/plan-station/plan-chiba.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-12"
     },
     {
         "name": "道の駅 大網白里市",
@@ -1976,6 +1968,26 @@
         "checked_on": "2026-01-01"
     },
     {
+        "name": "道の駅 栄町",
+        "pref": "千葉県",
+        "city": "印旛郡栄町",
+        "status": "計画中",
+        "date": "",
+        "lat": 35.859526,
+        "lng": 140.2541102,
+        "urls": [
+            {
+                "title": "栄町道の駅基本計画",
+                "url": "http://www.town.sakae.chiba.jp/cms/data/doc/1621911754_doc_81_0.pdf"
+            },
+            {
+                "title": "千葉県栄町、国道356号沿いの「道の駅」基本計画公表。利根川サイクリング拠点やキャンプ場など観光資源活用した“体験型道の駅”目指す",
+                "url": "https://travel.watch.impress.co.jp/docs/news/1327191.html"
+            }
+        ],
+        "checked_on": "2026-08-12"
+    },
+    {
         "name": "道の駅 一宮町",
         "pref": "千葉県",
         "city": "長生郡一宮町",
@@ -1989,11 +2001,11 @@
                 "url": "https://www.town.ichinomiya.chiba.jp/assets/files/gikaihou/gikaihou165.pdf"
             },
             {
-                "title": "https://www1.g-reiki.net/ichinomiya/reiki_honbun/g062RG00000442.html",
+                "title": "道の駅プロジェクトチーム設置要綱",
                 "url": "https://www1.g-reiki.net/ichinomiya/reiki_honbun/g062RG00000442.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-12"
     },
     {
         "name": "道の駅 東久留米市",
@@ -2037,11 +2049,11 @@
         "lng": 139.6721655,
         "urls": [
             {
-                "title": "https://www.kanaloco.jp/news/government/entry-9331.html",
+                "title": "「道の駅」設置で調査へ　横須賀市",
                 "url": "https://www.kanaloco.jp/news/government/entry-9331.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-12"
     },
     {
         "name": "道の駅 平塚",
@@ -2093,23 +2105,27 @@
         "lng": 139.4259736,
         "urls": [
             {
-                "title": "https://www.city.ayase.kanagawa.jp/soshiki/michinoekiseibisuishinshitsu/index.html",
-                "url": "https://www.city.ayase.kanagawa.jp/soshiki/michinoekiseibisuishinshitsu/index.html"
+                "title": "道の駅整備事業予定地の決定について",
+                "url": "https://www.city.ayase.kanagawa.jp/soshiki/cyushinshigaichisinkoka/michinoeki/index.html"
             },
             {
-                "title": "https://www.city.ayase.kanagawa.jp/soshiki/michinoekiseibisuishinshitsu/15608.html",
-                "url": "https://www.city.ayase.kanagawa.jp/soshiki/michinoekiseibisuishinshitsu/15608.html"
+                "title": "道の駅基本計画策定方針",
+                "url": "https://www.city.ayase.kanagawa.jp/soshiki/cyushinshigaichisinkoka/5286.html"
             },
             {
-                "title": "https://www.kanaloco.jp/news/government/article-1136619.html",
+                "title": "綾瀬の道の駅整備「棚上げ」に　市が総合計画一部見直しへ",
                 "url": "https://www.kanaloco.jp/news/government/article-1136619.html"
             },
             {
                 "title": "https://www.asahi.com/articles/AST2P421LT2PULOB015M.html",
                 "url": "https://www.asahi.com/articles/AST2P421LT2PULOB015M.html"
+            },
+            {
+                "title": "綾瀬市「道の駅」見直し巡り答申　総合計画審議会「手段の一つ」",
+                "url": "https://www.kanaloco.jp/news/government/article-1166263.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-12"
     },
     {
         "name": "道の駅 松田町",
