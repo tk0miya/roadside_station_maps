@@ -18,7 +18,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 // The record order is defined in plan-record-order.ts, which says why it lives
 // there rather than here.
-import { createPlanRecordComparator, knownPrefectures, type PlanRecordOrderKey } from '../lib/plan-record-order';
+import { type City, createPlanRecordComparator, knownPrefectures, type Plan } from '../lib/plan-record-order';
 // The status vocabulary is defined once, where the map narrows it. Importing it
 // rather than restating it means adding a Status also allows it in the data --
 // otherwise the type would accept a value the master could not hold, and the
@@ -28,11 +28,6 @@ import { STATUSES } from './types/plan';
 // Not derivable from a type at runtime, so this one is spelled out.
 const KEYS = ['name', 'pref', 'city', 'status', 'date', 'lat', 'lng', 'urls', 'checked_on'];
 const URL_KEYS = ['title', 'url'];
-
-interface City {
-    pref: string;
-    city: string;
-}
 
 function read<T>(path: string): T {
     return JSON.parse(readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8'));
@@ -46,8 +41,8 @@ const prefectures = knownPrefectures(cities);
 
 // The records are read untyped so a malformed field fails its own assertion
 // rather than the file's parse; the comparator needs the three ordering fields.
-function orderKey(record: Record<string, unknown>): PlanRecordOrderKey {
-    return record as unknown as PlanRecordOrderKey;
+function asPlan(record: Record<string, unknown>): Plan {
+    return record as unknown as Plan;
 }
 
 function label(record: Record<string, unknown>): string {
@@ -173,7 +168,7 @@ describe('data/plans.json', () => {
     it('is sorted by prefecture, city, then name', () => {
         for (let i = 1; i < plans.length; i++) {
             expect(
-                compareRecords(orderKey(plans[i - 1]), orderKey(plans[i])),
+                compareRecords(asPlan(plans[i - 1]), asPlan(plans[i])),
                 `${label(plans[i - 1])} before ${label(plans[i])}`
             ).toBeLessThanOrEqual(0);
         }

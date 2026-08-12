@@ -9,17 +9,19 @@
 // to put a new one in the right place (`src/scripts/plan.ts`). Stating it
 // twice would let one of them drift.
 //
-// The parameters are structural on purpose -- the full `City` and `PlanRecord`
-// satisfy them -- so ordering the master does not depend on the frontend types.
+// Both types are structural on purpose, and narrower than the ones in
+// `src/frontend/types/plan.ts` that satisfy them -- ordering the master needs
+// only these fields, and asking for no more keeps it independent of the
+// frontend types.
 
-// A row of the city table, read only for the order it appears in.
-export interface CityOrderRow {
+export interface City {
     pref: string;
     city: string;
 }
 
-// The three fields a record's position depends on.
-export interface PlanRecordOrderKey {
+// Only the fields a record's position depends on; the master's own records
+// carry more.
+export interface Plan {
     pref: string;
     city: string;
     name: string;
@@ -35,13 +37,11 @@ function compare(a: string, b: string): number {
     return a > b ? 1 : 0;
 }
 
-function cityKey(record: PlanRecordOrderKey): string {
+function cityKey(record: Plan): string {
     return `${record.pref} ${record.city}`;
 }
 
-export function createPlanRecordComparator(
-    cities: CityOrderRow[]
-): (a: PlanRecordOrderKey, b: PlanRecordOrderKey) => number {
+export function createPlanRecordComparator(cities: City[]): (a: Plan, b: Plan) => number {
     const prefOrder = new Map<string, number>();
     const cityOrder = new Map<string, number>();
     for (const city of cities) {
@@ -74,7 +74,7 @@ export function createPlanRecordComparator(
 
 // The prefectures the table knows, in order. `plan.ts` uses it to reject a
 // prefecture the master could not hold, before writing rather than in CI.
-export function knownPrefectures(cities: CityOrderRow[]): string[] {
+export function knownPrefectures(cities: City[]): string[] {
     const seen: string[] = [];
     for (const city of cities) {
         if (!seen.includes(city.pref)) {
