@@ -423,7 +423,7 @@ export function execute(argv: string[], records: PlanRecord[], cities: City[], t
         }
         return { name, pref };
     };
-    const findStationIndex = (): number => {
+    const getRecordIndex = (): number => {
         const station = requireStation();
         return findRecord(records, station.name, station.pref);
     };
@@ -435,7 +435,7 @@ export function execute(argv: string[], records: PlanRecord[], cities: City[], t
 
         case 'show': {
             parseFlags(options, []);
-            const record = records[findStationIndex()];
+            const record = records[getRecordIndex()];
             return { lines: [label(record), ...describeRecord(record)] };
         }
 
@@ -462,7 +462,7 @@ export function execute(argv: string[], records: PlanRecord[], cities: City[], t
 
         case 'touch': {
             parseFlags(options, []);
-            const index = findStationIndex();
+            const index = getRecordIndex();
             return written(records, index, setFields(records[index], {}, today), cities);
         }
 
@@ -474,14 +474,14 @@ export function execute(argv: string[], records: PlanRecord[], cities: City[], t
                     patch[key] = flags[key];
                 }
             }
-            const index = findStationIndex();
+            const index = getRecordIndex();
             return written(records, index, setFields(records[index], patch, today), cities);
         }
 
         case 'url:add': {
             const flags = parseFlags(options, ['title', 'url']);
             requireFlags(flags, 'title', 'url');
-            const index = findStationIndex();
+            const index = getRecordIndex();
             const link = { title: flags.title, url: flags.url };
             return written(records, index, addUrl(records[index], link, today), cities);
         }
@@ -489,7 +489,7 @@ export function execute(argv: string[], records: PlanRecord[], cities: City[], t
         case 'url:rm': {
             const flags = parseFlags(options, ['url']);
             requireFlags(flags, 'url');
-            const index = findStationIndex();
+            const index = getRecordIndex();
             return written(records, index, removeUrl(records[index], flags.url, today), cities);
         }
 
