@@ -12,13 +12,13 @@ import {
     describeChange,
     describeQueue,
     describeRecord,
+    execute,
     findRecord,
-    insertRecord,
-    movesRecord,
+    type Outcome,
     parseCoordinate,
     parseFlags,
+    placeRecord,
     removeUrl,
-    replaceRecord,
     setFields,
     todayInJst,
 } from './plan';
@@ -193,84 +193,197 @@ describe('buildRecord', () => {
     });
 });
 
-describe('insertRecord', () => {
+describe('placeRecord', () => {
     const asahikawa = record({ name: '道の駅 旭川市', pref: '北海道', city: '旭川市' });
     const ishikawa = record();
     const izumizaki = record({ name: '道の駅 いずみざき', pref: '福島県', city: '西白河郡泉崎村' });
+    const names = (records: PlanRecord[]) => records.map((r) => r.name);
 
-    it('places a record in prefecture, city, then name order', () => {
-        const inserted = insertRecord([asahikawa, izumizaki], ishikawa, CITIES);
-        expect(inserted.map((r) => r.name)).toEqual(['道の駅 旭川市', '道の駅 石川町', '道の駅 いずみざき']);
+    describe('a record that does not exist yet (index -1)', () => {
+        it('places it in prefecture, city, then name order', () => {
+            expect(names(placeRecord([asahikawa, izumizaki], -1, ishikawa, CITIES))).toEqual([
+                '道の駅 旭川市',
+                '道の駅 石川町',
+                '道の駅 いずみざき',
+            ]);
+        });
+
+        // The tail is the common case: every prefecture's last station, and
+        // every station in 沖縄県, appends rather than splices.
+        it('appends one that belongs after every existing record', () => {
+            expect(names(placeRecord([asahikawa, ishikawa], -1, izumizaki, CITIES))).toEqual([
+                '道の駅 旭川市',
+                '道の駅 石川町',
+                '道の駅 いずみざき',
+            ]);
+        });
+
+        // The comparator is shared by this and the check that rejects a
+        // misplaced record, so agreeing with itself proves nothing -- this
+        // branch (a city cities.json does not list) needs its own answer.
+        it('sorts cities the table does not list to the end of their prefecture, in string order', () => {
+            const placed = placeRecord(
+                [record(), record({ name: '道の駅 B', city: '未知町B' })],
+                -1,
+                record({ name: '道の駅 A', city: '未知町A' }),
+                CITIES
+            );
+            expect(placed.map((r) => r.city)).toEqual(['石川郡石川町', '未知町A', '未知町B']);
+        });
+
+        it('rejects a station the master already holds', () => {
+            expect(() => placeRecord([ishikawa], -1, record(), CITIES)).toThrow(/already in the master/);
+        });
+
+        it('rejects a prefecture cities.json does not know', () => {
+            expect(() => placeRecord([], -1, record({ pref: '東京都' }), CITIES)).toThrow(/unknown prefecture/);
+        });
     });
 
-    // The tail is the common case: every prefecture's last station, and every
-    // station in 沖縄県, appends rather than splices.
-    it('appends a record that belongs after every existing one', () => {
-        expect(insertRecord([asahikawa, ishikawa], izumizaki, CITIES).map((r) => r.name)).toEqual([
-            '道の駅 旭川市',
-            '道の駅 石川町',
-            '道の駅 いずみざき',
-        ]);
-    });
+    describe('a record already in the file', () => {
+        const records = [asahikawa, ishikawa, izumizaki];
 
-    // The comparator is shared by the writer and the check that rejects a
-    // misplaced record, so agreeing with itself proves nothing -- this branch
-    // (a city cities.json does not list) needs its own answer to compare to.
-    it('sorts cities the table does not list to the end of their prefecture, in string order', () => {
-        const inserted = insertRecord(
-            [record(), record({ name: '道の駅 B', city: '未知町B' })],
-            record({ name: '道の駅 A', city: '未知町A' }),
-            CITIES
-        );
-        expect(inserted.map((r) => r.city)).toEqual(['石川郡石川町', '未知町A', '未知町B']);
-    });
+        // The record is removed and re-placed on every write, so an edit that
+        // left the ordering fields alone has to land back in its own slot.
+        it('leaves it where it was when no ordering field changed', () => {
+            const edited = setFields(ishikawa, { status: '開業', date: '2026-09-18' }, TODAY);
+            const placed = placeRecord(records, 1, edited, CITIES);
+            expect(names(placed)).toEqual(names(records));
+            expect(placed[1]).toBe(edited);
+        });
 
-    it('rejects a station the master already holds', () => {
-        expect(() => insertRecord([ishikawa], record(), CITIES)).toThrow(/already in the master/);
-    });
+        it('moves it when its city is corrected', () => {
+            const moved = setFields(ishikawa, { city: '西白河郡泉崎村' }, TODAY);
+            expect(names(placeRecord(records, 1, moved, CITIES))).toEqual([
+                '道の駅 旭川市',
+                '道の駅 いずみざき',
+                '道の駅 石川町',
+            ]);
+        });
 
-    it('rejects a prefecture cities.json does not know', () => {
-        expect(() => insertRecord([], record({ pref: '東京都' }), CITIES)).toThrow(/unknown prefecture/);
+        it('moves it when it is refiled under another prefecture', () => {
+            const moved = setFields(ishikawa, { pref: '北海道', city: '旭川市', name: '道の駅 あ' }, TODAY);
+            expect(names(placeRecord(records, 1, moved, CITIES))).toEqual([
+                '道の駅 あ',
+                '道の駅 旭川市',
+                '道の駅 いずみざき',
+            ]);
+        });
+
+        it('moves it when a rename takes it past a station in the same city', () => {
+            const pair = [record({ name: '道の駅 A' }), record({ name: '道の駅 Z' })];
+            const renamed = setFields(pair[0], { name: '道の駅 あ' }, TODAY);
+            expect(names(placeRecord(pair, 0, renamed, CITIES))).toEqual(['道の駅 Z', '道の駅 あ']);
+        });
+
+        // The record being replaced is removed before the duplicate check, so it
+        // does not collide with itself -- but a name already taken still has to.
+        it('rejects a rename onto a name the prefecture already holds', () => {
+            const pair = [ishikawa, record({ name: '道の駅 いしかわ' })];
+            const renamed = setFields(ishikawa, { name: '道の駅 いしかわ' }, TODAY);
+            expect(() => placeRecord(pair, 0, renamed, CITIES)).toThrow(/already in the master/);
+        });
     });
 });
 
-describe('movesRecord', () => {
-    it('leaves a record in place when only its values change', () => {
-        expect(movesRecord(record(), setFields(record(), { status: '開業', date: '2026-09-18' }, TODAY))).toBe(false);
+describe('execute', () => {
+    const records = [
+        record({ name: '道の駅 旭川市', pref: '北海道', city: '旭川市' }),
+        record(),
+        record({ name: '道の駅 いずみざき', pref: '福島県', city: '西白河郡泉崎村' }),
+    ];
+    const at = (outcome: Outcome, name: string) => (outcome.records ?? []).find((r) => r.name === name) as PlanRecord;
+
+    describe('reading verbs leave the master alone', () => {
+        it.each([
+            ['list', ['list']],
+            ['show', ['show', '道の駅 石川町', '福島県']],
+        ])('%s writes nothing', (_verb, argv) => {
+            expect(execute(argv, records, CITIES, TODAY).records).toBeUndefined();
+        });
+
+        it('show reports the record it names', () => {
+            expect(execute(['show', '道の駅 石川町', '福島県'], records, CITIES, TODAY).lines[0]).toBe(
+                '道の駅 石川町 (福島県)'
+            );
+        });
     });
 
-    it('re-places a renamed record', () => {
-        expect(movesRecord(record(), setFields(record(), { name: '道の駅 いしかわ' }, TODAY))).toBe(true);
+    describe('writing verbs return the master to write', () => {
+        it('edit applies the new values', () => {
+            const outcome = execute(['edit', '道の駅 石川町', '福島県', '--status', '開業'], records, CITIES, TODAY);
+            expect(at(outcome, '道の駅 石川町').status).toBe('開業');
+            expect(outcome.records).toHaveLength(3);
+        });
+
+        it('touch moves only checked_on', () => {
+            const outcome = execute(['touch', '道の駅 石川町', '福島県'], records, CITIES, TODAY);
+            expect(at(outcome, '道の駅 石川町')).toEqual({ ...record(), checked_on: TODAY });
+        });
+
+        it('url:add appends, url:rm removes', () => {
+            const added = execute(
+                ['url:add', '道の駅 石川町', '福島県', '--title', '開業日決定', '--url', 'https://example.jp/news'],
+                records,
+                CITIES,
+                TODAY
+            );
+            expect(at(added, '道の駅 石川町').urls).toHaveLength(2);
+            const removed = execute(
+                ['url:rm', '道の駅 石川町', '福島県', '--url', 'https://example.jp/plan'],
+                records,
+                CITIES,
+                TODAY
+            );
+            expect(at(removed, '道の駅 石川町').urls).toEqual([]);
+            expect(removed.warnings).toEqual([expect.stringMatching(/cites no source/)]);
+        });
+
+        it('add places a new record and stamps it', () => {
+            const outcome = execute(
+                [
+                    'add',
+                    '道の駅 あさひかわ',
+                    '北海道',
+                    '--city',
+                    '旭川市',
+                    '--status',
+                    '計画中',
+                    '--title',
+                    '整備へ',
+                    '--url',
+                    'https://example.jp/a',
+                ],
+                records,
+                CITIES,
+                TODAY
+            );
+            expect(outcome.records).toHaveLength(4);
+            expect(at(outcome, '道の駅 あさひかわ').checked_on).toBe(TODAY);
+            expect(outcome.lines[0]).toMatch(/^added 道の駅 あさひかわ \(北海道\) at record 1 of 4$/);
+        });
+
+        it('says so when a write moved nothing', () => {
+            const stamped = [record({ checked_on: TODAY })];
+            const outcome = execute(['touch', '道の駅 石川町', '福島県'], stamped, CITIES, TODAY);
+            expect(outcome.lines).toEqual(['道の駅 石川町 (福島県)', '  no change']);
+        });
+
+        // The record arrives positionally, so the same value as an option would
+        // be dropped without a word.
+        it('add refuses the flags it takes positionally', () => {
+            const argv = ['add', '道の駅 あ', '北海道', '--name', '道の駅 い', '--city', '旭川市'];
+            expect(() => execute(argv, records, CITIES, TODAY)).toThrow(/unknown flag --name/);
+        });
     });
 
-    it('re-places a record filed under the wrong prefecture', () => {
-        expect(movesRecord(record(), setFields(record(), { pref: '北海道' }, TODAY))).toBe(true);
-    });
-
-    it('re-places a record whose city was corrected', () => {
-        expect(movesRecord(record({ city: '石川町' }), setFields(record(), { city: '石川郡石川町' }, TODAY))).toBe(
-            true
-        );
-    });
-});
-
-describe('replaceRecord', () => {
-    const asahikawa = record({ name: '道の駅 旭川市', pref: '北海道', city: '旭川市' });
-    const izumizaki = record({ name: '道の駅 いずみざき', pref: '福島県', city: '西白河郡泉崎村' });
-    const records = [asahikawa, record(), izumizaki];
-
-    it('keeps the count and the position when the edit does not move the record', () => {
-        const updated = replaceRecord(records, 1, setFields(record(), { status: '開業' }, TODAY), CITIES);
-        expect(updated.map((r) => r.name)).toEqual(records.map((r) => r.name));
-        expect(updated[1].status).toBe('開業');
-    });
-
-    // The edit has to land the record somewhere else, or this passes without
-    // ever taking the move path.
-    it('moves the record without losing any', () => {
-        const moved = setFields(record(), { city: '西白河郡泉崎村' }, TODAY);
-        const updated = replaceRecord(records, 1, moved, CITIES);
-        expect(updated.map((r) => r.name)).toEqual(['道の駅 旭川市', '道の駅 いずみざき', '道の駅 石川町']);
+    it.each([
+        ['an unknown verb', ['destroy', '道の駅 石川町', '福島県'], /unknown command destroy/],
+        ['no verb at all', [], /no command/],
+        ['a verb with no station', ['edit'], /missing the station name and prefecture/],
+        ['a station with no prefecture', ['edit', '道の駅 石川町'], /missing the station name and prefecture/],
+    ])('rejects %s', (_case, argv, message) => {
+        expect(() => execute(argv, records, CITIES, TODAY)).toThrow(message);
     });
 });
 

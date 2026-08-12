@@ -162,42 +162,30 @@ export function buildRecord(fields: {
     };
 }
 
-// Places the record where the file's order says it belongs. The ranking comes
-// from cities.json, not from the record itself.
-export function insertRecord(records: PlanRecord[], record: PlanRecord, cities: City[]): PlanRecord[] {
-    if (records.some((existing) => existing.name === record.name && existing.pref === record.pref)) {
-        throw new Error(`${label(record)} is already in the master`);
-    }
+// The one way the array changes: drop the record being written, then put it
+// where the file's order says it belongs. `index` is -1 for a record that does
+// not exist yet, which is the only respect in which adding differs from
+// editing.
+//
+// Re-placing unconditionally costs nothing and removes the question of which
+// edits move a record. An edit that left `pref` / `city` / `name` alone lands
+// back in the slot it came from, because the records around it are exactly the
+// ones it already sorted between.
+export function placeRecord(records: PlanRecord[], index: number, record: PlanRecord, cities: City[]): PlanRecord[] {
     if (!knownPrefectures(cities).includes(record.pref)) {
         throw new Error(`unknown prefecture ${record.pref}; it has to match data/cities.json`);
     }
-    const compare = createPlanRecordComparator(cities);
-    const at = records.findIndex((existing) => compare(record, existing) < 0);
-    const index = at === -1 ? records.length : at;
-    return [...records.slice(0, index), record, ...records.slice(index)];
-}
-
-// Whether an edit changed where the record belongs in the file. All three
-// ordering keys are editable, and a city corrected to the cities.json spelling
-// moves the record out of the tail its unknown spelling had put it in, so any
-// of them has to re-place it.
-export function movesRecord(before: PlanRecord, after: PlanRecord): boolean {
-    return after.name !== before.name || after.pref !== before.pref || after.city !== before.city;
-}
-
-// Puts an edited record back, at a new position when the edit moved it. This is
-// the only path that changes the shape of the array, and a record dropped here
-// would pass every check in plan-data.test.ts -- a station simply missing from
-// the master breaks no rule -- so it is worth having on its own.
-export function replaceRecord(records: PlanRecord[], index: number, after: PlanRecord, cities: City[]): PlanRecord[] {
-    const updated = [...records];
-    updated[index] = after;
-    if (!movesRecord(records[index], after)) {
-        return updated;
+    // Removed first, so a record does not collide with the copy of itself it is
+    // replacing -- and so a rename onto a name already taken in that prefecture
+    // still does.
+    const rest = index === -1 ? records : records.toSpliced(index, 1);
+    if (rest.some((existing) => existing.name === record.name && existing.pref === record.pref)) {
+        throw new Error(`${label(record)} is already in the master`);
     }
-    // Removed before being placed, so `insertRecord`'s duplicate check does not
-    // see the record collide with the copy of itself it is replacing.
-    return insertRecord(updated.toSpliced(index, 1), after, cities);
+    const compare = createPlanRecordComparator(cities);
+    const at = rest.findIndex((existing) => compare(record, existing) < 0);
+    const to = at === -1 ? rest.length : at;
+    return [...rest.slice(0, to), record, ...rest.slice(to)];
 }
 
 // A record with neither coordinates nor a city the table knows is not drawn at
@@ -216,10 +204,8 @@ export function coordinateWarning(record: PlanRecord, cities: City[]): string | 
     );
 }
 
-// Every field of a record, for `show` and for a record `add` just created --
-// `describeChange` would show none of the latter's fields, since a new record
-// has no previous value to differ from. Sources are listed without the +/- of a
-// change summary, because nothing here moved.
+// Every field of a record. Sources are listed without the +/- of a change
+// summary, because nothing here moved.
 export function describeRecord(record: PlanRecord): string[] {
     const lines = SCALAR_KEYS.map((key) => `  ${key.padEnd(10)} ${JSON.stringify(record[key])}`);
     return [...lines, ...record.urls.map((link) => `  urls       ${link.title}  ${link.url}`)];
@@ -389,72 +375,97 @@ under now; every option carries a new value. Writing stamps checked_on.`;
 // field names -- `--name` renames, `--pref` refiles.
 const EDIT_FLAGS = ['name', 'pref', 'city', 'status', 'date', 'lat', 'lng'];
 
-function run(argv: string[]): void {
-    const [verb, ...rest] = argv;
-    const records = readJson<PlanRecord[]>(PLANS_FILENAME);
+// What a command leaves behind: the lines it prints, the master to write when
+// it changed one, and anything the writer should notice that did not stop the
+// write. Returning this rather than printing lets every verb share one write
+// site and one output site -- and lets the dispatch be tested without touching
+// the file.
+export interface Outcome {
+    lines: string[];
+    records?: PlanRecord[];
+    warnings?: string[];
+}
 
-    if (verb === 'list') {
-        parseFlags(rest, []);
-        for (const line of describeQueue(records, QUEUE_PAGE)) {
-            console.log(line);
+// The tail the five writing verbs share, once they have decided what the
+// record should become.
+function written(records: PlanRecord[], index: number, after: PlanRecord, cities: City[]): Outcome {
+    const placed = placeRecord(records, index, after, cities);
+    const before = index === -1 ? null : records[index];
+    // A new record has no previous value to differ from, so it is listed in
+    // full. An edit prints what moved -- and says so when nothing did, since an
+    // edit that changed no field (the same value set twice, a second touch on
+    // one day) would otherwise print as silence.
+    const changes = before === null ? describeRecord(after) : describeChange(before, after);
+    const warnings = [
+        coordinateWarning(after, cities),
+        after.urls.length === 0 ? `${label(after)} now cites no source; add one before committing` : null,
+    ];
+    return {
+        lines: [
+            before === null
+                ? `added ${label(after)} at record ${placed.indexOf(after) + 1} of ${placed.length}`
+                : label(after),
+            ...(changes.length > 0 ? changes : ['  no change']),
+        ],
+        records: placed,
+        warnings: warnings.filter((warning) => warning !== null),
+    };
+}
+
+export function execute(argv: string[], records: PlanRecord[], cities: City[], today: string): Outcome {
+    const [verb, name, pref, ...options] = argv;
+
+    // Every verb but `list` names a station. Resolving it where it is needed
+    // rather than before the switch is what lets all seven sit in one.
+    const named = (): { name: string; pref: string } => {
+        if (!name || !pref) {
+            throw new Error(`missing the station name and prefecture\n\n${USAGE}`);
         }
-        return;
-    }
-
-    const [name, pref, ...options] = rest;
-    if (!verb || !name || !pref) {
-        throw new Error(`${verb ? 'missing the station name and prefecture' : 'no command'}\n\n${USAGE}`);
-    }
-
-    if (verb === 'show') {
-        parseFlags(options, []);
-        const record = records[findRecord(records, name, pref)];
-        console.log(label(record));
-        for (const line of describeRecord(record)) {
-            console.log(line);
-        }
-        return;
-    }
-
-    const today = todayInJst(new Date());
-    const cities = readJson<City[]>(CITIES_FILENAME);
-
-    if (verb === 'add') {
-        // Not EDIT_FLAGS: `name` and `pref` arrive positionally here, so
-        // accepting them as options too would let one be silently ignored.
-        const flags = parseFlags(options, ['city', 'status', 'date', 'lat', 'lng', 'title', 'url']);
-        requireFlags(flags, 'city', 'status', 'title', 'url');
-        const coordinates = coordinatePatch(flags);
-        const record = buildRecord({
-            name,
-            pref,
-            city: flags.city,
-            status: flags.status,
-            date: flags.date ?? '',
-            lat: coordinates.lat ?? null,
-            lng: coordinates.lng ?? null,
-            urls: [{ title: flags.title, url: flags.url }],
-            checked_on: today,
-        });
-        const inserted = insertRecord(records, record, cities);
-        writePlans(inserted);
-        console.log(`added ${label(record)} at record ${inserted.indexOf(record) + 1} of ${inserted.length}`);
-        for (const line of describeRecord(record)) {
-            console.log(line);
-        }
-        warn(coordinateWarning(record, cities));
-        return;
-    }
-
-    const index = findRecord(records, name, pref);
-    const before = records[index];
-    let after: PlanRecord;
+        return { name, pref };
+    };
+    const station = (): number => {
+        const target = named();
+        return findRecord(records, target.name, target.pref);
+    };
 
     switch (verb) {
-        case 'touch':
+        case 'list':
+            parseFlags(argv.slice(1), []);
+            return { lines: describeQueue(records, QUEUE_PAGE) };
+
+        case 'show': {
             parseFlags(options, []);
-            after = setFields(before, {}, today);
-            break;
+            const record = records[station()];
+            return { lines: [label(record), ...describeRecord(record)] };
+        }
+
+        case 'add': {
+            const fields = named();
+            // Not EDIT_FLAGS: `name` and `pref` arrive positionally, so
+            // accepting them as options too would let one be silently ignored.
+            const flags = parseFlags(options, ['city', 'status', 'date', 'lat', 'lng', 'title', 'url']);
+            requireFlags(flags, 'city', 'status', 'title', 'url');
+            const coordinates = coordinatePatch(flags);
+            const record = buildRecord({
+                name: fields.name,
+                pref: fields.pref,
+                city: flags.city,
+                status: flags.status,
+                date: flags.date ?? '',
+                lat: coordinates.lat ?? null,
+                lng: coordinates.lng ?? null,
+                urls: [{ title: flags.title, url: flags.url }],
+                checked_on: today,
+            });
+            return written(records, -1, record, cities);
+        }
+
+        case 'touch': {
+            parseFlags(options, []);
+            const index = station();
+            return written(records, index, setFields(records[index], {}, today), cities);
+        }
+
         case 'edit': {
             const flags = parseFlags(options, EDIT_FLAGS);
             const patch: FieldPatch = coordinatePatch(flags);
@@ -463,44 +474,45 @@ function run(argv: string[]): void {
                     patch[key] = flags[key];
                 }
             }
-            after = setFields(before, patch, today);
-            break;
+            const index = station();
+            return written(records, index, setFields(records[index], patch, today), cities);
         }
+
         case 'url:add': {
             const flags = parseFlags(options, ['title', 'url']);
             requireFlags(flags, 'title', 'url');
-            after = addUrl(before, { title: flags.title, url: flags.url }, today);
-            break;
+            const index = station();
+            const link = { title: flags.title, url: flags.url };
+            return written(records, index, addUrl(records[index], link, today), cities);
         }
+
         case 'url:rm': {
             const flags = parseFlags(options, ['url']);
             requireFlags(flags, 'url');
-            after = removeUrl(before, flags.url, today);
-            break;
+            const index = station();
+            return written(records, index, removeUrl(records[index], flags.url, today), cities);
         }
+
         default:
-            throw new Error(`unknown command ${verb}\n\n${USAGE}`);
-    }
-
-    const changes = describeChange(before, after);
-    writePlans(replaceRecord(records, index, after, cities));
-
-    console.log(label(after));
-    // Said out loud rather than printed as nothing: an edit that moved no field
-    // (the same value set twice, a second touch on one day) would otherwise look
-    // like the silent no-op this tool exists to rule out.
-    for (const line of changes.length > 0 ? changes : ['  no change']) {
-        console.log(line);
-    }
-    warn(coordinateWarning(after, cities));
-    if (after.urls.length === 0) {
-        console.warn(`warning: ${label(after)} now cites no source; add one before committing`);
+            throw new Error(`${verb ? `unknown command ${verb}` : 'no command'}\n\n${USAGE}`);
     }
 }
 
-function warn(message: string | null): void {
-    if (message) {
-        console.warn(`warning: ${message}`);
+function run(argv: string[]): void {
+    const outcome = execute(
+        argv,
+        readJson<PlanRecord[]>(PLANS_FILENAME),
+        readJson<City[]>(CITIES_FILENAME),
+        todayInJst(new Date())
+    );
+    if (outcome.records) {
+        writePlans(outcome.records);
+    }
+    for (const line of outcome.lines) {
+        console.log(line);
+    }
+    for (const warning of outcome.warnings ?? []) {
+        console.warn(`warning: ${warning}`);
     }
 }
 
