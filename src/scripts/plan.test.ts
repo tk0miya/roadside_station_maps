@@ -302,8 +302,8 @@ describe('execute', () => {
         });
 
         it('show answers with the record it names', () => {
-            const lines = execute(['show', '道の駅 石川町', '福島県'], records, CITIES, TODAY).lines;
-            expect(lines.join('\n')).toBe(JSON.stringify(record(), null, 4));
+            const outcome = execute(['show', '道の駅 石川町', '福島県'], records, CITIES, TODAY);
+            expect(outcome.output).toBe(JSON.stringify(record(), null, 4));
         });
     });
 
@@ -358,14 +358,14 @@ describe('execute', () => {
             );
             expect(outcome.records).toHaveLength(4);
             expect(at(outcome, '道の駅 あさひかわ').checked_on).toBe(TODAY);
-            expect(outcome.lines[0]).toBe('added 道の駅 あさひかわ (北海道) at record 1 of 4');
+            expect(outcome.output.split('\n')[0]).toBe('added 道の駅 あさひかわ (北海道) at record 1 of 4');
         });
 
         // Every verb that touches a record answers with the record, so a value
         // just written can be read back without a second command.
         it('answers with the whole record, not a summary of the edit', () => {
             const outcome = execute(['edit', '道の駅 石川町', '福島県', '--status', '開業'], records, CITIES, TODAY);
-            expect(outcome.lines.join('\n')).toBe(JSON.stringify(at(outcome, '道の駅 石川町'), null, 4));
+            expect(outcome.output).toBe(JSON.stringify(at(outcome, '道の駅 石川町'), null, 4));
         });
 
         // The record arrives positionally, so the same value as an option would
@@ -402,13 +402,13 @@ describe('coordinateWarning', () => {
 
 describe('describeRecord', () => {
     it('renders the record exactly as the file holds it', () => {
-        expect(describeRecord(record()).join('\n')).toBe(JSON.stringify(record(), null, 4));
+        expect(describeRecord(record())).toBe(JSON.stringify(record(), null, 4));
     });
 
     // The rendering is what a reader compares against `data/plans.json`, so the
     // indent has to be the one `writePlans` writes.
     it('indents with four spaces, one field per line', () => {
-        const lines = describeRecord(record());
+        const lines = describeRecord(record()).split('\n');
         expect(lines[0]).toBe('{');
         expect(lines[1]).toBe('    "name": "道の駅 石川町",');
         expect(lines.at(-1)).toBe('}');
@@ -427,14 +427,14 @@ describe('describeQueue', () => {
     // 開業 and 中止 are finished stories, so their older stamps must not pull
     // them to the front of a queue they are not in.
     it('lists the oldest page of the statuses that can still move', () => {
-        const lines = describeQueue(queue, 2);
-        expect(lines.slice(0, 2).map((line) => line.split('\t')[4])).toEqual(['道の駅 A', '道の駅 C']);
+        const rows = describeQueue(queue, 2).split('\n');
+        expect(rows.slice(0, 2).map((row) => row.split('\t')[4])).toEqual(['道の駅 A', '道の駅 C']);
     });
 
     // The totals are what tell the skill whether another session is worth
     // running, so they cover the whole queue rather than the page.
     it('counts the whole queue, not just the page', () => {
-        expect(describeQueue(queue, 2).at(-1)).toBe('3 queued; oldest checked_on 2026-01-01, shared by 2');
+        expect(describeQueue(queue, 2).split('\n').at(-1)).toBe('3 queued; oldest checked_on 2026-01-01, shared by 2');
     });
 });
 

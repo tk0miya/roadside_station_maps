@@ -199,14 +199,14 @@ export function coordinateWarning(record: PlanRecord, cities: City[]): string | 
 // so that what a command prints and what lands in the file cannot drift apart.
 // It is the whole record rather than a summary of the edit: `git diff` already
 // answers "what changed", in the form the pull request will carry.
-export function describeRecord(record: PlanRecord): string[] {
-    return JSON.stringify(record, null, 4).split('\n');
+export function describeRecord(record: PlanRecord): string {
+    return JSON.stringify(record, null, 4);
 }
 
 // The oldest page of the queue, plus how big the queue is. The totals matter
 // as much as the page: one session clears ten, so they are how the skill
 // reports whether another session is worth running.
-export function describeQueue(records: PlanRecord[], page: number): string[] {
+export function describeQueue(records: PlanRecord[], page: number): string {
     // Sorted by stamp alone, and stably, so records sharing a stamp keep the
     // order the file has them in (`plan-record-order.ts`). That fallback is not
     // a corner case: a session stamps a whole page with one date, so stations
@@ -215,7 +215,7 @@ export function describeQueue(records: PlanRecord[], page: number): string[] {
         .filter((record) => QUEUED.includes(record.status))
         .sort((a, b) => (a.checked_on < b.checked_on ? -1 : a.checked_on > b.checked_on ? 1 : 0));
     if (queued.length === 0) {
-        return ['nothing queued'];
+        return 'nothing queued';
     }
     const oldest = queued[0].checked_on;
     const atOldest = queued.filter((record) => record.checked_on === oldest).length;
@@ -224,7 +224,7 @@ export function describeQueue(records: PlanRecord[], page: number): string[] {
         .map((record) =>
             [record.checked_on, record.status, record.pref, record.city, record.name, record.date].join('\t')
         );
-    return [...rows, '', `${queued.length} queued; oldest checked_on ${oldest}, shared by ${atOldest}`];
+    return [...rows, '', `${queued.length} queued; oldest checked_on ${oldest}, shared by ${atOldest}`].join('\n');
 }
 
 type Flags = Record<string, string>;
@@ -348,7 +348,7 @@ const EDIT_FLAGS = ['name', 'pref', 'city', 'status', 'date', 'lat', 'lng'];
 // site and one output site -- and lets the dispatch be tested without touching
 // the file.
 export interface Outcome {
-    lines: string[];
+    output: string;
     records?: PlanRecord[];
     warnings?: string[];
 }
@@ -363,9 +363,9 @@ function written(records: PlanRecord[], index: number, after: PlanRecord, cities
         after.urls.length === 0 ? `${label(after)} now cites no source; add one before committing` : null,
     ];
     const heading =
-        index === -1 ? [`added ${label(after)} at record ${placed.indexOf(after) + 1} of ${placed.length}`] : [];
+        index === -1 ? `added ${label(after)} at record ${placed.indexOf(after) + 1} of ${placed.length}\n` : '';
     return {
-        lines: [...heading, ...describeRecord(after)],
+        output: heading + describeRecord(after),
         records: placed,
         warnings: warnings.filter((warning) => warning !== null),
     };
@@ -390,11 +390,11 @@ export function execute(argv: string[], records: PlanRecord[], cities: City[], t
     switch (verb) {
         case 'list':
             parseFlags(argv.slice(1), []);
-            return { lines: describeQueue(records, QUEUE_PAGE) };
+            return { output: describeQueue(records, QUEUE_PAGE) };
 
         case 'show': {
             parseFlags(options, []);
-            return { lines: describeRecord(records[getRecordIndex()]) };
+            return { output: describeRecord(records[getRecordIndex()]) };
         }
 
         case 'add': {
@@ -466,9 +466,7 @@ function run(argv: string[]): void {
     if (outcome.records) {
         writePlans(outcome.records);
     }
-    for (const line of outcome.lines) {
-        console.log(line);
-    }
+    console.log(outcome.output);
     for (const warning of outcome.warnings ?? []) {
         console.warn(`warning: ${warning}`);
     }
