@@ -34,6 +34,7 @@
 - **フロントエンド**: `npm start`（ウォッチビルド） / `npm run serve`（開発サーバー、ポート 8081） / `npm run build`
 - **バックエンド**: `npm run dev:backend`（wrangler dev） / `npm run deploy:backend` / `npm run db:migrate:local` / `npm run db:migrate`
 - **データ生成**: `npm run generate:all`（`generate:stations` → `generate:geojson`）
+- **開発計画マスタ**: `npm run plan`（`data/plans.json` の読み取りと更新。サブコマンドは `list` / `show` / `update` / `url` / `add`。`npm run plan -- --help`）
 - **品質**: `npm test` / `npm run lint` / `npm run format` / `npm run typecheck` / `npm run lint:fix`
 
 ### generate:stations のデバッグモード
@@ -57,7 +58,7 @@ src/
 ├── backend/     Cloudflare Workers（Hono）API。auth / handlers / db / middleware
 ├── frontend/    React 19 フロントエンド。components / auth / storage / types
 ├── shared/      フロント・バック共通の型定義
-├── lib/         scripts が使うモジュール（CSV パース、Station 型）
+├── lib/         scripts が使うモジュール（CSV パース、Station 型、開発計画マスタの正規形）
 ├── scripts/     CLI のエントリーポイント（npm script から実行する）
 └── test-utils/  テスト用ヘルパー
 
@@ -144,21 +145,24 @@ data/         生成データ（CSV / GeoJSON）と開発計画マスタ（plans
 
 #### 形式
 
-1 要素 1 駅の JSON 配列（現在 177 件）。キー順は固定で `name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `urls` / `checked_on`。型は `lat` / `lng` が number または null、`urls` が `{ title, url }`（キー順も固定）の配列、残りは string（空は `""`）。レコード順も固定で `pref` → `city` → `name`（`pref` と `city` は `data/cities.json` の出現順 = 全国地方公共団体コード順。`cities.json` に引き当たらない `city` はその `pref` の末尾に文字列順）。
+1 要素 1 駅の JSON 配列（現在 177 件）。キー順は固定で `name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `urls` / `checked_on`。型は `lat` / `lng` が number または null、`urls` が `{ title, url }`（キー順も固定）の配列、残りは string（空は `""`）。レコード順も固定で `pref` → `city` → `name`（`pref` と `city` は `data/cities.json` の出現順 = 全国地方公共団体コード順）。
 
 - **キー順を固定する**: 差分の安定のためだけでなく、`name` が一意でない（「道の駅 川崎町」が福岡県と宮城県にある）ため、レコードを特定するには `name` の直後に `pref` が来る必要がある
 - **レコード順を固定する**: 順序が動くと差分が壊れる。都道府県順にすると GitHub の編集 UI で目的の駅に当たりが付く（表示順は別物で、`plan-order.ts` が読み込み後に決める）
 - **単一ファイルにする**: マスタがそのまま配信ファイルになりビルド工程が増えない。1 駅 1 ファイルにするとバンドル生成が必要になり、生成物のコミット漏れという失敗モードを新たに作る。この規模ならコンフリクト耐性のためにそれを払う価値はない
 - **pretty-print（1 行 1 フィールド）にする**: 差分が読め、コンフリクトが同一レコードに限定される。JSONL はレコード全体が 1 行に潰れ、出典が 5 本ある駅では `urls` だけで数百桁になって GitHub の編集 UI で扱いづらい
+- **`pref` / `city` は `data/cities.json` にある市区町村**: 座標のないレコードを代表点へ落とす引き当てキーで、レコード順もこのテーブルが決めるので、載っていない表記は書かない。**`cities.json` は別の経路で更新されるので、この台帳がそれに従う** — 改称・合併に追随していなければ、載っている表記で書く。`plan-master.ts` の比較関数は未知の `city` をその `pref` の末尾に送るが、これは規定ではなく保険
 - **`date` は形式を決めない**: 判明している粒度をそのまま記録するため、`2026-04-01` / `2026-04` / `2026` / `2026夏` のいずれもありうる
 - **`checked_on` はその駅を最後に調査した日**: 調査は古い順に少しずつ進めるため**この列は調査キューの並び替えキー**で、書き忘れるとキューが進まなくなる
 - **`urls` は 1 レコード 10 件まで**: 上限がないと古い記事が積もり、新しい出典がその中に埋もれる。上限があれば 10 件に達した駅では 1 本足すたびにいちばん弱い 1 本を見直すことになり、出典が新陳代謝する。どの 1 本を落とすかの基準はスキル側にある（本数だけを `npm run ci` が検証する）
 
-#### 更新は Edit ツールではなく jq で行う
+#### 更新は `npm run plan` で行う
 
-3600 行の JSON では `old_string` の一意性を取るのが難しく（`"name": "道の駅 川崎町"` は 2 件ある）、`urls` の書き換えでは長大になる。jq は既存キーの順序を保持するのでキー順も崩れない。
+Edit ツールは使わない。3600 行の JSON では `old_string` の一意性を取るのが難しく（`"name": "道の駅 川崎町"` は 2 件ある）、`urls` の書き換えでは長大になる。**このマスタの壊れ方は「書いたつもりで何も起きていない」**で、ファイルは正しいままなので `npm run ci` では捕まらない。CLI（`src/scripts/plan.ts` と `src/lib/plan-master.ts`）はそれを exit 1 にするために置いてあり、失敗したときは `data/plans.json` に触らずに終わる。
 
-手順（レコードの引き方、`urls` の足し方、`checked_on` の押印、PR の出し方）は `.claude/skills/michi-no-eki-plan-research/SKILL.md` にある。**同じことをここに書き足さない** — 手順が変わったとき片方だけ直されて、残った側が嘘になる。
+CLI の設計（借り出してから書き換える形、レコード順の比較関数を検証側と共有する形）とその理由は `src/lib/plan-master.ts` のコメントにある。
+
+手順（どのサブコマンドで何を書くか、`urls` の足し方、PR の出し方）は `.claude/skills/michi-no-eki-plan-research/SKILL.md` にある。**同じことをここに書き足さない** — 手順が変わったとき片方だけ直されて、残った側が嘘になる。
 
 #### 整形は Biome、構造は vitest
 
@@ -166,11 +170,9 @@ data/         生成データ（CSV / GeoJSON）と開発計画マスタ（plans
 
 構造の検証は `src/frontend/plan-data.test.ts` が実データを読んで行う（キーの集合と順序、`status` の 5 値、`pref` の実在、`name` の非空、`name` + `pref` の一意性、座標の型、`urls` の形（1 件以上 10 件以下、`title` の非空、`url` の重複なし、`http` / `https` スキーム）、レコード順）。**インデントやバイト一致は検証しない** — 前者は Biome の担当で、後者は数値のレンダリングが書き手によって揺れる（座標がちょうど整数のとき `36.0` と `36` のどちらもありうる）ため、原因の分かりにくい赤になる。
 
-**`checked_on` の更新は CI で強制しない。** 「差分に現れた駅は `checked_on` が更新されている」を CI ルールにすると、GitHub UI で `city` の誤字を直しただけの PR が落ちる。押印忘れのコスト（再調査 1 枠）より誤検知のコストが大きいので、押印はスキルの責務に置く。
-
 #### 相談事項は `docs/plan-reports.md` に書く
 
-調査で出た、データの列に書けない相談事項（所在地の食い違い、代替の見つからないリンク切れ、判断を仰ぎたい事項）の置き場所。旧経路では `plan:update --report` が GAS 経由で Slack に流していたが、その経路も GAS と一緒に消えた。
+調査で出た、データの列に書けないもの（所在地の食い違い、代替の見つからないリンク切れ、`data/cities.json` の古さ、判断を仰ぎたい事項）の置き場所。旧経路では `plan:update --report` が GAS 経由で Slack に流していたが、その経路も GAS と一緒に消えた。
 
 Issue にしないのは、ファイルなら contents 権限だけで扱えて、GitHub API に到達できないセッションでも調査ループが完結するため。リポジトリの既存の作法（App トークンに `permission-contents: write` と `permission-pull-requests: write` だけを明示）とも揃う。PR の差分に出るのでレビューで必ず目に入る。
 
