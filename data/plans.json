@@ -1935,14 +1935,14 @@
         "name": "道の駅 勝浦市",
         "pref": "千葉県",
         "city": "勝浦市",
-        "status": "計画中",
+        "status": "中止",
         "date": "",
         "lat": 35.2030875,
         "lng": 140.2691267,
         "urls": [
             {
-                "title": "https://www.city.katsuura.lg.jp/div/soumu/pdf/public-comment/mitinoeki_kihonkeikakuan.pdf",
-                "url": "https://www.city.katsuura.lg.jp/div/soumu/pdf/public-comment/mitinoeki_kihonkeikakuan.pdf"
+                "title": "計画中の道の駅 千葉県の各市町村の状況",
+                "url": "https://michinoeki.around-japan.jp/plan-station/plan-chiba.html"
             }
         ],
         "checked_on": "2026-08-12"
