@@ -158,30 +158,25 @@ export function buildRecord(fields: {
     };
 }
 
-// The one way the array changes: drop the record being written, then put it
-// where the file's order says it belongs. `index` is -1 for a record that does
-// not exist yet, which is the only respect in which adding differs from
-// editing.
+// The one way the array changes: put the record in, then restore the file's
+// order. `index` is -1 for a record that does not exist yet, which is the only
+// respect in which adding differs from editing.
 //
-// Re-placing unconditionally costs nothing and removes the question of which
-// edits move a record. An edit that left `pref` / `city` / `name` alone lands
-// back in the slot it came from, because the records around it are exactly the
-// ones it already sorted between.
+// Sorting the whole array rather than searching for an insertion point is what
+// keeps this short. The master is sorted and stays sorted, so a record whose
+// `pref` / `city` / `name` did not move sorts back to where it was.
 export function placeRecord(records: PlanRecord[], index: number, record: PlanRecord, cities: City[]): PlanRecord[] {
     if (!knownPrefectures(cities).includes(record.pref)) {
         throw new Error(`unknown prefecture ${record.pref}; it has to match data/cities.json`);
     }
-    // Removed first, so a record does not collide with the copy of itself it is
-    // replacing -- and so a rename onto a name already taken in that prefecture
-    // still does.
-    const rest = index === -1 ? records : records.toSpliced(index, 1);
-    if (rest.some((existing) => existing.name === record.name && existing.pref === record.pref)) {
+    const updated = index === -1 ? [...records, record] : records.with(index, record);
+    // Counted over the result, so a record does not collide with the copy of
+    // itself it is replacing -- while a rename onto a name the prefecture
+    // already holds still does.
+    if (updated.filter((held) => held.name === record.name && held.pref === record.pref).length > 1) {
         throw new Error(`${label(record)} is already in the master`);
     }
-    const compare = createPlanRecordComparator(cities);
-    const at = rest.findIndex((existing) => compare(record, existing) < 0);
-    const to = at === -1 ? rest.length : at;
-    return [...rest.slice(0, to), record, ...rest.slice(to)];
+    return updated.toSorted(createPlanRecordComparator(cities));
 }
 
 // A record with neither coordinates nor a city the table knows is not drawn at
