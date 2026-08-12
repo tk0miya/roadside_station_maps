@@ -1580,6 +1580,34 @@
         "checked_on": "2026-08-11"
     },
     {
+        "name": "道の駅 さいたま",
+        "pref": "埼玉県",
+        "city": "さいたま市見沼区",
+        "status": "計画中",
+        "date": "2033年度",
+        "lat": 35.9482709,
+        "lng": 139.6710459,
+        "urls": [
+            {
+                "title": "https://www.city.saitama.jp/005/002/008/001/index.html",
+                "url": "https://www.city.saitama.jp/005/002/008/001/index.html"
+            },
+            {
+                "title": "https://k-saito.jp/archives/1194",
+                "url": "https://k-saito.jp/archives/1194"
+            },
+            {
+                "title": "さいたま市「道の駅」整備計画",
+                "url": "https://www.city.saitama.lg.jp/005/002/008/001/p125881.html"
+            },
+            {
+                "title": "さいたま市「道の駅」整備事業について",
+                "url": "https://www.city.saitama.lg.jp/005/002/008/001/p125883.html"
+            }
+        ],
+        "checked_on": "2026-08-11"
+    },
+    {
         "name": "道の駅くるん熊谷",
         "pref": "埼玉県",
         "city": "熊谷市",
@@ -1831,34 +1859,6 @@
             {
                 "title": "http://www.town.matsubushi.lg.jp/www/contents/1607582275848/index.html",
                 "url": "http://www.town.matsubushi.lg.jp/www/contents/1607582275848/index.html"
-            }
-        ],
-        "checked_on": "2026-08-11"
-    },
-    {
-        "name": "道の駅 さいたま",
-        "pref": "埼玉県",
-        "city": "さいたま市",
-        "status": "計画中",
-        "date": "2033年度",
-        "lat": 35.9482709,
-        "lng": 139.6710459,
-        "urls": [
-            {
-                "title": "https://www.city.saitama.jp/005/002/008/001/index.html",
-                "url": "https://www.city.saitama.jp/005/002/008/001/index.html"
-            },
-            {
-                "title": "https://k-saito.jp/archives/1194",
-                "url": "https://k-saito.jp/archives/1194"
-            },
-            {
-                "title": "さいたま市「道の駅」整備計画",
-                "url": "https://www.city.saitama.lg.jp/005/002/008/001/p125881.html"
-            },
-            {
-                "title": "さいたま市「道の駅」整備事業について",
-                "url": "https://www.city.saitama.lg.jp/005/002/008/001/p125883.html"
             }
         ],
         "checked_on": "2026-08-11"
@@ -2864,33 +2864,9 @@
         "checked_on": "2026-08-11"
     },
     {
-        "name": "道の駅 高田屋嘉兵衛公園",
-        "pref": "兵庫県",
-        "city": "淡路市",
-        "status": "計画中",
-        "date": "",
-        "lat": 34.4161941,
-        "lng": 134.7918969,
-        "urls": [
-            {
-                "title": "https://readyfor.jp/projects/97258",
-                "url": "https://readyfor.jp/projects/97258"
-            },
-            {
-                "title": "https://www.city.sumoto.lg.jp/uploaded/attachment/15045.pdf",
-                "url": "https://www.city.sumoto.lg.jp/uploaded/attachment/15045.pdf"
-            },
-            {
-                "title": "https://kisspress.jp/news/61686/",
-                "url": "https://kisspress.jp/news/61686/"
-            }
-        ],
-        "checked_on": "2026-01-01"
-    },
-    {
         "name": "道の駅こんだ薬師温泉ぬくもりの郷",
         "pref": "兵庫県",
-        "city": "丹波篠山市",
+        "city": "篠山市",
         "status": "計画中",
         "date": "2027-03",
         "lat": 34.9991695,
@@ -2914,6 +2890,30 @@
             }
         ],
         "checked_on": "2026-08-11"
+    },
+    {
+        "name": "道の駅 高田屋嘉兵衛公園",
+        "pref": "兵庫県",
+        "city": "淡路市",
+        "status": "計画中",
+        "date": "",
+        "lat": 34.4161941,
+        "lng": 134.7918969,
+        "urls": [
+            {
+                "title": "https://readyfor.jp/projects/97258",
+                "url": "https://readyfor.jp/projects/97258"
+            },
+            {
+                "title": "https://www.city.sumoto.lg.jp/uploaded/attachment/15045.pdf",
+                "url": "https://www.city.sumoto.lg.jp/uploaded/attachment/15045.pdf"
+            },
+            {
+                "title": "https://kisspress.jp/news/61686/",
+                "url": "https://kisspress.jp/news/61686/"
+            }
+        ],
+        "checked_on": "2026-01-01"
     },
     {
         "name": "道の駅 クロスウェイなかまち",
