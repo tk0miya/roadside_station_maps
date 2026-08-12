@@ -417,15 +417,15 @@ export function execute(argv: string[], records: PlanRecord[], cities: City[], t
 
     // Every verb but `list` names a station. Resolving it where it is needed
     // rather than before the switch is what lets all seven sit in one.
-    const named = (): { name: string; pref: string } => {
+    const requireStation = (): { name: string; pref: string } => {
         if (!name || !pref) {
             throw new Error(`missing the station name and prefecture\n\n${USAGE}`);
         }
         return { name, pref };
     };
-    const station = (): number => {
-        const target = named();
-        return findRecord(records, target.name, target.pref);
+    const findStationIndex = (): number => {
+        const station = requireStation();
+        return findRecord(records, station.name, station.pref);
     };
 
     switch (verb) {
@@ -435,20 +435,20 @@ export function execute(argv: string[], records: PlanRecord[], cities: City[], t
 
         case 'show': {
             parseFlags(options, []);
-            const record = records[station()];
+            const record = records[findStationIndex()];
             return { lines: [label(record), ...describeRecord(record)] };
         }
 
         case 'add': {
-            const fields = named();
+            const station = requireStation();
             // Not EDIT_FLAGS: `name` and `pref` arrive positionally, so
             // accepting them as options too would let one be silently ignored.
             const flags = parseFlags(options, ['city', 'status', 'date', 'lat', 'lng', 'title', 'url']);
             requireFlags(flags, 'city', 'status', 'title', 'url');
             const coordinates = coordinatePatch(flags);
             const record = buildRecord({
-                name: fields.name,
-                pref: fields.pref,
+                name: station.name,
+                pref: station.pref,
                 city: flags.city,
                 status: flags.status,
                 date: flags.date ?? '',
@@ -462,7 +462,7 @@ export function execute(argv: string[], records: PlanRecord[], cities: City[], t
 
         case 'touch': {
             parseFlags(options, []);
-            const index = station();
+            const index = findStationIndex();
             return written(records, index, setFields(records[index], {}, today), cities);
         }
 
@@ -474,14 +474,14 @@ export function execute(argv: string[], records: PlanRecord[], cities: City[], t
                     patch[key] = flags[key];
                 }
             }
-            const index = station();
+            const index = findStationIndex();
             return written(records, index, setFields(records[index], patch, today), cities);
         }
 
         case 'url:add': {
             const flags = parseFlags(options, ['title', 'url']);
             requireFlags(flags, 'title', 'url');
-            const index = station();
+            const index = findStationIndex();
             const link = { title: flags.title, url: flags.url };
             return written(records, index, addUrl(records[index], link, today), cities);
         }
@@ -489,7 +489,7 @@ export function execute(argv: string[], records: PlanRecord[], cities: City[], t
         case 'url:rm': {
             const flags = parseFlags(options, ['url']);
             requireFlags(flags, 'url');
-            const index = station();
+            const index = findStationIndex();
             return written(records, index, removeUrl(records[index], flags.url, today), cities);
         }
 
