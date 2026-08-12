@@ -157,13 +157,13 @@ data/         生成データ（CSV / GeoJSON）と開発計画マスタ（plans
 
 #### 読み書きは `npm run plan:*`
 
-Edit ツールでも jq でもなく `src/scripts/plan.ts` が引き受ける（`plan:list` / `plan:show` / `plan:edit` / `plan:touch` / `plan:add` / `plan:url:add` / `plan:url:rm`）。**どの規則がなぜ jq では守れなかったかは `plan.ts` 冒頭のコメントにある。**
+`plan:list` / `plan:show` / `plan:edit` / `plan:touch` / `plan:add` / `plan:url:add` / `plan:url:rm`（実装は `src/scripts/plan.ts`）。
 
 - **1 モジュールを 7 つの npm script から呼ぶ**: 呼ぶ側にはサブコマンドがなくコマンド名だけがある。verb は npm script が渡す
 - **駅は位置引数、オプションは新しい値**: `plan:edit "道の駅 石川町" "福島県" --name "道の駅石川"` は「いまこの名前で入っている駅の名前を変える」と読める。位置引数とオプションで役割が割れているので、`--new-` のような prefix が要らない
 - **`checked_on` はコマンドが押す**: 書き手に見えるフィールドではなく、書き込みの結果として付く（下記「`checked_on` の更新は CI で強制しない」）
 - **`plan:add` はメンテナのコマンド**: 調査セッションは台帳にない駅を自分で足さず `docs/plan-reports.md` に報告する。新規レコードは既存レコードの更新より大きな主張で、取り違えたときに残るのが値の誤りではなく実在しない計画になるため、承認を挟む。位置決めが手作業では面倒なのでコマンド自体は残す
-- **出典の件数だけは検証しない**: 書き手が管理し、`plan-data.test.ts` が最後に 1 度だけ検証する（理由は `plan.ts` 冒頭）
+- **出典の件数だけは検証しない**: 「1 件以上 10 件以下」を書き込みのたびに強制すると、消してから足す差し替えが途中で失敗する。件数は書き手が管理し、`plan-data.test.ts` が最後に 1 度だけ検証する
 
 レコード順の定義は `src/lib/plan-record-order.ts` に 1 つだけ置く。
 
