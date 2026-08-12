@@ -2,8 +2,8 @@
 //
 // One module behind seven npm scripts (`plan:list`, `plan:show`, `plan:edit`,
 // `plan:touch`, `plan:add`, `plan:url:add`, `plan:url:rm`); each passes its verb
-// as the first argument, so the research skill types a command name rather than
-// a subcommand. Every verb but `plan:list` takes the station as two positional
+// as the first argument, so a caller types a command name rather than a
+// subcommand. Every verb but `plan:list` takes the station as two positional
 // arguments -- the name and prefecture it is filed under today -- and every
 // option carries a new value for the field it names.
 //
