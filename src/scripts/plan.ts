@@ -7,21 +7,11 @@
 // arguments -- the name and prefecture it is filed under today -- and every
 // option carries a new value for the field it names.
 //
-// The master was edited with jq before. jq reads the file well, but three of
-// the skill's rules could only be followed by remembering them:
-//
-//   - a `select` that hits nothing still exits 0 and rewrites the file
-//     unchanged, so a mistyped station name looks exactly like a successful
-//     edit
-//   - `checked_on` is deliberately not enforced by CI (see CLAUDE.md), and a
-//     station that misses its stamp is handed out by the queue again
-//   - a new record's position needs `data/cities.json`, which jq cannot reach
-//     from the expression, so records were appended and moved by hand
-//
-// This makes the first two structural -- every verb resolves exactly one record
-// or exits non-zero, and every write stamps `checked_on` -- and does the third
-// itself. `checked_on` is not a field any verb accepts: the stamp is a
-// consequence of writing, not something the writer decides.
+// Two properties hold for every write: it resolves exactly one record or exits
+// non-zero, and it stamps `checked_on`. The stamp is not a field any verb
+// accepts -- it follows from writing rather than being decided, which is what
+// keeps the research queue moving without CI having to enforce it (CLAUDE.md
+// says why it does not).
 //
 // What it does not check is how many sources a record ends up with. A record
 // holds one to ten, and a source is replaced by removing it before adding its
@@ -172,8 +162,8 @@ export function buildRecord(fields: {
     };
 }
 
-// Places the record where the file's order says it belongs, which is the part
-// jq could not do: the ranking comes from cities.json, not from the record.
+// Places the record where the file's order says it belongs. The ranking comes
+// from cities.json, not from the record itself.
 export function insertRecord(records: PlanRecord[], record: PlanRecord, cities: City[]): PlanRecord[] {
     if (records.some((existing) => existing.name === record.name && existing.pref === record.pref)) {
         throw new Error(`${label(record)} is already in the master`);

@@ -1,7 +1,6 @@
-// The writer's guards are the reason it exists, so they are what these cover:
-// each one stands for a rule the research skill could previously only follow by
-// remembering it. The happy paths are checked for key order and placement,
-// which is what a hand-written jq expression got wrong.
+// The guards are what these cover, one test per rule the writer enforces. The
+// happy paths are checked for key order and placement -- the two things a
+// record can get wrong while every one of its values is correct.
 
 import { describe, expect, it } from 'vitest';
 import type { City, PlanRecord } from '../frontend/types/plan';
