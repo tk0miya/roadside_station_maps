@@ -110,6 +110,17 @@ describe('data/plans.json', () => {
         }
     });
 
+    // A `city` cities.json cannot resolve costs the record both its coordinate
+    // fallback and its order key, while still reading as a correct address.
+    // Unlike the prefecture check above, the failure names the offending value
+    // instead of listing the haystack -- cities.json holds every municipality.
+    it('has a municipality known to cities.json on every record', () => {
+        for (const record of plans) {
+            const key = `${record.pref} ${record.city}`;
+            expect(cityOrder.has(key), `${label(record)} / ${record.city}`).toBe(true);
+        }
+    });
+
     it('has string fields typed as strings', () => {
         for (const record of plans) {
             for (const key of ['name', 'pref', 'city', 'status', 'date', 'checked_on']) {
