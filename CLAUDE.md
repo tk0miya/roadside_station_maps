@@ -4,7 +4,7 @@
 
 ## プロジェクト概要
 
-日本の道の駅の地図アプリケーション。michi-no-eki.jp から駅データをスクレイピングし、Google Maps 上にインタラクティブに表示する。データ生成 CLI（TypeScript）、React フロントエンド、Cloudflare Workers + D1 バックエンドで構成される。
+日本の道の駅の地図アプリケーション。Google Maps 上に 2 つの地図を出す — michi-no-eki.jp からスクレイピングした**既存の駅の地図**と、これから開業する駅を追う**整備計画マップ**。データ生成 CLI（TypeScript）、React フロントエンド、Cloudflare Workers + D1 バックエンドで構成される。
 
 ## ルール
 
@@ -34,7 +34,7 @@
 - **フロントエンド**: `npm start`（ウォッチビルド） / `npm run serve`（開発サーバー、ポート 8081） / `npm run build`
 - **バックエンド**: `npm run dev:backend`（wrangler dev） / `npm run deploy:backend` / `npm run db:migrate:local` / `npm run db:migrate`
 - **データ生成**: `npm run generate:all`（`generate:stations` → `generate:geojson`）
-- **開発計画マスタ**: `npm run plan`（`data/plans.json` の読み取りと更新。サブコマンドは `list` / `show` / `update` / `url` / `add`。`npm run plan -- --help`）
+- **整備計画マスタ**: `npm run plan`（`data/plans.json` の読み取りと更新。**直接書き換えない。** サブコマンドは `list` / `show` / `update` / `url` / `add`。`npm run plan -- --help`）
 - **品質**: `npm test` / `npm run lint` / `npm run format` / `npm run typecheck` / `npm run lint:fix`
 
 ### generate:stations のデバッグモード
@@ -58,14 +58,14 @@ src/
 ├── backend/     Cloudflare Workers（Hono）API。auth / handlers / db / middleware
 ├── frontend/    React 19 フロントエンド。components / auth / storage / types
 ├── shared/      フロント・バック共通の型定義
-├── lib/         scripts が使うモジュール（CSV パース、Station 型、開発計画マスタの正規形）
+├── lib/         scripts が使うモジュール（CSV パース、Station 型、整備計画マスタの正規形）
 ├── scripts/     CLI のエントリーポイント（npm script から実行する）
 └── test-utils/  テスト用ヘルパー
 
 docs/         人が読むドキュメント（Pages には配信されない）
 migrations/   Cloudflare D1 マイグレーション（SQL）
 html/         静的アセット（index.html / plan.html の 2 ページ、CSS、ビルド成果物）
-data/         生成データ（CSV / GeoJSON）と開発計画マスタ（plans.json）
+data/         生成データ（CSV / GeoJSON）と整備計画マスタ（plans.json）
 .claude/      Claude Code の設定（skills / hooks）
 ```
 
@@ -114,21 +114,15 @@ data/         生成データ（CSV / GeoJSON）と開発計画マスタ（plans
 - ログイン済み: Workers + D1 と同期する `RemoteStorage`（デバウンス付き）
 - 未ログイン: 空の `MemoryStorage`（ゲストモード、永続化なし）
 
-開発計画マップは別のエントリーポイント（`src/frontend/plan-app.tsx`）を持ち、`data/plans.json` を読んで描画する。`planned-stations.ts` / `plan-order.ts` / `types/plan.ts` と `components/Plan*.tsx` がその一式。仕様は `docs/plan-map.md` にある。
-
 ### データパイプライン
 
 1. `generate-stationlist.ts` - michi-no-eki.jp を都道府県・駅の階層でたどり `data/stations.csv` を出力（`cheerio` で HTML 解析、`jaconv` でテキスト正規化）
 2. `generate-geojson.ts` - CSV を Point Feature の GeoJSON（`data/stations.geojson`）へ変換
 3. フロントエンドが GeoJSON を読み込んで描画
 
-### 開発計画マスタ（`data/plans.json`）
+### 整備計画マップ
 
-開発計画マップ（`html/plan.html`）のデータ元。人手と調査セッションが育てる台帳で、**このリポジトリが唯一のマスタ**。
-
-**更新は `npm run plan` で行う。** `data/plans.json` を直接書き換えない。
-
-データ構造・地図での表示・道具と運用ルールは `docs/plan-map.md`、調査の手順は `.claude/skills/michi-no-eki-plan-research/SKILL.md` にある。**同じことをここに書き足さない** — 変わったとき片方だけ直されて、残った側が嘘になる。
+2 つ目のアプリ（`html/plan.html`）。仕様は `docs/plan-map.md`、データを最新化する調査の手順は `.claude/skills/michi-no-eki-plan-research/SKILL.md` にある。**同じことをここに書き足さない** — 変わったとき片方だけ直されて、残った側が嘘になる。
 
 ### ビルド・デプロイ
 

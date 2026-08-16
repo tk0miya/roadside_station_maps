@@ -7,7 +7,7 @@ name: michi-no-eki-plan-research
 
 # 道の駅 整備計画データの調査・更新
 
-開発計画マスタ `data/plans.json` の `status` / `date` / `name` / `urls` を Web 調査で最新化する。
+整備計画マスタ `data/plans.json` の `status` / `date` / `name` / `urls` を Web 調査で最新化する。
 
 ## 全体の流れ
 
