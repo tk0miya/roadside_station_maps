@@ -10,12 +10,12 @@ import { MemoryStorage } from '../storage/memory-storage';
 import {
     applyMultiSelection,
     changeStyle,
+    cycleRouteNumber,
     loadRoadStations,
     MAX_ROUTE_SELECTION,
     Markers,
     resetStyle,
     resolveMarkerClick,
-    swapWithPrevious,
 } from './Markers';
 
 const stations = createMockStations(3);
@@ -360,29 +360,37 @@ describe('resolveMarkerClick', () => {
     });
 });
 
-describe('swapWithPrevious', () => {
+describe('cycleRouteNumber', () => {
     it('swaps the feature with the one numbered just before it', () => {
         const a = createMockFeature('A');
         const b = createMockFeature('B');
         const c = createMockFeature('C');
 
-        expect(swapWithPrevious([a, b, c], c)).toEqual([a, c, b]);
+        expect(cycleRouteNumber([a, b, c], c)).toEqual([a, c, b]);
     });
 
-    it('returns the same array when the feature already holds the first number', () => {
+    it('sends the feature holding the first number to the end', () => {
         const a = createMockFeature('A');
         const b = createMockFeature('B');
-        const multiSelected = [a, b];
+        const c = createMockFeature('C');
 
-        expect(swapWithPrevious(multiSelected, a)).toBe(multiSelected);
+        expect(cycleRouteNumber([a, b, c], a)).toEqual([b, c, a]);
+    });
+
+    it('returns the same array when the feature is the only marker in the route set', () => {
+        const a = createMockFeature('A');
+        const multiSelected = [a];
+
+        expect(cycleRouteNumber(multiSelected, a)).toBe(multiSelected);
     });
 
     it('returns the same array when the feature is not in the route set', () => {
         const a = createMockFeature('A');
-        const outsider = createMockFeature('B');
-        const multiSelected = [a];
+        const b = createMockFeature('B');
+        const outsider = createMockFeature('C');
+        const multiSelected = [a, b];
 
-        expect(swapWithPrevious(multiSelected, outsider)).toBe(multiSelected);
+        expect(cycleRouteNumber(multiSelected, outsider)).toBe(multiSelected);
     });
 
     it('does not mutate the input array', () => {
@@ -390,7 +398,8 @@ describe('swapWithPrevious', () => {
         const b = createMockFeature('B');
         const multiSelected = [a, b];
 
-        swapWithPrevious(multiSelected, b);
+        cycleRouteNumber(multiSelected, b);
+        cycleRouteNumber(multiSelected, a);
 
         expect(multiSelected).toEqual([a, b]);
     });
