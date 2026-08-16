@@ -69,16 +69,17 @@ export function resolveMarkerClick({
     return { selectedFeature: clickedFeature };
 }
 
-// Move `feature` one step towards the head of the route order, trading places
-// with the marker numbered just before it. Returns the input array itself when
-// there is nothing to swap: the feature is not in the route set, or it already
-// holds the first number.
-export function swapWithPrevious(
+// Move `feature` one number earlier in the route order, wrapping the first
+// marker around to the end so repeated calls walk a marker through every
+// position. Returns the input array itself when the order cannot change, so the
+// state update bails out instead of re-numbering markers for nothing.
+export function cycleRouteNumber(
     multiSelected: google.maps.Data.Feature[],
     feature: google.maps.Data.Feature
 ): google.maps.Data.Feature[] {
     const index = multiSelected.indexOf(feature);
-    if (index <= 0) return multiSelected;
+    if (index < 0 || multiSelected.length === 1) return multiSelected;
+    if (index === 0) return [...multiSelected.slice(1), feature];
     const next = [...multiSelected];
     next[index - 1] = feature;
     next[index] = multiSelected[index - 1];
@@ -254,7 +255,7 @@ export function Markers(props: MarkersProps) {
         // Modifier + right-click reorders the route, as the counterpart to
         // modifier-click appending a marker at its end.
         if (isModifierPressed(event)) {
-            props.onMultiSelectChange((prev) => swapWithPrevious(prev, event.feature));
+            props.onMultiSelectChange((prev) => cycleRouteNumber(prev, event.feature));
             return;
         }
         if (multiSelectedRef.current.length > 0) {
