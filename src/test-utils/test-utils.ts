@@ -65,6 +65,15 @@ export const createMockMap = () => {
         addListener: dataEvents.addListener,
         setStyle: vi.fn(),
         overrideStyle: vi.fn(),
+        add: vi.fn((options: google.maps.Data.FeatureOptions) => {
+            const properties = (options.properties ?? {}) as Record<string, unknown>;
+            const feature = {
+                getProperty: (name: string) => properties[name],
+                getGeometry: () => options.geometry,
+            } as unknown as google.maps.Data.Feature;
+            features.push(feature);
+            return feature;
+        }),
         forEach: vi.fn((cb: (f: google.maps.Data.Feature) => void) => features.forEach(cb)),
         remove: vi.fn((f: google.maps.Data.Feature) => {
             features = features.filter((x) => x !== f);
@@ -77,16 +86,35 @@ export const createMockMap = () => {
 
     const mapEvents = createListenerRegistry();
 
+    const setOptions = vi.fn();
+
     return {
         controls,
         data,
+        setOptions,
         addListener: mapEvents.addListener,
         _emit: mapEvents._emit,
-    } as unknown as google.maps.Map & { data: typeof data; _emit: typeof mapEvents._emit };
+    } as unknown as google.maps.Map & {
+        data: typeof data;
+        setOptions: typeof setOptions;
+        _emit: typeof mapEvents._emit;
+    };
 };
 
+// Create a mock google.maps.LatLng, the shape the Maps API hands back from a
+// map event and from a feature's geometry.
+export const createMockLatLng = (lat: number, lng: number) =>
+    ({
+        lat: () => lat,
+        lng: () => lng,
+    }) as google.maps.LatLng;
+
 // Create mock Google Maps Data Feature
-export const createMockFeature = (stationId: string, overrides: Record<string, string> = {}) => {
+export const createMockFeature = (
+    stationId: string,
+    overrides: Record<string, string> = {},
+    position: { lat: number; lng: number } = { lat: 35.0, lng: 139.0 }
+) => {
     const defaultProperties: Record<string, string> = {
         stationId,
         name: `Station ${stationId}`,
@@ -104,10 +132,20 @@ export const createMockFeature = (stationId: string, overrides: Record<string, s
         id: `feature${stationId}`,
         getProperty: (name: string) => properties[name],
         getGeometry: () => ({
-            get: () => ({ lat: 35.0, lng: 139.0 }),
+            get: () => createMockLatLng(position.lat, position.lng),
         }),
     } as unknown as google.maps.Data.Feature;
 };
+
+// Create a mock feature standing for a custom route point: no station data,
+// just the marker property and a position.
+export const createMockCustomPoint = (lat = 36.0, lng = 140.0) =>
+    ({
+        getProperty: (name: string) => (name === 'customPoint' ? true : undefined),
+        getGeometry: () => ({
+            get: () => createMockLatLng(lat, lng),
+        }),
+    }) as unknown as google.maps.Data.Feature;
 
 // Create mock StationsGeoJSON
 export const createMockStations = (count: number, startId = 18786) => ({
@@ -152,6 +190,14 @@ export const setupGoogleMapsMock = () => {
                     public x: number,
                     public y: number
                 ) {}
+            },
+            Data: {
+                Point: class {
+                    constructor(private readonly position: google.maps.LatLng) {}
+                    get() {
+                        return this.position;
+                    }
+                },
             },
         },
     };

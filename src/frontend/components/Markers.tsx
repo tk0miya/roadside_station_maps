@@ -5,10 +5,28 @@ import type { Storage } from '../storage';
 import * as style from '../style';
 import { getStyle } from '../style';
 import type { StationsGeoJSON } from '../types/geojson';
+import { useModifierHeld } from '../use-modifier-held';
 
 // Google Maps directions support at most 10 stops (origin + destination
 // + 8 waypoints), so the route-selection set is capped just under that bound.
 export const MAX_ROUTE_SELECTION = 9;
+
+// A custom point is a feature the user dropped on the map to route through a
+// place that is not a station. It carries no station data, so a branch that
+// assumes some has to step around it.
+export function isCustomPoint(feature: google.maps.Data.Feature): boolean {
+    return Boolean(feature.getProperty('customPoint'));
+}
+
+// Add a custom route point at `position` and return its feature. It is created
+// hidden: applyMultiSelection reveals it once the selection gives it a number,
+// which keeps it from flashing a station icon in between.
+function addCustomPoint(map: google.maps.Map, position: google.maps.LatLng): google.maps.Data.Feature {
+    return map.data.add({
+        geometry: new google.maps.Data.Point(position),
+        properties: { customPoint: true },
+    });
+}
 
 export interface MarkerClickContext {
     clickedFeature: google.maps.Data.Feature;
@@ -58,6 +76,11 @@ export function resolveMarkerClick({
         };
     }
 
+    // A custom route point has no station behind it, so a plain click has
+    // nothing to open or cycle.
+    if (isCustomPoint(clickedFeature)) {
+        return {};
+    }
     // Plain click clears any in-progress multi-selection before the
     // single-selection logic runs.
     if (multiSelected.length > 0) {
@@ -90,7 +113,16 @@ const styleOptionsFor = (styleId: number): google.maps.Data.StyleOptions => ({
     icon: MARKER_ICONS[styleId],
 });
 
-const isModifierPressed = (event: google.maps.Data.MouseEvent): boolean => {
+// Base style of the data layer: a station shows the icon its stored style id
+// maps to, and a custom route point has none to show.
+const baseStyleFor = (feature: google.maps.Data.Feature, storage: Storage): google.maps.Data.StyleOptions => {
+    if (isCustomPoint(feature)) {
+        return { visible: false };
+    }
+    return styleOptionsFor(getStyle(storage, feature.getProperty('stationId') as string));
+};
+
+export const isModifierPressed = (event: google.maps.MapMouseEvent): boolean => {
     const domEvent = event.domEvent as MouseEvent | undefined;
     return Boolean(domEvent && (domEvent.metaKey || domEvent.ctrlKey));
 };
@@ -115,12 +147,13 @@ interface MarkerHandlers {
     onMarkerClick: (event: google.maps.Data.MouseEvent) => void;
     onMarkerDoubleClick: (event: google.maps.Data.MouseEvent) => void;
     onMarkerRightClick: (event: google.maps.Data.MouseEvent) => void;
+    onMarkerMouseDown: () => void;
+    onFeatureDragged: () => void;
 }
 
-// Load the road-station GeoJSON onto the map's data layer, wire click /
-// dblclick / rightclick listeners, and install the storage-driven style
-// callback. Returns a cleanup that detaches the listeners and removes
-// every feature.
+// Load the road-station GeoJSON onto the map's data layer, wire the marker
+// listeners, and install the storage-driven style callback. Returns a cleanup
+// that detaches the listeners and removes every feature.
 export function loadRoadStations(
     map: google.maps.Map,
     stations: StationsGeoJSON,
@@ -128,18 +161,20 @@ export function loadRoadStations(
     handlers: MarkerHandlers
 ): () => void {
     map.data.addGeoJson(stations);
-    const clickListener = map.data.addListener('click', handlers.onMarkerClick);
-    const doubleClickListener = map.data.addListener('dblclick', handlers.onMarkerDoubleClick);
-    const rightClickListener = map.data.addListener('rightclick', handlers.onMarkerRightClick);
-    map.data.setStyle((feature: google.maps.Data.Feature) => {
-        const stationId = feature.getProperty('stationId') as string;
-        return styleOptionsFor(getStyle(storage, stationId));
-    });
+    const listeners = [
+        map.data.addListener('click', handlers.onMarkerClick),
+        map.data.addListener('dblclick', handlers.onMarkerDoubleClick),
+        map.data.addListener('rightclick', handlers.onMarkerRightClick),
+        map.data.addListener('mousedown', handlers.onMarkerMouseDown),
+        // Dragging a custom point is the only thing that moves a geometry.
+        map.data.addListener('setgeometry', handlers.onFeatureDragged),
+    ];
+    map.data.setStyle((feature: google.maps.Data.Feature) => baseStyleFor(feature, storage));
 
     return () => {
-        clickListener.remove();
-        doubleClickListener.remove();
-        rightClickListener.remove();
+        for (const listener of listeners) {
+            listener.remove();
+        }
         const features: google.maps.Data.Feature[] = [];
         map.data.forEach((f) => {
             features.push(f);
@@ -153,6 +188,10 @@ export function loadRoadStations(
 // Diff `previous` against `next` and reapply icons on the data layer:
 // features no longer selected fall back to their storage-driven icon, while
 // features in `next` receive a 1-based numbered icon matching their position.
+// A custom point exists only as part of a route, so leaving the selection
+// takes its marker off the map rather than restoring a station icon. It is
+// draggable the whole time it is on the map: unlike a station, it stands for
+// nothing but the position the user gave it.
 export function applyMultiSelection(
     map: google.maps.Map,
     previous: google.maps.Data.Feature[],
@@ -160,13 +199,20 @@ export function applyMultiSelection(
     storage: Storage
 ): void {
     for (const feature of previous) {
-        if (!next.includes(feature)) {
-            const stationId = feature.getProperty('stationId') as string;
-            map.data.overrideStyle(feature, styleOptionsFor(getStyle(storage, stationId)));
+        if (next.includes(feature)) continue;
+        if (isCustomPoint(feature)) {
+            map.data.remove(feature);
+            continue;
         }
+        const stationId = feature.getProperty('stationId') as string;
+        map.data.overrideStyle(feature, styleOptionsFor(getStyle(storage, stationId)));
     }
     next.forEach((feature, index) => {
-        map.data.overrideStyle(feature, { icon: numberedMarkerIcon(index + 1) });
+        const numbered: google.maps.Data.StyleOptions = { icon: numberedMarkerIcon(index + 1) };
+        map.data.overrideStyle(
+            feature,
+            isCustomPoint(feature) ? { ...numbered, visible: true, draggable: true } : numbered
+        );
     });
 }
 
@@ -185,6 +231,12 @@ export function Markers(props: MarkersProps) {
     const selectedFeatureRef = useRef<google.maps.Data.Feature | null>(null);
     const multiSelectedRef = useRef<google.maps.Data.Feature[]>(props.multiSelected);
     const storageRef = useRef<Storage>(props.storage);
+    // Set when a drag moved a custom point, cleared by the next press on a
+    // marker. Dragging a point ends with a mouseup on it, and a modifier-click
+    // deletes the point, so the release that finishes a drag must not be taken
+    // for the click that removes what was just positioned.
+    const draggedRef = useRef(false);
+    const modifierHeld = useModifierHeld();
 
     useEffect(() => {
         selectedFeatureRef.current = props.selectedFeature;
@@ -195,10 +247,7 @@ export function Markers(props: MarkersProps) {
     useEffect(() => {
         storageRef.current = props.storage;
         if (!props.map) return;
-        props.map.data.setStyle((feature: google.maps.Data.Feature) => {
-            const stationId = feature.getProperty('stationId') as string;
-            return styleOptionsFor(getStyle(storageRef.current, stationId));
-        });
+        props.map.data.setStyle((feature: google.maps.Data.Feature) => baseStyleFor(feature, storageRef.current));
     }, [props.map, props.storage]);
 
     useEffect(() => {
@@ -207,8 +256,26 @@ export function Markers(props: MarkersProps) {
             onMarkerClick,
             onMarkerDoubleClick,
             onMarkerRightClick,
+            onMarkerMouseDown: () => {
+                draggedRef.current = false;
+            },
+            onFeatureDragged: () => {
+                draggedRef.current = true;
+            },
         });
     }, [props.map, props.stations]);
+
+    useEffect(() => {
+        if (!props.map) return;
+        const listener = props.map.addListener('dblclick', onMapDoubleClick);
+        return () => listener.remove();
+    }, [props.map]);
+
+    // The modifier turns a double-click into "drop a route point here", so the
+    // map must not read the same gesture as a zoom-in while it is held.
+    useEffect(() => {
+        props.map?.setOptions({ disableDoubleClickZoom: modifierHeld });
+    }, [props.map, modifierHeld]);
 
     useEffect(() => {
         if (!props.map) return;
@@ -216,16 +283,7 @@ export function Markers(props: MarkersProps) {
         multiSelectedRef.current = props.multiSelected;
     }, [props.map, props.multiSelected]);
 
-    const onMarkerClick = (event: google.maps.Data.MouseEvent) => {
-        if (!props.map) return;
-
-        const result = resolveMarkerClick({
-            clickedFeature: event.feature,
-            modifierPressed: isModifierPressed(event),
-            selectedFeature: selectedFeatureRef.current,
-            multiSelected: multiSelectedRef.current,
-        });
-
+    const applyClickResult = (result: MarkerClickResult) => {
         if (result.selectedFeature !== undefined) {
             props.onFeatureSelect(result.selectedFeature);
         }
@@ -233,16 +291,53 @@ export function Markers(props: MarkersProps) {
             const { multiSelected } = result;
             props.onMultiSelectChange(() => multiSelected);
         }
-        if (result.cycleStyleOn) {
+        if (result.cycleStyleOn && props.map) {
             changeStyle(props.map, result.cycleStyleOn, storageRef.current);
             props.onStyleChange();
         }
     };
 
+    const onMarkerClick = (event: google.maps.Data.MouseEvent) => {
+        if (!props.map) return;
+        if (draggedRef.current) return;
+
+        applyClickResult(
+            resolveMarkerClick({
+                clickedFeature: event.feature,
+                modifierPressed: isModifierPressed(event),
+                selectedFeature: selectedFeatureRef.current,
+                multiSelected: multiSelectedRef.current,
+            })
+        );
+    };
+
+    // Modifier + double-click on the map drops a custom route point where the
+    // cursor is. The point then takes the number after the ones already chosen,
+    // which is what a modifier-click on a marker created there would have done,
+    // so the click resolver decides the new order too.
+    const onMapDoubleClick = (event: google.maps.MapMouseEvent) => {
+        if (!props.map || !isModifierPressed(event) || !event.latLng) return;
+        // Checked before the point is created so a full route leaves no marker
+        // behind: the resolver would refuse to number it.
+        if (multiSelectedRef.current.length >= MAX_ROUTE_SELECTION) return;
+
+        const feature = addCustomPoint(props.map, event.latLng);
+        applyClickResult(
+            resolveMarkerClick({
+                clickedFeature: feature,
+                modifierPressed: true,
+                selectedFeature: selectedFeatureRef.current,
+                multiSelected: multiSelectedRef.current,
+            })
+        );
+    };
+
     const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {
         if (!props.map) return;
-        // Modifier + double-click has no defined meaning; ignore it.
+        // Modifier + double-click drops a route point, and only the map itself
+        // answers that gesture; on a marker it does nothing.
         if (isModifierPressed(event)) return;
+        if (isCustomPoint(event.feature)) return;
         if (multiSelectedRef.current.length > 0) {
             props.onMultiSelectChange(() => []);
         }
@@ -258,6 +353,7 @@ export function Markers(props: MarkersProps) {
             props.onMultiSelectChange((prev) => cycleRouteNumber(prev, event.feature));
             return;
         }
+        if (isCustomPoint(event.feature)) return;
         if (multiSelectedRef.current.length > 0) {
             props.onMultiSelectChange(() => []);
         }

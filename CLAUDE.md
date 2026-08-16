@@ -114,6 +114,12 @@ data/         生成データ（GeoJSON）と整備計画マスタ（plans.json�
 - ログイン済み: Workers + D1 と同期する `RemoteStorage`（デバウンス付き）
 - 未ログイン: 空の `MemoryStorage`（ゲストモード、永続化なし）
 
+ルート作成は Ctrl（Cmd）を修飾キーとして駅マーカーを順番に選び、Ctrl + ダブルクリックで駅のない地点にも任意の経由地を落とせる。落とした経由地はドラッグで動かせる（`src/frontend/components/Markers.tsx`）。ルート選択の並びが Google マップのルート URL になる（`src/frontend/components/RouteButton.tsx`）。
+
+- **任意の経由地も Data Layer の Feature にする**: 番号付け・削除・並びの計算が駅マーカーと同じ 1 本の配列で済む。駅データを持たない Feature が混ざるので、駅を前提とする経路は `isCustomPoint()` を見て避ける
+- **ルート URL は駅を「駅名 + 都道府県」、任意の経由地を座標で書く**: 経由地には検索できる名前がない。都道府県を添える理由は `RouteButton.tsx` の `toStopQuery()` のコメントを参照
+- **ダブルクリックズームの抑止はキーの上げ下げに追随させる**: 理由は `Markers.tsx` の `disableDoubleClickZoom` を設定する effect のコメント、押下状態の持ち方は `src/frontend/use-modifier-held.ts` を参照
+
 ### データパイプライン
 
 1. `generate-stationlist.ts` - michi-no-eki.jp を都道府県・駅の階層でたどり、Point Feature の GeoJSON（`data/stations.geojson`）を直接出力する（`cheerio` で HTML 解析、`jaconv` でテキスト正規化）
