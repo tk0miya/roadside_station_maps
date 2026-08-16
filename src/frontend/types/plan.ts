@@ -1,22 +1,14 @@
-// Domain types for the roadside-station development-plan map.
-//
-// This map is independent from the main scraped-station pipeline: its source of
-// truth is `data/plans.json`, a hand-edited master tracked in this repository.
+// Domain types for the roadside-station development-plan map. What the columns
+// and the display categories mean is in `docs/plan-map.md`.
 
-// 凍結 sits between 計画中 and 中止: the municipality has declared the plan
-// suspended, but not abandoned -- it can still resume.
 export type Status = '開業' | '登録済み' | '計画中' | '凍結' | '中止';
 
 export const STATUSES: Status[] = ['開業', '登録済み', '計画中', '凍結', '中止'];
 
-// Where a station's rendered coordinate came from:
-//   exact - explicit lat/lng in the master
-//   city  - fell back to the municipality (市区町村) representative point
-//   none  - could not be resolved (not rendered)
+// Where a station's coordinate came from: the record's own lat/lng, the
+// municipality representative point it fell back to, or neither.
 export type CoordSource = 'exact' | 'city' | 'none';
 
-// One source link backing a record's values: `title` is the source page's own
-// heading, `url` the page it points at.
 export interface PlanUrl {
     title: string;
     url: string;
@@ -57,14 +49,12 @@ export interface City {
     lng: number;
 }
 
-// Display category used for marker color and the filter/legend. `status` stays
-// 5-valued; 計画中 is split here by whether a target date is set.
+// Display category, derived from `status` and `date`, and used for marker color,
+// the sidebar grouping and the filter.
 export type Category = '開業' | '登録済み' | '計画中(予定あり)' | '計画中(未定)' | '凍結' | '中止';
 
 export const CATEGORIES: Category[] = ['開業', '登録済み', '計画中(予定あり)', '計画中(未定)', '凍結', '中止'];
 
-// Derive a station's display category. 計画中 splits into スケジュールあり / 未定
-// by the presence of a date; the other statuses map 1:1.
 export function categoryOf(station: PlannedStation): Category {
     if (station.status === '計画中') {
         return station.date ? '計画中(予定あり)' : '計画中(未定)';

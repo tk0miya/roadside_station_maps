@@ -1,15 +1,5 @@
-// Display order for the development-plan station list.
-//
-// The sheet's `date` column records whatever granularity is known, so the same
-// column holds `2026-09-18`, `2026-07`, `2026夏ごろ`, `2026年度下半期` and `2026`.
-// Sorting therefore cannot go through Date: turning `2026年度初頭` into a month
-// would invent precision the source never stated, which is exactly what the
-// sheet avoids. Instead a value becomes the numeric key [year, month, day,
-// granularity], where the date is the *last* one its notation can mean: a
-// station marked `2026年度` opens by March 2027 rather than in April 2026, and
-// one marked `2026` opens by that December. Values ending together are ordered
-// by granularity, narrowest first, so the more precise notation comes out ahead
-// (`2026-12-31` → `2026-12` → `2026`).
+// Display order for the development-plan station list. The ordering rules are in
+// `docs/plan-map.md`; this file turns them into comparable keys.
 
 import type { Category, City, PlannedStation } from './types/plan';
 import { CATEGORIES, categoryOf } from './types/plan';
@@ -130,9 +120,6 @@ function compareKeys(a: number[], b: number[]): number {
     return 0;
 }
 
-// Order the list the way the sidebar shows it: by category, then by opening
-// (planned) date for the categories that have one, and by prefecture for the
-// ones that do not. Ties fall through to prefecture, city and name.
 export function sortPlannedStations(stations: PlannedStation[], cities: City[]): PlannedStation[] {
     const prefectureRank = prefectureRanks(cities);
     const collator = new Intl.Collator('ja');

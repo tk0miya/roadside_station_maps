@@ -30,7 +30,6 @@ import { STATUSES } from '../frontend/types/plan.js';
 const PLANS_PATH = new URL('../../data/plans.json', import.meta.url);
 const CITIES_PATH = new URL('../../data/cities.json', import.meta.url);
 
-// Why the column has a ceiling at all is in CLAUDE.md (開発計画マスタ).
 export const MAX_URLS = 10;
 
 // The master, plus the city table that decides record order. Always read as a
@@ -206,8 +205,8 @@ export function checkInPlan(master: Master, plan: PlanRecord): void {
     if (matchingIndexes(master.plans, plan).length > 0) {
         throw new Error(`${label(plan)} is already in the master. A plan is identified by name + pref.`);
     }
-    // The location has to name a municipality the city table knows (CLAUDE.md,
-    // 開発計画マスタ). An empty city fails this too, by not matching anything.
+    // The location has to name a municipality the city table knows
+    // (docs/plan-map.md). An empty city fails this too, by not matching anything.
     // Reported per column because the fixes differ, which is why these are two
     // checks rather than one lookup of the pair.
     if (!master.cities.some((city) => city.pref === plan.pref)) {
