@@ -1,9 +1,6 @@
-// Loader for the development-plan data.
-//
-// The master is `data/plans.json`, tracked in this repository and served as-is
-// by GitHub Pages (deploy.yml copies `data/` verbatim), so loading is a plain
-// fetch of two static files. The pure transform is exported separately so it
-// can be unit-tested without the network.
+// Loader for the development-plan data. `data/plans.json` and `data/cities.json`
+// are served as static assets, so loading is a plain fetch of the two. The pure
+// transform is exported separately so it can be unit-tested without the network.
 
 import { sortPlannedStations } from './plan-order';
 import type { City, PlannedStation, PlanRecord, Status } from './types/plan';

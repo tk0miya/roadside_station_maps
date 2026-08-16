@@ -4,7 +4,7 @@
 
 ## プロジェクト概要
 
-日本の道の駅の地図アプリケーション。michi-no-eki.jp から駅データをスクレイピングし、Google Maps 上にインタラクティブに表示する。データ生成 CLI（TypeScript）、React フロントエンド、Cloudflare Workers + D1 バックエンドで構成される。
+日本の道の駅の地図アプリケーション。Google Maps 上に 2 つの地図を出す — michi-no-eki.jp からスクレイピングした**既存の駅の地図**と、これから開業する駅を追う**整備計画マップ**。データ生成 CLI（TypeScript）、React フロントエンド、Cloudflare Workers + D1 バックエンドで構成される。
 
 ## ルール
 
@@ -34,7 +34,7 @@
 - **フロントエンド**: `npm start`（ウォッチビルド） / `npm run serve`（開発サーバー、ポート 8081） / `npm run build`
 - **バックエンド**: `npm run dev:backend`（wrangler dev） / `npm run deploy:backend` / `npm run db:migrate:local` / `npm run db:migrate`
 - **データ生成**: `npm run generate:all`（`generate:stations` → `generate:geojson`）
-- **開発計画マスタ**: `npm run plan`（`data/plans.json` の読み取りと更新。サブコマンドは `list` / `show` / `update` / `url` / `add`。`npm run plan -- --help`）
+- **整備計画マスタ**: `npm run plan`（`data/plans.json` の読み取りと更新。**直接書き換えない。** サブコマンドは `list` / `show` / `update` / `url` / `add`。`npm run plan -- --help`）
 - **品質**: `npm test` / `npm run lint` / `npm run format` / `npm run typecheck` / `npm run lint:fix`
 
 ### generate:stations のデバッグモード
@@ -58,14 +58,15 @@ src/
 ├── backend/     Cloudflare Workers（Hono）API。auth / handlers / db / middleware
 ├── frontend/    React 19 フロントエンド。components / auth / storage / types
 ├── shared/      フロント・バック共通の型定義
-├── lib/         scripts が使うモジュール（CSV パース、Station 型、開発計画マスタの正規形）
+├── lib/         scripts が使うモジュール（CSV パース、Station 型、整備計画マスタの正規形）
 ├── scripts/     CLI のエントリーポイント（npm script から実行する）
 └── test-utils/  テスト用ヘルパー
 
 docs/         人が読むドキュメント（Pages には配信されない）
 migrations/   Cloudflare D1 マイグレーション（SQL）
-html/         静的アセット（index.html、CSS、ビルド成果物 bundle.js）
-data/         生成データ（CSV / GeoJSON）と開発計画マスタ（plans.json）
+html/         静的アセット（index.html / plan.html の 2 ページ、CSS、ビルド成果物）
+data/         生成データ（CSV / GeoJSON）と整備計画マスタ（plans.json）
+.claude/      Claude Code の設定（skills / hooks）
 ```
 
 ### バックエンド（Cloudflare Workers + Hono + D1）
@@ -113,76 +114,19 @@ data/         生成データ（CSV / GeoJSON）と開発計画マスタ（plans
 - ログイン済み: Workers + D1 と同期する `RemoteStorage`（デバウンス付き）
 - 未ログイン: 空の `MemoryStorage`（ゲストモード、永続化なし）
 
-開発計画マップは `data/plans.json` を `src/frontend/planned-stations.ts` の `loadPlannedStations()` で読む。純粋変換 `toPlannedStations(records, cities)` を分離してあり、`lat` / `lng` が `null` のレコードは `data/cities.json` の市区町村代表点にフォールバックする（`coordSource` の 3 値 `exact` / `city` / `none`）。
-
-情報ウィンドウは `urls` 列（`{ title, url }` の配列）を出典リストとして描画する（`src/frontend/components/PlanInfoWindow.tsx`）。
-
-- **リンクを構造として持つ**: この列に入るのは出典リンクだけなので、記法を決めて 1 つの文字列に詰めると、書くたびに記法を守らせ、読むたびに解析することになる。配列なら書き手も読み手も分解しなくてよい
-
-開発計画マップの並び順は `src/frontend/plan-order.ts` が決める。カテゴリ順に並べ、`開業` / `登録済み` / `計画中(予定あり)` は開業（予定）日順、`計画中(未定)` / `凍結` / `中止` は都道府県順（どちらも同着は都道府県 → 市区町村 → 名前で決める）。粒度の混在した `date` をどう順序に落とすかは同ファイルのコメントを参照。
-
-- **並び替えるのは読み込み直後（`toPlannedStations()`）**: サイドバーはカテゴリごとに push するだけなので配列の順序がそのまま表示順になる。並び順をレンダリングなしでテストできる
-- **都道府県順は `data/cities.json` の並びから引く**: 全国地方公共団体コード順のテーブルそのもので、地図が既に読み込んでいる。47 件のリストをコード側に持つと二重管理になる
-
-開発計画マップは地図の右クリックでその地点の座標を `[lat, lng]` 形式でクリップボードにコピーする（`src/frontend/components/PlanCoordCopy.tsx`）。座標が未記入の駅を調査するとき、地図で位置を当てて `data/plans.json` の `lat` / `lng` に貼るための機能。丸め桁とブラウザの右クリックメニューを抑止する理由は同ファイルのコメントを参照。
-
 ### データパイプライン
 
 1. `generate-stationlist.ts` - michi-no-eki.jp を都道府県・駅の階層でたどり `data/stations.csv` を出力（`cheerio` で HTML 解析、`jaconv` でテキスト正規化）
 2. `generate-geojson.ts` - CSV を Point Feature の GeoJSON（`data/stations.geojson`）へ変換
 3. フロントエンドが GeoJSON を読み込んで描画
 
-### 開発計画マスタ（`data/plans.json`）
+### 整備計画マップ
 
-開発計画マップ（`html/plan.html`）のデータ元。人手と調査セッションが育てる台帳で、**このリポジトリが唯一のマスタ**。地図はこのファイルをそのまま読む（`deploy.yml` が `data/` をまるごと GitHub Pages に載せるので、マスタがそのまま配信ファイルになる）。
-
-もとは Google スプレッドシートに置き、GAS の Web App（`doGet` / `doPost`）と公開 CSV で読み書きしていた。git に移した理由:
-
-- **承認ゲートが約束から仕組みになる**: 「報告して承認を得てから書く」という運用上の約束が PR レビューになる。誤った上書きは revert できる
-- **書き込み口が push 権限になる**: GAS Web App は `ANYONE_ANONYMOUS` で公開された無認証の書き込み口だった
-- **読み取り経路が 1 つになる**: 地図は公開 CSV、CLI は `doGet` という二重性がなくなる
-- **外部サービスへの依存が読み書きの両方から消える**
-
-#### 形式
-
-1 要素 1 駅の JSON 配列（現在 177 件）。キー順は固定で `name` / `pref` / `city` / `status` / `date` / `lat` / `lng` / `urls` / `checked_on`。型は `lat` / `lng` が number または null、`urls` が `{ title, url }`（キー順も固定）の配列、残りは string（空は `""`）。レコード順も固定で `pref` → `city` → `name`（`pref` と `city` は `data/cities.json` の出現順 = 全国地方公共団体コード順）。
-
-- **キー順を固定する**: 差分の安定のためだけでなく、`name` が一意でない（「道の駅 川崎町」が福岡県と宮城県にある）ため、レコードを特定するには `name` の直後に `pref` が来る必要がある
-- **レコード順を固定する**: 順序が動くと差分が壊れる。都道府県順にすると GitHub の編集 UI で目的の駅に当たりが付く（表示順は別物で、`plan-order.ts` が読み込み後に決める）
-- **単一ファイルにする**: マスタがそのまま配信ファイルになりビルド工程が増えない。1 駅 1 ファイルにするとバンドル生成が必要になり、生成物のコミット漏れという失敗モードを新たに作る。この規模ならコンフリクト耐性のためにそれを払う価値はない
-- **pretty-print（1 行 1 フィールド）にする**: 差分が読め、コンフリクトが同一レコードに限定される。JSONL はレコード全体が 1 行に潰れ、出典が 5 本ある駅では `urls` だけで数百桁になって GitHub の編集 UI で扱いづらい
-- **`pref` / `city` は `data/cities.json` にある市区町村**: 座標のないレコードを代表点へ落とす引き当てキーで、レコード順もこのテーブルが決めるので、載っていない表記は書かない。**`cities.json` は別の経路で更新されるので、この台帳がそれに従う** — 改称・合併に追随していなければ、載っている表記で書く。`plan-master.ts` の比較関数は未知の `city` をその `pref` の末尾に送るが、これは規定ではなく保険
-- **`date` は形式を決めない**: 判明している粒度をそのまま記録するため、`2026-04-01` / `2026-04` / `2026` / `2026夏` のいずれもありうる
-- **`checked_on` はその駅を最後に調査した日**: 調査は古い順に少しずつ進めるため**この列は調査キューの並び替えキー**で、書き忘れるとキューが進まなくなる
-- **`urls` は 1 レコード 10 件まで**: 上限がないと古い記事が積もり、新しい出典がその中に埋もれる。上限があれば 10 件に達した駅では 1 本足すたびにいちばん弱い 1 本を見直すことになり、出典が新陳代謝する。どの 1 本を落とすかの基準はスキル側にある（本数だけを `npm run ci` が検証する）
-
-#### 更新は `npm run plan` で行う
-
-Edit ツールは使わない。3600 行の JSON では `old_string` の一意性を取るのが難しく（`"name": "道の駅 川崎町"` は 2 件ある）、`urls` の書き換えでは長大になる。**このマスタの壊れ方は「書いたつもりで何も起きていない」**で、ファイルは正しいままなので `npm run ci` では捕まらない。CLI（`src/scripts/plan.ts` と `src/lib/plan-master.ts`）はそれを exit 1 にするために置いてあり、失敗したときは `data/plans.json` に触らずに終わる。
-
-CLI の設計（借り出してから書き換える形、レコード順の比較関数を検証側と共有する形）とその理由は `src/lib/plan-master.ts` のコメントにある。
-
-手順（どのサブコマンドで何を書くか、`urls` の足し方、PR の出し方）は `.claude/skills/michi-no-eki-plan-research/SKILL.md` にある。**同じことをここに書き足さない** — 手順が変わったとき片方だけ直されて、残った側が嘘になる。
-
-#### 整形は Biome、構造は vitest
-
-整形は Biome に任せ、正規形のための専用コマンドは作らない。`.gitignore` の例外により `data/plans.json` だけが Biome の対象になる（`vcs.useIgnoreFile: true`）。Biome の JSON 整形は展開方向にのみ正規化するので（4 スペースの pretty JSON は無変更、2 スペースや 1 行に潰れたものは 4 スペースに展開）、編集の道具と争わない。整形崩れは `npm run lint` が検出し `npm run lint:fix` が直す。
-
-構造の検証は `src/frontend/plan-data.test.ts` が実データを読んで行う（キーの集合と順序、`status` の 5 値、`pref` の実在、`name` の非空、`name` + `pref` の一意性、座標の型、`urls` の形（1 件以上 10 件以下、`title` の非空、`url` の重複なし、`http` / `https` スキーム）、レコード順）。**インデントやバイト一致は検証しない** — 前者は Biome の担当で、後者は数値のレンダリングが書き手によって揺れる（座標がちょうど整数のとき `36.0` と `36` のどちらもありうる）ため、原因の分かりにくい赤になる。
-
-#### 相談事項は `docs/plan-reports.md` に書く
-
-調査で出た、データの列に書けないもの（所在地の食い違い、代替の見つからないリンク切れ、`data/cities.json` の古さ、判断を仰ぎたい事項）の置き場所。旧経路では `plan:update --report` が GAS 経由で Slack に流していたが、その経路も GAS と一緒に消えた。
-
-Issue にしないのは、ファイルなら contents 権限だけで扱えて、GitHub API に到達できないセッションでも調査ループが完結するため。リポジトリの既存の作法（App トークンに `permission-contents: write` と `permission-pull-requests: write` だけを明示）とも揃う。PR の差分に出るのでレビューで必ず目に入る。
-
-**調査セッションは追記するだけ**で、対応と消し込みはメンテナが行う。読んで判断する責務を調査側に持たせない。
-
-`deploy.yml` は `html/` と `data/` だけを Pages にコピーするので `docs/` は配信されない。
+2 つ目のアプリ（`html/plan.html`）。仕様は `docs/plan-map.md`、データを最新化する調査の手順は `.claude/skills/michi-no-eki-plan-research/SKILL.md` にある。**同じことをここに書き足さない** — 変わったとき片方だけ直されて、残った側が嘘になる。
 
 ### ビルド・デプロイ
 
-- `esbuild.config.ts` - `src/frontend/app.tsx` を `html/js/bundle.js` にバンドル（watch / serve / build モード）
+- `esbuild.config.ts` - `app.tsx` と `plan-app.tsx` を `html/js/` へバンドル（`bundle.js` / `plan.js`。watch / serve / build モード）
 - `wrangler.toml` - Workers 設定。D1 バインディング（`DB`）、`migrations_dir`、`env.production` の許可オリジン
 - TypeScript 設定はフロント（`tsconfig.json`）とバックエンド（`tsconfig.backend.json`）で分かれており、`npm run typecheck` は両方を実行する
 - デプロイ先は Cloudflare Workers（バックエンド）と静的ホスティング（`html/`）

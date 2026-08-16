@@ -116,7 +116,6 @@ describe('data/plans.json', () => {
         }
     });
 
-    // Why the column has a ceiling at all is in CLAUDE.md (開発計画マスタ).
     it('has at most ten urls on every record', () => {
         for (const record of plans) {
             expect((record.urls as unknown[]).length, label(record)).toBeLessThanOrEqual(MAX_URLS);
