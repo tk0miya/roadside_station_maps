@@ -15,6 +15,7 @@ import {
     Markers,
     resetStyle,
     resolveMarkerClick,
+    swapWithPrevious,
 } from './Markers';
 
 const stations = createMockStations(3);
@@ -183,16 +184,22 @@ describe('Markers', () => {
             expect(mockMap.data.overrideStyle).not.toHaveBeenCalled();
         });
 
-        it('ignores Cmd + right-click', () => {
+        it('swaps a numbered marker with the previous one on Cmd + right-click', () => {
             const featureA = createMockFeature('A');
+            const featureB = createMockFeature('B');
+            const featureC = createMockFeature('C');
             const { mockMap, onMultiSelectChange, onFeatureSelect } = renderMarkers({
-                multiSelected: [featureA],
+                multiSelected: [featureA, featureB, featureC],
             });
             (mockMap.data.overrideStyle as ReturnType<typeof vi.fn>).mockClear();
 
-            mockMap.data._emit('rightclick', buildClickEvent(featureA, 'meta'));
+            mockMap.data._emit('rightclick', buildClickEvent(featureC, 'meta'));
 
-            expect(onMultiSelectChange).not.toHaveBeenCalled();
+            expect(applyUpdater(onMultiSelectChange, [featureA, featureB, featureC])).toEqual([
+                featureA,
+                featureC,
+                featureB,
+            ]);
             expect(onFeatureSelect).not.toHaveBeenCalled();
             expect(mockMap.data.overrideStyle).not.toHaveBeenCalled();
         });
@@ -350,6 +357,42 @@ describe('resolveMarkerClick', () => {
             expect(result.cycleStyleOn).toBeUndefined();
             expect(result.multiSelected).toBeUndefined();
         });
+    });
+});
+
+describe('swapWithPrevious', () => {
+    it('swaps the feature with the one numbered just before it', () => {
+        const a = createMockFeature('A');
+        const b = createMockFeature('B');
+        const c = createMockFeature('C');
+
+        expect(swapWithPrevious([a, b, c], c)).toEqual([a, c, b]);
+    });
+
+    it('returns the same array when the feature already holds the first number', () => {
+        const a = createMockFeature('A');
+        const b = createMockFeature('B');
+        const multiSelected = [a, b];
+
+        expect(swapWithPrevious(multiSelected, a)).toBe(multiSelected);
+    });
+
+    it('returns the same array when the feature is not in the route set', () => {
+        const a = createMockFeature('A');
+        const outsider = createMockFeature('B');
+        const multiSelected = [a];
+
+        expect(swapWithPrevious(multiSelected, outsider)).toBe(multiSelected);
+    });
+
+    it('does not mutate the input array', () => {
+        const a = createMockFeature('A');
+        const b = createMockFeature('B');
+        const multiSelected = [a, b];
+
+        swapWithPrevious(multiSelected, b);
+
+        expect(multiSelected).toEqual([a, b]);
     });
 });
 

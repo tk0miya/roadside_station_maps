@@ -69,6 +69,22 @@ export function resolveMarkerClick({
     return { selectedFeature: clickedFeature };
 }
 
+// Move `feature` one step towards the head of the route order, trading places
+// with the marker numbered just before it. Returns the input array itself when
+// there is nothing to swap: the feature is not in the route set, or it already
+// holds the first number.
+export function swapWithPrevious(
+    multiSelected: google.maps.Data.Feature[],
+    feature: google.maps.Data.Feature
+): google.maps.Data.Feature[] {
+    const index = multiSelected.indexOf(feature);
+    if (index <= 0) return multiSelected;
+    const next = [...multiSelected];
+    next[index - 1] = feature;
+    next[index] = multiSelected[index - 1];
+    return next;
+}
+
 const styleOptionsFor = (styleId: number): google.maps.Data.StyleOptions => ({
     icon: MARKER_ICONS[styleId],
 });
@@ -235,8 +251,12 @@ export function Markers(props: MarkersProps) {
 
     const onMarkerRightClick = (event: google.maps.Data.MouseEvent) => {
         if (!props.map) return;
-        // Modifier + right-click has no defined meaning; ignore it.
-        if (isModifierPressed(event)) return;
+        // Modifier + right-click reorders the route, as the counterpart to
+        // modifier-click appending a marker at its end.
+        if (isModifierPressed(event)) {
+            props.onMultiSelectChange((prev) => swapWithPrevious(prev, event.feature));
+            return;
+        }
         if (multiSelectedRef.current.length > 0) {
             props.onMultiSelectChange(() => []);
         }
