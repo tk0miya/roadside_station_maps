@@ -119,7 +119,6 @@ export const createMockStations = (count: number, startId = 18786) => ({
         },
         properties: {
             stationId: `${startId + i}`,
-            internalId: `${i}`,
             name: `Station ${String.fromCharCode(65 + i)}`, // Station A, B, C...
             address: '',
             hours: '',

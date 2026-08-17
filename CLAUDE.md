@@ -33,7 +33,7 @@
 
 - **フロントエンド**: `npm start`（ウォッチビルド） / `npm run serve`（開発サーバー、ポート 8081） / `npm run build`
 - **バックエンド**: `npm run dev:backend`（wrangler dev） / `npm run deploy:backend` / `npm run db:migrate:local` / `npm run db:migrate`
-- **データ生成**: `npm run generate:all`（`generate:stations` → `generate:geojson`）
+- **データ生成**: `npm run generate:stations`（`data/stations.geojson` を生成）
 - **整備計画マスタ**: `npm run plan`（`data/plans.json` の読み取りと更新。**直接書き換えない。** サブコマンドは `list` / `show` / `update` / `url` / `add`。`npm run plan -- --help`）
 - **品質**: `npm test` / `npm run lint` / `npm run format` / `npm run typecheck` / `npm run lint:fix`
 
@@ -58,14 +58,14 @@ src/
 ├── backend/     Cloudflare Workers（Hono）API。auth / handlers / db / middleware
 ├── frontend/    React 19 フロントエンド。components / auth / storage / types
 ├── shared/      フロント・バック共通の型定義
-├── lib/         scripts が使うモジュール（CSV パース、Station 型、整備計画マスタの正規形）
+├── lib/         scripts が使うモジュール（GeoJSON 出力、Station 型、整備計画マスタの正規形）
 ├── scripts/     CLI のエントリーポイント（npm script から実行する）
 └── test-utils/  テスト用ヘルパー
 
 docs/         人が読むドキュメント（Pages には配信されない）
 migrations/   Cloudflare D1 マイグレーション（SQL）
 html/         静的アセット（index.html / plan.html の 2 ページ、CSS、ビルド成果物）
-data/         生成データ（CSV / GeoJSON）と整備計画マスタ（plans.json）
+data/         生成データ（GeoJSON）と整備計画マスタ（plans.json）
 .claude/      Claude Code の設定（skills / hooks）
 ```
 
@@ -116,9 +116,10 @@ data/         生成データ（CSV / GeoJSON）と整備計画マスタ（plans
 
 ### データパイプライン
 
-1. `generate-stationlist.ts` - michi-no-eki.jp を都道府県・駅の階層でたどり `data/stations.csv` を出力（`cheerio` で HTML 解析、`jaconv` でテキスト正規化）
-2. `generate-geojson.ts` - CSV を Point Feature の GeoJSON（`data/stations.geojson`）へ変換
-3. フロントエンドが GeoJSON を読み込んで描画
+1. `generate-stationlist.ts` - michi-no-eki.jp を都道府県・駅の階層でたどり、Point Feature の GeoJSON（`data/stations.geojson`）を直接出力する（`cheerio` で HTML 解析、`jaconv` でテキスト正規化）
+2. フロントエンドが GeoJSON を読み込んで描画
+
+書き出しは `src/lib/station-geojson.ts`。
 
 ### 整備計画マップ
 
@@ -133,4 +134,4 @@ data/         生成データ（CSV / GeoJSON）と整備計画マスタ（plans
 
 ### 主要技術
 
-Cloudflare Workers / Hono / D1 / jose、React 19 / Google Maps API / `@react-oauth/google`、cheerio / jaconv、esbuild、Vitest（`@testing-library/react` + jsdom）、Biome。CSV / JSON のパースに外部ライブラリは使わない（CSV は `src/lib/station-csv.ts` の手書き、JSON は標準の `JSON.parse` / `Response.json()`）。
+Cloudflare Workers / Hono / D1 / jose、React 19 / Google Maps API / `@react-oauth/google`、cheerio / jaconv、esbuild、Vitest（`@testing-library/react` + jsdom）、Biome。JSON の読み書きに外部ライブラリは使わない（標準の `JSON.parse` / `Response.json()`）。
