@@ -2137,31 +2137,39 @@
         "lng": 139.137512,
         "urls": [
             {
-                "title": "https://www.townnews.co.jp/0608/2026/05/23/838023.html",
+                "title": "神奈川県足柄上郡松田町寄地区 自然休養村管理センターがリニューアル 道の駅認定も目指す",
                 "url": "https://www.townnews.co.jp/0608/2026/05/23/838023.html"
             },
             {
-                "title": "https://www.kanaloco.jp/news/government/article-1272064.html",
+                "title": "松田町の寄自然休養村管理センター、再オープンへ 「道の駅」認可見据え",
                 "url": "https://www.kanaloco.jp/news/government/article-1272064.html"
+            },
+            {
+                "title": "2.2億円かけた施設 道の駅にするはずが…想定外、担当者困惑（毎日新聞）",
+                "url": "https://news.yahoo.co.jp/articles/61e4525d4d9f0989ec88be262978e18de905730f"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 能美市",
         "pref": "石川県",
         "city": "能美市",
         "status": "計画中",
-        "date": "",
+        "date": "2029秋頃",
         "lat": 36.4439706,
         "lng": 136.5498651,
         "urls": [
             {
-                "title": "https://prtimes.jp/main/html/rd/p/000000026.000082839.html",
-                "url": "https://prtimes.jp/main/html/rd/p/000000026.000082839.html"
+                "title": "旧辰口フラワーハウス跡地整備・運営事業 公募型プロポーザルの実施について",
+                "url": "https://www.city.nomi.ishikawa.jp/docs/5660.html"
+            },
+            {
+                "title": "旧辰口フラワーハウス跡地整備構想について",
+                "url": "https://www.city.nomi.ishikawa.jp/docs/5318.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 蓮如の里あわら",
@@ -2281,7 +2289,7 @@
                 "url": "https://www.mlit.go.jp/common/001252218.pdf"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 まるこ",
@@ -2313,15 +2321,19 @@
         "lng": 138.119971,
         "urls": [
             {
-                "title": "https://www.city.chikuma.lg.jp/material/files/group/4/R40322siryou2-1.pdf",
+                "title": "令和3年度 千曲市道の駅（地域防災拠点）設置可能性 概要調査報告書",
                 "url": "https://www.city.chikuma.lg.jp/material/files/group/4/R40322siryou2-1.pdf"
             },
             {
-                "title": "https://www.city.chikuma.lg.jp/soshiki/chiikikaihatsusuishinshitsu/kaihatsu_toshikeikaku/1/8880.html",
-                "url": "https://www.city.chikuma.lg.jp/soshiki/chiikikaihatsusuishinshitsu/kaihatsu_toshikeikaku/1/8880.html"
+                "title": "【現在策定中】千曲市地域防災拠点・道の駅基本計画について",
+                "url": "https://www.city.chikuma.lg.jp/soshiki/kominkyoso/kaihatsu_toshikeikaku/michinoeki/kihonkeikau/index.html"
+            },
+            {
+                "title": "千曲市の「道の駅」計画案、市議会から見直し求める声相次ぐ 策定は2026年度にずれ込み見通し",
+                "url": "https://www.shinmai.co.jp/news/article/gf01d6g1eon071vbt7g9h66g"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 八千穂高原",
@@ -2401,11 +2413,15 @@
         "lng": 137.6682418,
         "urls": [
             {
-                "title": "https://www.vill.achi.lg.jp/soshiki/2/20180323henchi.html",
-                "url": "https://www.vill.achi.lg.jp/soshiki/2/20180323henchi.html"
+                "title": "阿智村第6次総合計画（後期計画）を策定いたしました",
+                "url": "https://www.vill.achi.lg.jp/soshiki/2/dai6ji-sogokeikaku-kouki.html"
+            },
+            {
+                "title": "リニア残土の上に「道の駅」 阿智村が検討 地権者要望の候補地で",
+                "url": "https://www.shinmai.co.jp/news/article/CNTS2022083100138"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 リニアの見える丘公園",
@@ -2417,11 +2433,11 @@
         "lng": 137.4694792,
         "urls": [
             {
-                "title": "https://www.city.nakatsugawa.lg.jp/soshikikarasagasu/lineartaisakuka/1/1/index.html",
+                "title": "リニア中央新幹線／中津川市",
                 "url": "https://www.city.nakatsugawa.lg.jp/soshikikarasagasu/lineartaisakuka/1/1/index.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 瑞浪市",
@@ -2449,11 +2465,11 @@
         "lng": 137.3549627,
         "urls": [
             {
-                "title": "https://www.city.ena.lg.jp/soshikiichiran/kensetsubu/linearmachizukurika/iinkai/12076.html",
+                "title": "恵那市武並町道の駅検討委員会",
                 "url": "https://www.city.ena.lg.jp/soshikiichiran/kensetsubu/linearmachizukurika/iinkai/12076.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 養老の郷",
@@ -2465,11 +2481,11 @@
         "lng": 136.5564679,
         "urls": [
             {
-                "title": "https://www.cbr.mlit.go.jp/michinoeki/pdf/yoro.pdf",
+                "title": "道の駅「(仮称)養老の郷」 岐阜県養老町",
                 "url": "https://www.cbr.mlit.go.jp/michinoeki/pdf/yoro.pdf"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 トライアルパーク蒲原",
@@ -2481,31 +2497,47 @@
         "lng": 138.6260243,
         "urls": [
             {
-                "title": "https://www.city.shizuoka.lg.jp/485_000062.html",
+                "title": "道の駅整備事業「トライアルパーク蒲原」",
                 "url": "https://www.city.shizuoka.lg.jp/485_000062.html"
+            },
+            {
+                "title": "（仮称）道の駅「蒲原」の整備にむけて",
+                "url": "https://www.city.shizuoka.lg.jp/s9847/s013032.html"
+            },
+            {
+                "title": "（仮称）道の駅「蒲原」基本計画（2026年3月）",
+                "url": "https://www.city.shizuoka.lg.jp/documents/53876/2603_kihonnkeikaku_honpen.pdf"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 浜松市",
         "pref": "静岡県",
         "city": "浜松市南区",
         "status": "計画中",
-        "date": "",
+        "date": "2032年度以降",
         "lat": 34.6644595,
         "lng": 137.7455562,
         "urls": [
             {
-                "title": "https://www.chunichi.co.jp/article/624368",
+                "title": "浜松市、道の駅新設調査へ 県営野球場計画に合わせ",
                 "url": "https://www.chunichi.co.jp/article/624368"
             },
             {
-                "title": "https://www.city.hamamatsu.shizuoka.jp/zaisek/budget/budget05/detail/d_009.html",
+                "title": "〈新規〉遠州灘海浜公園篠原地区道の駅整備事業／浜松市",
                 "url": "https://www.city.hamamatsu.shizuoka.jp/zaisek/budget/budget05/detail/d_009.html"
+            },
+            {
+                "title": "浜松市、新たな道の駅の基本計画策定 国道1号沿い、「防災道の駅」選定へ検討",
+                "url": "https://www.chunichi.co.jp/article/1249929"
+            },
+            {
+                "title": "浜松市の新「道の駅」国道1号南側に整備 市が基本計画、早ければ2032年度に開業 遠州灘海浜公園篠原地区",
+                "url": "https://news.at-s.com/article/1968386"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 浜松市 (浜北IC付近)",
