@@ -103,15 +103,13 @@ describe.skipIf(isClaudeCodeWeb)('generate_stationlist', () => {
             // Verify URI
             expect(station.uri).toContain('/stations/views/19150');
 
-            // Verify coordinates are valid numbers (not 'None')
-            const lat = Number.parseFloat(station.lat);
-            const lng = Number.parseFloat(station.lng);
-            expect(Number.isNaN(lat)).toBe(false);
-            expect(Number.isNaN(lng)).toBe(false);
-            expect(lat).toBeGreaterThan(35); // Rough latitude check for Kanagawa
-            expect(lat).toBeLessThan(36);
-            expect(lng).toBeGreaterThan(138); // Rough longitude check for Kanagawa
-            expect(lng).toBeLessThan(140);
+            // Verify coordinates were parsed out of the page
+            expect(station.lat).not.toBeNull();
+            expect(station.lng).not.toBeNull();
+            expect(station.lat).toBeGreaterThan(35); // Rough latitude check for Kanagawa
+            expect(station.lat).toBeLessThan(36);
+            expect(station.lng).toBeGreaterThan(138); // Rough longitude check for Kanagawa
+            expect(station.lng).toBeLessThan(140);
         });
 
         it('should drop the 道の駅 prefix the site puts on some station names', async () => {

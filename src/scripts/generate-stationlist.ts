@@ -2,12 +2,12 @@ import { setTimeout } from 'node:timers/promises';
 import type { CheerioAPI } from 'cheerio';
 import * as cheerio from 'cheerio';
 import jaconv from 'jaconv';
-import * as StationCSV from '../lib/station-csv.js';
+import * as StationGeoJSON from '../lib/station-geojson.js';
 import type { Station } from '../lib/types.js';
 
 const BASEURI = 'https://www.michi-no-eki.jp/';
 const FETCH_INTERVAL = 1000; // 1 second in milliseconds
-const STATION_FILENAME = 'data/stations.csv';
+const STATION_FILENAME = 'data/stations.geojson';
 
 interface Prefecture {
     id: string;
@@ -99,8 +99,8 @@ export async function getStationDetails(stationUri: string, prefId: string): Pro
     let address = '';
     let tel = '';
     let hours = '';
-    let lat = 'None';
-    let lng = 'None';
+    let lat: number | null = null;
+    let lng: number | null = null;
     let mapcode = '';
 
     const $station = await fetchPage(uri);
@@ -142,17 +142,12 @@ export async function getStationDetails(stationUri: string, prefId: string): Pro
     const stationHtml = $station.html() || '';
     const coordMatch = stationHtml.match(/www\.google\.com\/maps\/.+\?q=(.*?),(.*?)&/);
     if (coordMatch) {
-        try {
-            const latValue = Number.parseFloat(coordMatch[1]);
-            const lngValue = Number.parseFloat(coordMatch[2]);
+        const latValue = Number.parseFloat(coordMatch[1]);
+        const lngValue = Number.parseFloat(coordMatch[2]);
 
-            if (!Number.isNaN(latValue) && !Number.isNaN(lngValue)) {
-                lat = latValue.toString();
-                lng = lngValue.toString();
-            }
-        } catch {
-            lat = '0';
-            lng = '0';
+        if (!Number.isNaN(latValue) && !Number.isNaN(lngValue)) {
+            lat = latValue;
+            lng = lngValue;
         }
     }
 
@@ -268,8 +263,8 @@ async function main(): Promise<void> {
         process.stdout.write(' done\n');
     }
 
-    process.stdout.write('Writing CSV file ...');
-    StationCSV.dump(allStations, STATION_FILENAME);
+    process.stdout.write('Writing GeoJSON file ...');
+    StationGeoJSON.dump(allStations, STATION_FILENAME);
     process.stdout.write(' done\n');
 }
 

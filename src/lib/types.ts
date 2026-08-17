@@ -6,7 +6,8 @@ export interface Station {
     tel: string;
     hours: string;
     uri: string;
-    lat: string;
-    lng: string;
+    // null when the station page carried no parsable Google Maps link.
+    lat: number | null;
+    lng: number | null;
     mapcode: string;
 }
