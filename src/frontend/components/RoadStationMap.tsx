@@ -6,7 +6,7 @@ import { createStorage, type Storage } from '../storage';
 import type { StationsGeoJSON } from '../types/geojson';
 import { InfoWindow } from './InfoWindow';
 import { LoginButton } from './LoginButton';
-import { Markers } from './Markers';
+import { isModifierPressed, Markers } from './Markers';
 import { RouteButton } from './RouteButton';
 import { ShareButton } from './ShareButton';
 import { StationCounter } from './StationCounter';
@@ -84,7 +84,11 @@ export function RoadStationMap() {
     useEffect(() => {
         if (!map) return;
 
-        map.addListener('click', () => {
+        map.addListener('click', (event: google.maps.MapMouseEvent) => {
+            // A modifier-click on the map belongs to the route gesture: it is
+            // the click that precedes the double-click dropping a route point,
+            // and it must not clear the route that point is about to join.
+            if (isModifierPressed(event)) return;
             setFeature(null);
             setMultiSelected([]);
         });

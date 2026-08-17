@@ -4,7 +4,7 @@
 
 import { render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createMockFeature, createMockMap, setupGoogleMapsMock } from '#test-utils/test-utils';
+import { createMockCustomPoint, createMockFeature, createMockMap, setupGoogleMapsMock } from '#test-utils/test-utils';
 import { buildDirectionsURL, RouteButton } from './RouteButton';
 
 describe('buildDirectionsURL', () => {
@@ -22,7 +22,16 @@ describe('buildDirectionsURL', () => {
         expect(url.searchParams.get('destination')).toBe('道の駅 さかい 福井県');
     });
 
-    it('omits the waypoints parameter when only two stations are given', () => {
+    it('writes a custom route point as its coordinate', () => {
+        const features = [createMockCustomPoint(43.7708, 142.365), createMockFeature('2', { name: 'びふか' })];
+
+        const url = new URL(buildDirectionsURL(features));
+
+        expect(url.searchParams.get('origin')).toBe('43.770800,142.365000');
+        expect(url.searchParams.get('destination')).toBe('道の駅 びふか 北海道');
+    });
+
+    it('omits the waypoints parameter when only two stops are given', () => {
         const features = [createMockFeature('1', { name: '三笠' }), createMockFeature('2', { name: 'びふか' })];
 
         const url = new URL(buildDirectionsURL(features));
@@ -30,11 +39,11 @@ describe('buildDirectionsURL', () => {
         expect(url.searchParams.has('waypoints')).toBe(false);
     });
 
-    it('joins intermediate stations into the waypoints parameter with "|"', () => {
+    it('joins intermediate stops into the waypoints parameter with "|"', () => {
         const features = [
             createMockFeature('1', { name: '三笠' }),
             createMockFeature('2', { name: 'スタープラザ 芦別' }),
-            createMockFeature('3', { name: '南ふらの' }),
+            createMockCustomPoint(43.0, 142.0),
             createMockFeature('4', { name: 'びふか' }),
         ];
 
@@ -42,10 +51,10 @@ describe('buildDirectionsURL', () => {
 
         expect(url.searchParams.get('origin')).toBe('道の駅 三笠 北海道');
         expect(url.searchParams.get('destination')).toBe('道の駅 びふか 北海道');
-        expect(url.searchParams.get('waypoints')).toBe('道の駅 スタープラザ 芦別 北海道|道の駅 南ふらの 北海道');
+        expect(url.searchParams.get('waypoints')).toBe('道の駅 スタープラザ 芦別 北海道|43.000000,142.000000');
     });
 
-    it('handles the maximum 9-station route (7 waypoints)', () => {
+    it('handles the maximum 9-stop route (7 waypoints)', () => {
         const features = Array.from({ length: 9 }, (_, i) => createMockFeature(`${i}`, { name: `S${i}` }));
 
         const url = new URL(buildDirectionsURL(features));

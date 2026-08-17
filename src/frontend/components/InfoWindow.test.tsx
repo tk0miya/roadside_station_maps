@@ -64,11 +64,14 @@ describe('InfoWindow', () => {
         render(<InfoWindow selectedFeature={mockFeature as any} map={mockMap} />);
 
         expect(mockInfoWindow.setOptions).toHaveBeenCalledWith({
-            position: { lat: 35.0, lng: 139.0 },
+            position: expect.anything(),
             content: expect.any(HTMLElement),
             headerDisabled: true,
             pixelOffset: expect.any(Object),
         });
+        // The geometry hands back a LatLng, which the InfoWindow takes as is.
+        const { position } = mockInfoWindow.setOptions.mock.calls[0][0] as { position: google.maps.LatLng };
+        expect([position.lat(), position.lng()]).toEqual([35.0, 139.0]);
         expect(mockInfoWindow.open).toHaveBeenCalledWith(mockMap);
     });
 
@@ -83,7 +86,7 @@ describe('InfoWindow', () => {
         render(<InfoWindow selectedFeature={mockFeature as any} map={mockMap} />);
 
         expect(mockInfoWindow.setOptions).toHaveBeenCalledWith({
-            position: { lat: 35.0, lng: 139.0 },
+            position: expect.anything(),
             content: expect.any(HTMLElement),
             headerDisabled: true,
             pixelOffset: expect.any(Object),
