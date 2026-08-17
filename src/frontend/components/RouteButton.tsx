@@ -8,7 +8,12 @@ interface RouteButtonProps {
 export function buildDirectionsURL(features: google.maps.Data.Feature[]): string {
     const labels = features.map((feature) => {
         const name = feature.getProperty('name') as string;
-        return `道の駅 ${name}`;
+        const prefName = feature.getProperty('prefName') as string;
+        // Some station names are shared by two prefectures ("さかい" sits in both
+        // Ibaraki and Fukui), and the bare name lets Google Maps route to the
+        // wrong one. The prefecture comes from its own field rather than the
+        // address, because a handful of addresses omit it.
+        return `道の駅 ${name} ${prefName}`;
     });
     const origin = labels[0];
     const destination = labels[labels.length - 1];

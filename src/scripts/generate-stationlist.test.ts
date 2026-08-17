@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { getPrefectures, getStationDetails, getStations, stripStationPrefix } from './generate-stationlist';
+import {
+    getPrefectures,
+    getStationDetails,
+    getStations,
+    normalizePrefectureName,
+    stripStationPrefix,
+} from './generate-stationlist';
 
 // These tests hit michi-no-eki.jp for real, so that a change to the site's
 // markup shows up here instead of in the weekly data update. Claude Code on
@@ -29,6 +35,24 @@ describe('stripStationPrefix', () => {
     });
 });
 
+describe('normalizePrefectureName', () => {
+    it('should append 県 to an ordinary prefecture', () => {
+        expect(normalizePrefectureName('茨城')).toBe('茨城県');
+        expect(normalizePrefectureName('神奈川')).toBe('神奈川県');
+        expect(normalizePrefectureName('沖縄')).toBe('沖縄県');
+    });
+
+    it('should give 東京 its 都 and 大阪 / 京都 their 府', () => {
+        expect(normalizePrefectureName('東京')).toBe('東京都');
+        expect(normalizePrefectureName('大阪')).toBe('大阪府');
+        expect(normalizePrefectureName('京都')).toBe('京都府');
+    });
+
+    it('should leave 北海道 alone', () => {
+        expect(normalizePrefectureName('北海道')).toBe('北海道');
+    });
+});
+
 describe.skipIf(isClaudeCodeWeb)('generate_stationlist', () => {
     describe('getPrefectures', () => {
         it('should fetch and parse prefecture list from michi-no-eki.jp', async () => {
@@ -42,11 +66,11 @@ describe.skipIf(isClaudeCodeWeb)('generate_stationlist', () => {
             const prefectureNames = prefectures.map((p) => p.name);
 
             // Check if we have some expected prefectures
-            // Note: Prefecture names on the site don't include suffixes like '都', '府', '県'
+            // Note: the site omits suffixes like '都', '府', '県'; getPrefectures puts them back
             expect(prefectureNames).toContain('北海道');
-            expect(prefectureNames).toContain('東京');
-            expect(prefectureNames).toContain('大阪');
-            expect(prefectureNames).toContain('沖縄');
+            expect(prefectureNames).toContain('東京都');
+            expect(prefectureNames).toContain('大阪府');
+            expect(prefectureNames).toContain('沖縄県');
         });
     });
 
@@ -55,7 +79,7 @@ describe.skipIf(isClaudeCodeWeb)('generate_stationlist', () => {
             // Use Iwate prefecture (ID: 13) to test pagination functionality
             const iwate = {
                 id: '13',
-                name: '岩手',
+                name: '岩手県',
                 uri: '/stations/search/13/all/all',
             };
 
@@ -65,9 +89,10 @@ describe.skipIf(isClaudeCodeWeb)('generate_stationlist', () => {
             // Iwate has exactly 39 stations
             expect(stations).toHaveLength(39);
 
-            // Verify all stations have the correct prefecture ID
+            // Verify all stations have the correct prefecture
             stations.forEach((station) => {
                 expect(station.prefId).toBe('13');
+                expect(station.prefName).toBe('岩手県');
             });
 
             // Check for known stations in Iwate
@@ -81,12 +106,13 @@ describe.skipIf(isClaudeCodeWeb)('generate_stationlist', () => {
         it('should fetch and parse station details from a specific station page', async () => {
             // Test with station ID 19150 (Hakone-toge in Kanagawa)
             const stationUri = '/stations/views/19150';
-            const prefId = '23'; // Kanagawa
+            const kanagawa = { id: '23', name: '神奈川県' };
 
-            const station = await getStationDetails(stationUri, prefId);
+            const station = await getStationDetails(stationUri, kanagawa);
 
-            // Verify prefecture ID (passed as parameter)
+            // Verify prefecture (passed as parameter)
             expect(station.prefId).toBe('23');
+            expect(station.prefName).toBe('神奈川県');
 
             // Verify station ID (extracted from URI)
             expect(station.stationId).toBe('19150');
@@ -114,7 +140,7 @@ describe.skipIf(isClaudeCodeWeb)('generate_stationlist', () => {
 
         it('should drop the 道の駅 prefix the site puts on some station names', async () => {
             // Station 22061 (Kitagou in Miyazaki) is registered as "道の駅きたごう"
-            const station = await getStationDetails('/stations/views/22061', '54');
+            const station = await getStationDetails('/stations/views/22061', { id: '54', name: '宮崎県' });
 
             expect(station.name).toBe('きたごう');
         });

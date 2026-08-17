@@ -19,6 +19,7 @@ interface StationFeature {
     };
     properties: {
         prefId: string;
+        prefName: string;
         stationId: string;
         name: string;
         address: string;
@@ -41,6 +42,7 @@ export function toFeature(station: Station): StationFeature {
         },
         properties: {
             prefId: station.prefId,
+            prefName: station.prefName,
             stationId: station.stationId,
             name: station.name,
             address: station.address,
