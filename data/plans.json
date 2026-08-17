@@ -2804,7 +2804,7 @@
         "pref": "兵庫県",
         "city": "洲本市",
         "status": "計画中",
-        "date": "",
+        "date": "2029年度",
         "lat": 34.4161941,
         "lng": 134.7918969,
         "urls": [
@@ -2813,12 +2813,16 @@
                 "url": "https://readyfor.jp/projects/97258"
             },
             {
-                "title": "高田屋嘉兵衛公園の道の駅整備説明会｜洲本市が7月4日に五色庁舎で開催",
-                "url": "https://harimap.com/sumoto-takadaya-michinoeki-briefing-20260704/"
+                "title": "(仮称)高田屋嘉兵衛公園「道の駅」整備にかかる説明会の開催について",
+                "url": "https://www.city.sumoto.lg.jp/soshiki/16/36532.html"
             },
             {
                 "title": "新たな洲本市西海岸の観光拠点「高田屋嘉兵衛公園道の駅」施設整備の基本設計が完成！",
                 "url": "https://kisspress.jp/news/61686/"
+            },
+            {
+                "title": "開業が大幅遅れの道の駅は事業費２５億円…初の住民説明会で発表、参加者らは「来る仕掛けが必要」「地元ゆかりの偉人コーナーを」と要望",
+                "url": "https://www.yomiuri.co.jp/local/kansai/news/20260708-GYO1T00098/"
             }
         ],
         "checked_on": "2026-08-18"
