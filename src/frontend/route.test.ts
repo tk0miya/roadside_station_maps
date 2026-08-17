@@ -1,11 +1,6 @@
-/**
- * @vitest-environment jsdom
- */
-
-import { render } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createMockCustomPoint, createMockFeature, createMockMap, setupGoogleMapsMock } from '#test-utils/test-utils';
-import { buildDirectionsURL, RouteButton } from './RouteButton';
+import { describe, expect, it } from 'vitest';
+import { createMockCustomPoint, createMockFeature } from '#test-utils/test-utils';
+import { buildDirectionsURL, clearsSelectionOnMapClick } from './route';
 
 describe('buildDirectionsURL', () => {
     it('appends the prefecture, telling two stations sharing a name apart', () => {
@@ -73,69 +68,22 @@ describe('buildDirectionsURL', () => {
     });
 });
 
-describe('RouteButton', () => {
-    let originalOpen: typeof window.open;
-
-    beforeEach(() => {
-        setupGoogleMapsMock();
-        originalOpen = window.open;
+describe('clearsSelectionOnMapClick', () => {
+    const context = (overrides: Partial<Parameters<typeof clearsSelectionOnMapClick>[0]> = {}) => ({
+        modifierPressed: false,
+        routeMode: false,
+        ...overrides,
     });
 
-    afterEach(() => {
-        window.open = originalOpen;
+    it('clears on a plain click outside route editing', () => {
+        expect(clearsSelectionOnMapClick(context())).toBe(true);
     });
 
-    it('renders nothing while fewer than two stations are selected', () => {
-        const mockMap = createMockMap();
-        const feature = createMockFeature('1', { name: '三笠' });
-
-        render(<RouteButton map={mockMap} multiSelected={[feature]} />);
-
-        const controls = mockMap.controls[google.maps.ControlPosition.TOP_CENTER].getArray();
-        expect(controls).toHaveLength(0);
+    it('keeps the route on the click that precedes dropping a point', () => {
+        expect(clearsSelectionOnMapClick(context({ modifierPressed: true }))).toBe(false);
     });
 
-    it('mounts a button into TOP_CENTER controls once two stations are selected', () => {
-        const mockMap = createMockMap();
-        const features = [createMockFeature('1', { name: '三笠' }), createMockFeature('2', { name: 'びふか' })];
-
-        render(<RouteButton map={mockMap} multiSelected={features} />);
-
-        const controls = mockMap.controls[google.maps.ControlPosition.TOP_CENTER].getArray();
-        expect(controls).toHaveLength(1);
-        expect(controls[0].textContent).toBe('ルートを作成');
-    });
-
-    it('opens a Google Maps directions URL in a new tab on click', () => {
-        const mockMap = createMockMap();
-        const features = [createMockFeature('1', { name: '三笠' }), createMockFeature('2', { name: 'びふか' })];
-        const openSpy = vi.fn();
-        window.open = openSpy as unknown as typeof window.open;
-
-        render(<RouteButton map={mockMap} multiSelected={features} />);
-
-        const button = mockMap.controls[google.maps.ControlPosition.TOP_CENTER].getArray()[0];
-        button.click();
-
-        expect(openSpy).toHaveBeenCalledTimes(1);
-        const [openedURL, target, features_] = openSpy.mock.calls[0];
-        expect(openedURL).toBe(buildDirectionsURL(features));
-        expect(target).toBe('_blank');
-        expect(features_).toBe('noopener');
-    });
-
-    it('removes the button when the selection drops below two stations', () => {
-        const mockMap = createMockMap();
-        const features = [createMockFeature('1', { name: '三笠' }), createMockFeature('2', { name: 'びふか' })];
-
-        const { rerender } = render(<RouteButton map={mockMap} multiSelected={features} />);
-
-        let controls = mockMap.controls[google.maps.ControlPosition.TOP_CENTER].getArray();
-        expect(controls).toHaveLength(1);
-
-        rerender(<RouteButton map={mockMap} multiSelected={[features[0]]} />);
-
-        controls = mockMap.controls[google.maps.ControlPosition.TOP_CENTER].getArray();
-        expect(controls).toHaveLength(0);
+    it('keeps the route while route mode is on', () => {
+        expect(clearsSelectionOnMapClick(context({ routeMode: true }))).toBe(false);
     });
 });

@@ -1,22 +1,12 @@
 import { useEffect, useRef } from 'react';
 
 import { MARKER_ICONS, numberedMarkerIcon } from '../marker-icons';
+import { isCustomPoint, MAX_ROUTE_SELECTION } from '../route';
 import type { Storage } from '../storage';
 import * as style from '../style';
 import { getStyle } from '../style';
 import type { StationsGeoJSON } from '../types/geojson';
 import { useModifierHeld } from '../use-modifier-held';
-
-// Google Maps directions support at most 10 stops (origin + destination
-// + 8 waypoints), so the route-selection set is capped just under that bound.
-export const MAX_ROUTE_SELECTION = 9;
-
-// A custom point is a feature the user dropped on the map to route through a
-// place that is not a station. It carries no station data, so a branch that
-// assumes some has to step around it.
-export function isCustomPoint(feature: google.maps.Data.Feature): boolean {
-    return Boolean(feature.getProperty('customPoint'));
-}
 
 // Add a custom route point at `position` and return its feature. It is created
 // hidden: applyMultiSelection reveals it once the selection gives it a number,
@@ -31,6 +21,8 @@ function addCustomPoint(map: google.maps.Map, position: google.maps.LatLng): goo
 export interface MarkerClickContext {
     clickedFeature: google.maps.Data.Feature;
     modifierPressed: boolean;
+    // In route mode a plain click does what a modifier-click does.
+    routeMode: boolean;
     selectedFeature: google.maps.Data.Feature | null;
     multiSelected: google.maps.Data.Feature[];
 }
@@ -46,12 +38,13 @@ export interface MarkerClickResult {
 export function resolveMarkerClick({
     clickedFeature,
     modifierPressed,
+    routeMode,
     selectedFeature,
     multiSelected,
 }: MarkerClickContext): MarkerClickResult {
-    if (modifierPressed) {
-        // Modifier-click always suppresses single-selection regardless of
-        // prior state, so always emit a (possibly redundant) clear.
+    if (modifierPressed || routeMode) {
+        // A click that edits the route always suppresses single-selection
+        // regardless of prior state, so always emit a (possibly redundant) clear.
         if (selectedFeature) {
             // Extending a single selection: lift the previously selected
             // marker into the set together with the newly clicked one.
@@ -225,12 +218,14 @@ interface MarkersProps {
     storage: Storage;
     stations: StationsGeoJSON | null;
     onStyleChange: () => void;
+    routeMode: boolean;
 }
 
 export function Markers(props: MarkersProps) {
     const selectedFeatureRef = useRef<google.maps.Data.Feature | null>(null);
     const multiSelectedRef = useRef<google.maps.Data.Feature[]>(props.multiSelected);
     const storageRef = useRef<Storage>(props.storage);
+    const routeModeRef = useRef<boolean>(props.routeMode);
     // Set when a drag moved a custom point, cleared by the next press on a
     // marker. Dragging a point ends with a mouseup on it, and a modifier-click
     // deletes the point, so the release that finishes a drag must not be taken
@@ -241,6 +236,10 @@ export function Markers(props: MarkersProps) {
     useEffect(() => {
         selectedFeatureRef.current = props.selectedFeature;
     }, [props.selectedFeature]);
+
+    useEffect(() => {
+        routeModeRef.current = props.routeMode;
+    }, [props.routeMode]);
 
     // Keep handlers and the data-layer style callback bound to the latest storage
     // so login/logout transitions immediately switch storage backends without remounting.
@@ -265,10 +264,19 @@ export function Markers(props: MarkersProps) {
         });
     }, [props.map, props.stations]);
 
+    // Gestures on the map itself, as opposed to on a marker. A gesture landing
+    // on a marker never arrives here: the data layer takes that event.
     useEffect(() => {
         if (!props.map) return;
-        const listener = props.map.addListener('dblclick', onMapDoubleClick);
-        return () => listener.remove();
+        const listeners = [
+            props.map.addListener('dblclick', onMapDoubleClick),
+            props.map.addListener('contextmenu', onMapLongPress),
+        ];
+        return () => {
+            for (const listener of listeners) {
+                listener.remove();
+            }
+        };
     }, [props.map]);
 
     // The modifier turns a double-click into "drop a route point here", so the
@@ -305,31 +313,53 @@ export function Markers(props: MarkersProps) {
             resolveMarkerClick({
                 clickedFeature: event.feature,
                 modifierPressed: isModifierPressed(event),
+                routeMode: routeModeRef.current,
                 selectedFeature: selectedFeatureRef.current,
                 multiSelected: multiSelectedRef.current,
             })
         );
     };
 
-    // Modifier + double-click on the map drops a custom route point where the
-    // cursor is. The point then takes the number after the ones already chosen,
-    // which is what a modifier-click on a marker created there would have done,
-    // so the click resolver decides the new order too.
-    const onMapDoubleClick = (event: google.maps.MapMouseEvent) => {
-        if (!props.map || !isModifierPressed(event) || !event.latLng) return;
+    // Put a custom route point at `position`. It takes the number after the ones
+    // already chosen, which is what a modifier-click on a marker created there
+    // would have done, so the click resolver decides the new order too.
+    const dropRoutePoint = (map: google.maps.Map, position: google.maps.LatLng) => {
         // Checked before the point is created so a full route leaves no marker
         // behind: the resolver would refuse to number it.
         if (multiSelectedRef.current.length >= MAX_ROUTE_SELECTION) return;
 
-        const feature = addCustomPoint(props.map, event.latLng);
+        const feature = addCustomPoint(map, position);
         applyClickResult(
             resolveMarkerClick({
                 clickedFeature: feature,
                 modifierPressed: true,
+                routeMode: routeModeRef.current,
                 selectedFeature: selectedFeatureRef.current,
                 multiSelected: multiSelectedRef.current,
             })
         );
+    };
+
+    // Modifier + double-click on the map is the pointer way to drop a route
+    // point, where the cursor is.
+    const onMapDoubleClick = (event: google.maps.MapMouseEvent) => {
+        if (!props.map || !isModifierPressed(event) || !event.latLng) return;
+        dropRoutePoint(props.map, event.latLng);
+    };
+
+    // A long press drops a route point without a keyboard. The Maps API reports
+    // it as `contextmenu`, which is where a right-click arrives too, so the
+    // pointer gesture comes along for free — and a browser that keeps the long
+    // press to itself never gets here, which costs that device this one gesture
+    // and nothing else. Only route mode answers it: outside the mode the
+    // gesture stays the browser's, and a keyboard reaches the same thing with
+    // modifier + double-click. Inside the mode the press belongs to this app,
+    // so the browser's menu is not what it asked for — that holds even when a
+    // full route leaves nothing to place.
+    const onMapLongPress = (event: google.maps.MapMouseEvent) => {
+        if (!props.map || !routeModeRef.current || !event.latLng) return;
+        event.domEvent?.preventDefault();
+        dropRoutePoint(props.map, event.latLng);
     };
 
     const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {
@@ -337,6 +367,10 @@ export function Markers(props: MarkersProps) {
         // Modifier + double-click drops a route point, and only the map itself
         // answers that gesture; on a marker it does nothing.
         if (isModifierPressed(event)) return;
+        // Route mode edits the route, not the visit styles: a double tap there
+        // is two taps that added and removed a stop, and cycling the style on
+        // top of that — let alone dropping the route — is not what was asked.
+        if (routeModeRef.current) return;
         if (isCustomPoint(event.feature)) return;
         if (multiSelectedRef.current.length > 0) {
             props.onMultiSelectChange(() => []);
@@ -351,6 +385,15 @@ export function Markers(props: MarkersProps) {
         // modifier-click appending a marker at its end.
         if (isModifierPressed(event)) {
             props.onMultiSelectChange((prev) => cycleRouteNumber(prev, event.feature));
+            return;
+        }
+        // In route mode a gesture on a marker edits the route — reordering is the
+        // modifier + right-click above, and dropping a stop is a second tap on it
+        // — so resetting a visit style is not on offer. A long press that landed
+        // on a marker rather than the map drops no point, but the browser menu is
+        // no more what it asked for here than it is out on the map.
+        if (routeModeRef.current) {
+            event.domEvent?.preventDefault();
             return;
         }
         if (isCustomPoint(event.feature)) return;

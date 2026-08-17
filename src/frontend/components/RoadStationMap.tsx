@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuthManager } from '../auth/auth-context';
 import { useSessionRefresh } from '../auth/use-session-refresh';
+import { clearsSelectionOnMapClick } from '../route';
 import { fetchStations, reconcileVisits } from '../station';
 import { createStorage, type Storage } from '../storage';
 import type { StationsGeoJSON } from '../types/geojson';
 import { InfoWindow } from './InfoWindow';
 import { LoginButton } from './LoginButton';
 import { isModifierPressed, Markers } from './Markers';
-import { RouteButton } from './RouteButton';
+import { RouteBar } from './RouteBar';
+import { RouteModeButton } from './RouteModeButton';
 import { ShareButton } from './ShareButton';
 import { StationCounter } from './StationCounter';
 
@@ -29,6 +31,18 @@ export function RoadStationMap() {
     const [styleVersion, setStyleVersion] = useState(0);
     const [storage, setStorage] = useState<Storage | null>(null);
     const [loadError, setLoadError] = useState<string | null>(null);
+    const [routeMode, setRouteMode] = useState(false);
+    // The map click listener is installed once, so what it reads about route
+    // mode has to come from a ref rather than the render it was created in.
+    const routeModeRef = useRef(routeMode);
+
+    // The bar stands in for the route: it is up while one is being built,
+    // whether route mode or a modifier-click started it.
+    const isRouteBarVisible = routeMode || multiSelected.length > 0;
+
+    useEffect(() => {
+        routeModeRef.current = routeMode;
+    }, [routeMode]);
 
     useEffect(() => {
         if (mapContainerRef.current) {
@@ -85,10 +99,11 @@ export function RoadStationMap() {
         if (!map) return;
 
         map.addListener('click', (event: google.maps.MapMouseEvent) => {
-            // A modifier-click on the map belongs to the route gesture: it is
-            // the click that precedes the double-click dropping a route point,
-            // and it must not clear the route that point is about to join.
-            if (isModifierPressed(event)) return;
+            const clears = clearsSelectionOnMapClick({
+                modifierPressed: isModifierPressed(event),
+                routeMode: routeModeRef.current,
+            });
+            if (!clears) return;
             setFeature(null);
             setMultiSelected([]);
         });
@@ -100,6 +115,18 @@ export function RoadStationMap() {
             const latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
             map.setCenter(latlng);
         }
+    };
+
+    // Entering route mode closes the info window: from here a tap on a marker
+    // adds it to the route rather than opening it.
+    const enterRouteMode = () => {
+        setFeature(null);
+        setRouteMode(true);
+    };
+
+    const closeRouteBar = () => {
+        setRouteMode(false);
+        setMultiSelected([]);
     };
 
     return (
@@ -122,12 +149,14 @@ export function RoadStationMap() {
                         storage={storage}
                         stations={stations}
                         onStyleChange={() => setStyleVersion((v) => v + 1)}
+                        routeMode={routeMode}
                     />
                     <ShareButton map={map} />
                     <StationCounter storage={storage} stations={stations} styleVersion={styleVersion} map={map} />
                 </>
             )}
-            <RouteButton map={map} multiSelected={multiSelected} />
+            <RouteModeButton map={map} visible={!isRouteBarVisible} onClick={enterRouteMode} />
+            {isRouteBarVisible && <RouteBar stops={multiSelected} onClose={closeRouteBar} />}
             <InfoWindow selectedFeature={multiSelected.length > 0 ? null : feature} map={map} />
             <LoginButton map={map} />
         </>
