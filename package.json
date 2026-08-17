@@ -30,6 +30,7 @@
         "db:migrate:local": "wrangler d1 migrations apply DB --local",
         "db:migrate": "wrangler d1 migrations apply DB --remote --env production",
         "plan": "node --import tsx src/scripts/plan.ts",
+        "generate:cities": "NODE_USE_ENV_PROXY=1 node --import tsx src/scripts/generate-cities.ts",
         "generate:stations": "NODE_USE_ENV_PROXY=1 node --import tsx src/scripts/generate-stationlist.ts",
         "test": "NODE_USE_ENV_PROXY=1 vitest",
         "ci": "npm run lint && npm run typecheck && npm test"
@@ -37,6 +38,8 @@
     "dependencies": {
         "@react-oauth/google": "^0.13.5",
         "cheerio": "^1.2.0",
+        "csv-parse": "^7.0.2",
+        "fflate": "^0.8.3",
         "hono": "^4.12.34",
         "jaconv": "^1.1.2",
         "jose": "^6.2.8",

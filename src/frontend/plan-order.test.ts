@@ -4,10 +4,10 @@ import type { City, PlannedStation } from './types/plan';
 
 // Prefectures in 全国地方公共団体コード order, as data/cities.json supplies them.
 const cities: City[] = [
-    { pref: '北海道', city: '札幌市中央区', lat: 43, lng: 141 },
-    { pref: '福島県', city: '石川郡石川町', lat: 37, lng: 140 },
-    { pref: '長野県', city: '上伊那郡箕輪町', lat: 35.9, lng: 137.9 },
-    { pref: '福岡県', city: '田川郡川崎町', lat: 33.6, lng: 130.8 },
+    { code: '011002', pref: '北海道', city: '札幌市', lat: 43, lng: 141 },
+    { code: '075019', pref: '福島県', city: '石川郡石川町', lat: 37, lng: 140 },
+    { code: '203831', pref: '長野県', city: '上伊那郡箕輪町', lat: 35.9, lng: 137.9 },
+    { code: '406058', pref: '福岡県', city: '田川郡川崎町', lat: 33.6, lng: 130.8 },
 ];
 
 function station(overrides: Partial<PlannedStation>): PlannedStation {
