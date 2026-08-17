@@ -2156,7 +2156,7 @@
         "pref": "石川県",
         "city": "能美市",
         "status": "計画中",
-        "date": "2029秋頃",
+        "date": "2029-10頃",
         "lat": 36.4439706,
         "lng": 136.5498651,
         "urls": [
@@ -2167,6 +2167,10 @@
             {
                 "title": "旧辰口フラワーハウス跡地整備構想について",
                 "url": "https://www.city.nomi.ishikawa.jp/docs/5318.html"
+            },
+            {
+                "title": "旧辰口フラワーハウス跡地整備・運営事業 公募型プロポーザル募集要項",
+                "url": "https://www.city.nomi.ishikawa.jp/fs/2/0/7/9/3/_/1boshuyoko.pdf"
             }
         ],
         "checked_on": "2026-08-18"
@@ -2285,7 +2289,7 @@
         "lng": 138.8700111,
         "urls": [
             {
-                "title": "https://www.mlit.go.jp/common/001252218.pdf",
+                "title": "民間活動に合わせた基盤整備調査を機動的に支援！～平成30年度 第3回 官民連携基盤整備推進調査費の配分～",
                 "url": "https://www.mlit.go.jp/common/001252218.pdf"
             }
         ],
