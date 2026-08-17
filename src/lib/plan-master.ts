@@ -99,7 +99,10 @@ export function savePlans(plans: PlanRecord[]): void {
 // Today in Japan. The master records Japanese days, so the machine running a
 // command -- often on UTC -- does not get to decide which day it is. en-CA is the
 // locale that formats a date as yyyy-mm-dd, the form the column holds.
-function todayInJapan(): string {
+//
+// Exported because the city table dates the same way: ABR's effective dates are
+// Japanese days too, and a scheduled job runs on UTC there as well.
+export function todayInJapan(): string {
     return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
 }
 
@@ -149,6 +152,36 @@ export function createPlanComparator(cities: City[]): (a: OrderKey, b: OrderKey)
         }
         return compareStrings(a.name, b.name);
     };
+}
+
+// Follow the city table after it is regenerated: move plans onto municipalities
+// that were renamed, and put the master back in the order the new table defines.
+// `renames` maps `"pref city"` to the location that replaces it.
+//
+// Both halves are needed even when nothing was renamed, because record order is
+// the city table's order (docs/plan-map.md) -- a regeneration that reorders
+// municipalities reorders the master with it.
+//
+// Both columns of the location are written, not just `city`. A prefecture does
+// not change under a municipality in practice, but the caller decides what
+// counts as a rename, and a half-applied one would leave the record naming a
+// pair that exists in neither table while the report called it repointed.
+//
+// Deliberately not a check-in. `checked_on` records when a plan was last
+// researched and orders the research queue; a municipality renaming itself says
+// nothing about whether anyone looked at the plan, so the stamp stays put.
+export function repointPlans(
+    plans: PlanRecord[],
+    cities: City[],
+    renames: Map<string, Pick<City, 'pref' | 'city'>>
+): PlanRecord[] {
+    // Spread rather than assignment: it rebuilds the record in its existing key
+    // order, so overwriting the location cannot move those columns.
+    const repointed = plans.map((plan) => {
+        const moved = renames.get(`${plan.pref} ${plan.city}`);
+        return moved === undefined ? plan : { ...plan, pref: moved.pref, city: moved.city };
+    });
+    return repointed.sort(createPlanComparator(cities));
 }
 
 function matchingIndexes(plans: PlanRecord[], key: PlanKey): number[] {

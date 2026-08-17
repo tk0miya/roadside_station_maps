@@ -42,7 +42,13 @@ export interface PlanRecord {
 }
 
 // One row of the city (市区町村) representative-point table.
+//
+// `code` is the 全国地方公共団体コード, six digits as a string so the leading zero
+// survives. The table is sorted by it, and it identifies a municipality across
+// regenerations -- the code outlives the name (篠山市 and 丹波篠山市 are both
+// 282219).
 export interface City {
+    code: string;
     pref: string;
     city: string;
     lat: number;

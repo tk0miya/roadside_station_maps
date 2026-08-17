@@ -22,6 +22,7 @@ import {
     type Master,
     removeUrl,
     replaceUrl,
+    repointPlans,
     setUrlTitle,
 } from './plan-master';
 
@@ -29,11 +30,11 @@ import {
 // then 福島県, then 福岡県. 沖縄県 is left out so it can stand for a prefecture
 // the table does not know.
 const CITIES: City[] = [
-    { pref: '北海道', city: '旭川市', lat: 43.77, lng: 142.36 },
-    { pref: '北海道', city: '共和町', lat: 42.9, lng: 140.5 },
-    { pref: '福島県', city: '安達郡大玉村', lat: 37.5, lng: 140.4 },
-    { pref: '福島県', city: '田村市', lat: 37.4, lng: 140.5 },
-    { pref: '福岡県', city: '田川郡川崎町', lat: 33.6, lng: 130.8 },
+    { code: '012041', pref: '北海道', city: '旭川市', lat: 43.77, lng: 142.36 },
+    { code: '014010', pref: '北海道', city: '岩内郡共和町', lat: 42.9, lng: 140.5 },
+    { code: '072117', pref: '福島県', city: '田村市', lat: 37.4, lng: 140.5 },
+    { code: '073229', pref: '福島県', city: '安達郡大玉村', lat: 37.5, lng: 140.4 },
+    { code: '406058', pref: '福岡県', city: '田川郡川崎町', lat: 33.6, lng: 130.8 },
 ];
 
 function plan(overrides: Partial<PlanRecord> = {}): PlanRecord {
@@ -70,6 +71,53 @@ function manyUrls(count: number): PlanRecord['urls'] {
     }));
 }
 
+describe('repointPlans', () => {
+    // 田村市 stands in for a municipality the regenerated table renamed.
+    const RENAMES = new Map([['福島県 田村市', { pref: '福島県', city: '安達郡大玉村' }]]);
+    const renamed = plan({ name: 'あ', pref: '福島県', city: '田村市' });
+
+    it('rewrites only the records the map names', () => {
+        const plans = [renamed, plan({ name: 'い', city: '岩内郡共和町' })];
+
+        expect(names(repointPlans(plans, CITIES, RENAMES))).toEqual([
+            '北海道 岩内郡共和町 い',
+            '福島県 安達郡大玉村 あ',
+        ]);
+    });
+
+    it('writes both halves of the location', () => {
+        const moved = new Map([['北海道 旭川市', { pref: '福岡県', city: '田川郡川崎町' }]]);
+
+        const [repointed] = repointPlans([plan()], CITIES, moved);
+
+        expect([repointed.pref, repointed.city]).toEqual(['福岡県', '田川郡川崎町']);
+    });
+
+    // Record order is the city table's order, so a regeneration that reorders
+    // municipalities reorders the master -- whether or not anything was renamed.
+    it('sorts to the table it is given, with nothing renamed', () => {
+        const plans = [plan({ pref: '福岡県', city: '田川郡川崎町' }), plan({ city: '岩内郡共和町' })];
+
+        expect(names(repointPlans(plans, CITIES, new Map()))).toEqual([
+            '北海道 岩内郡共和町 道の駅 旭川市',
+            '福岡県 田川郡川崎町 道の駅 旭川市',
+        ]);
+    });
+
+    // Why it is left alone is on repointPlans; this holds it to that.
+    it('leaves checked_on alone', () => {
+        const [repointed] = repointPlans([renamed], CITIES, RENAMES);
+
+        expect(repointed.checked_on).toBe('2026-01-01');
+    });
+
+    it('keeps the key order of a record it rewrites', () => {
+        const [repointed] = repointPlans([renamed], CITIES, RENAMES);
+
+        expect(Object.keys(repointed)).toEqual(Object.keys(renamed));
+    });
+});
+
 describe('findPlan', () => {
     it('returns the matching plan without removing it', () => {
         const plans = [plan({ name: 'あ' }), plan({ name: 'い' })];
@@ -92,14 +140,14 @@ describe('checkOutPlan', () => {
     // `name` alone is not a key: 道の駅 川崎町 exists in both 福岡県 and 宮城県.
     it('distinguishes same-named plans by prefecture', () => {
         const state = master([
-            plan({ name: '道の駅 川崎町', pref: '北海道', city: '共和町' }),
+            plan({ name: '道の駅 川崎町', pref: '北海道', city: '岩内郡共和町' }),
             plan({ name: '道の駅 川崎町', pref: '福岡県', city: '田川郡川崎町' }),
         ]);
 
         const borrowed = checkOutPlan(state, { name: '道の駅 川崎町', pref: '福岡県' });
 
         expect(borrowed.city).toBe('田川郡川崎町');
-        expect(names(state.plans)).toEqual(['北海道 共和町 道の駅 川崎町']);
+        expect(names(state.plans)).toEqual(['北海道 岩内郡共和町 道の駅 川崎町']);
     });
 
     // The failure jq hid: a `select` that matched nothing succeeded and printed
@@ -135,7 +183,7 @@ describe('createPlanComparator', () => {
 
     it('orders cities within a prefecture by the same table', () => {
         const asahikawa = plan({ city: '旭川市' });
-        const kyowa = plan({ city: '共和町' });
+        const kyowa = plan({ city: '岩内郡共和町' });
 
         expect(compare(asahikawa, kyowa)).toBeLessThan(0);
     });
@@ -172,11 +220,11 @@ describe('checkInPlan', () => {
     it('inserts at the sorted position rather than the end', () => {
         const state = master([plan({ city: '旭川市', name: 'あ' }), plan({ pref: '福岡県', city: '田川郡川崎町' })]);
 
-        checkInPlan(state, plan({ city: '共和町', name: 'う' }));
+        checkInPlan(state, plan({ city: '岩内郡共和町', name: 'う' }));
 
         expect(names(state.plans)).toEqual([
             '北海道 旭川市 あ',
-            '北海道 共和町 う',
+            '北海道 岩内郡共和町 う',
             '福岡県 田川郡川崎町 道の駅 旭川市',
         ]);
     });

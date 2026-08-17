@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { toPlannedStations } from './planned-stations';
 import type { City, PlanRecord } from './types/plan';
 
-const cities: City[] = [{ pref: '長野県', city: '上伊那郡箕輪町', lat: 35.9, lng: 137.9 }];
+const cities: City[] = [{ code: '203831', pref: '長野県', city: '上伊那郡箕輪町', lat: 35.9, lng: 137.9 }];
 
 function record(overrides: Partial<PlanRecord>): PlanRecord {
     return {
