@@ -3009,11 +3009,11 @@
         "lng": 135.1473525,
         "urls": [
             {
-                "title": "http://www.city.wakayama.wakayama.jp/kurashi/sangyo_koyo_roudou/1001116/1007759/1044862.html",
+                "title": "中央卸売市場南用地について",
                 "url": "http://www.city.wakayama.wakayama.jp/kurashi/sangyo_koyo_roudou/1001116/1007759/1044862.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 海南サクアス",
@@ -3045,11 +3045,11 @@
         "lng": 135.7888823,
         "urls": [
             {
-                "title": "https://www.town.kushimoto.wakayama.jp/sangyo/kensetsu/2025-0528-1422-11.html",
+                "title": "（仮称）串本IC周辺地域活性化施設整備に関する官民連携事業　募集要項等の公表について",
                 "url": "https://www.town.kushimoto.wakayama.jp/sangyo/kensetsu/2025-0528-1422-11.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 益田",
@@ -3061,11 +3061,11 @@
         "lng": 131.8411494,
         "urls": [
             {
-                "title": "https://www.city.masuda.lg.jp/soshikikarasagasu/seisakukikakukyoku/seisakukikakuka/3/4/1962.html",
+                "title": "益田市道の駅整備基本構想について",
                 "url": "https://www.city.masuda.lg.jp/soshikikarasagasu/seisakukikakukyoku/seisakukikakuka/3/4/1962.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 城東",
@@ -3077,15 +3077,11 @@
         "lng": 134.0045802,
         "urls": [
             {
-                "title": "https://tsuyamaasahi.co.jp/%E5%9F%8E%E6%9D%B1%E5%9C%B0%E5%8C%BA%E3%81%AB%E9%81%93%E3%81%AE%E9%A7%85%E3%80%80%E8%A8%AD%E7%BD%AE%E3%82%92%E7%9B%AE%E6%8C%87%E3%81%99/",
+                "title": "城東地区に道の駅　設置を目指す",
                 "url": "https://tsuyamaasahi.co.jp/%E5%9F%8E%E6%9D%B1%E5%9C%B0%E5%8C%BA%E3%81%AB%E9%81%93%E3%81%AE%E9%A7%85%E3%80%80%E8%A8%AD%E7%BD%AE%E3%82%92%E7%9B%AE%E6%8C%87%E3%81%99/"
-            },
-            {
-                "title": "https://www.kentsu.co.jp/webnews/html_top/231031600013.html",
-                "url": "https://www.kentsu.co.jp/webnews/html_top/231031600013.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 備前市",
@@ -3097,11 +3093,11 @@
         "lng": 134.295262,
         "urls": [
             {
-                "title": "https://www.kentsu.co.jp/webnews/html_top/211210600005.html",
-                "url": "https://www.kentsu.co.jp/webnews/html_top/211210600005.html"
+                "title": "予算決算審査委員会報告書（令和6年3月13日）",
+                "url": "https://www.city.bizen.okayama.jp/uploaded/attachment/25086.pdf"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 赤磐市",
@@ -3113,11 +3109,15 @@
         "lng": 134.0187579,
         "urls": [
             {
-                "title": "https://www.city.akaiwa.lg.jp/material/files/group/21/hpkeisai.pdf",
+                "title": "赤磐市公告第179号　赤磐市「道の駅」基本計画策定等業務における受託者の選定に係る公募型プロポーザルの結果について",
                 "url": "https://www.city.akaiwa.lg.jp/material/files/group/21/hpkeisai.pdf"
+            },
+            {
+                "title": "DBOかBTOのいずれかで道の駅を整備運営、赤磐市がサウンディング",
+                "url": "https://project.nikkeibp.co.jp/atclppp/PPP/news/120303619/"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 徳島市",
@@ -3149,11 +3149,11 @@
         "lng": 134.5949772,
         "urls": [
             {
-                "title": "https://www.city.komatsushima.lg.jp/fs/9/6/8/9/5/_/_____________.pdf",
+                "title": "小松島南部のまちづくり方策の概要",
                 "url": "https://www.city.komatsushima.lg.jp/fs/9/6/8/9/5/_/_____________.pdf"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 公方の郷なかがわ (リニューアル)",
@@ -3205,11 +3205,15 @@
         "lng": 133.8368153,
         "urls": [
             {
-                "title": "https://www.miyoshi.i-tokushima.jp/docs/708144.html",
+                "title": "三好市「（仮称）箸蔵道の駅」基本計画を策定しました",
                 "url": "https://www.miyoshi.i-tokushima.jp/docs/708144.html"
+            },
+            {
+                "title": "カフェや親水空間整備など三好市が道の駅計画案を公表",
+                "url": "https://www.topics.or.jp/articles/-/194780"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 しおのえ (リニューアル)",
@@ -3259,17 +3263,21 @@
         "name": "道の駅 上島町",
         "pref": "愛媛県",
         "city": "越智郡上島町",
-        "status": "計画中",
+        "status": "凍結",
         "date": "",
         "lat": 34.2597628,
         "lng": 133.2004505,
         "urls": [
             {
-                "title": "https://www.town.kamijima.lg.jp/soshiki/4/23397.html",
-                "url": "https://www.town.kamijima.lg.jp/soshiki/4/23397.html"
+                "title": "上島の道の駅整備構想、「いったん凍結」へ　町長が方針示す",
+                "url": "https://www.ehime-np.co.jp/article/news202409100239"
+            },
+            {
+                "title": "ゆめしま海道に道の駅整備するか判断　上島町検討協が初会合",
+                "url": "https://www.ehime-np.co.jp/article/news202307040212"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 東洋町",
@@ -3605,11 +3613,15 @@
         "lng": 130.215915,
         "urls": [
             {
-                "title": "https://www.city.akune.lg.jp/soshikikarasagasu/toshikensetsuka/toshikeikakukakari/2/1/1237.html",
+                "title": "サンセット牛之浜景勝地「道の駅」全体構想・基本計画",
                 "url": "https://www.city.akune.lg.jp/soshikikarasagasu/toshikensetsuka/toshikeikakukakari/2/1/1237.html"
+            },
+            {
+                "title": "牛之浜景勝地道の駅",
+                "url": "https://www.kc-news.co.jp/kiji/new/kiji_syousai/2025_06_27_2-1.html"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-08-18"
     },
     {
         "name": "道の駅 出水市",
