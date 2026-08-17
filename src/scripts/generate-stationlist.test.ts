@@ -1,11 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { getPrefectures, getStationDetails, getStations } from './generate-stationlist';
+import { getPrefectures, getStationDetails, getStations, stripStationPrefix } from './generate-stationlist';
 
 // These tests hit michi-no-eki.jp for real, so that a change to the site's
 // markup shows up here instead of in the weekly data update. Claude Code on
 // the web denies egress to the site (403 on CONNECT), so skip them there
 // rather than let every `npm run ci` fail on an unreachable host.
 const isClaudeCodeWeb = process.env.CLAUDE_CODE_REMOTE === 'true';
+
+describe('stripStationPrefix', () => {
+    it('should remove a leading 道の駅 prefix', () => {
+        expect(stripStationPrefix('道の駅きたごう')).toBe('きたごう');
+        expect(stripStationPrefix('道の駅「安達」智恵子の里 上り線')).toBe('「安達」智恵子の里 上り線');
+    });
+
+    it('should remove the whitespace following the prefix', () => {
+        expect(stripStationPrefix('道の駅 きたごう')).toBe('きたごう');
+        expect(stripStationPrefix('道の駅　きたごう')).toBe('きたごう');
+    });
+
+    it('should keep 道の駅 that is not a prefix', () => {
+        expect(stripStationPrefix('あ・ら・伊達な道の駅')).toBe('あ・ら・伊達な道の駅');
+        expect(stripStationPrefix('北欧の風 道の駅とうべつ')).toBe('北欧の風 道の駅とうべつ');
+        expect(stripStationPrefix('まきのさんの道の駅・佐川')).toBe('まきのさんの道の駅・佐川');
+    });
+
+    it('should keep a name without the prefix as is', () => {
+        expect(stripStationPrefix('箱根峠')).toBe('箱根峠');
+    });
+});
 
 describe.skipIf(isClaudeCodeWeb)('generate_stationlist', () => {
     describe('getPrefectures', () => {
@@ -90,6 +112,13 @@ describe.skipIf(isClaudeCodeWeb)('generate_stationlist', () => {
             expect(lat).toBeLessThan(36);
             expect(lng).toBeGreaterThan(138); // Rough longitude check for Kanagawa
             expect(lng).toBeLessThan(140);
+        });
+
+        it('should drop the 道の駅 prefix the site puts on some station names', async () => {
+            // Station 22061 (Kitagou in Miyazaki) is registered as "道の駅きたごう"
+            const station = await getStationDetails('/stations/views/22061', '54');
+
+            expect(station.name).toBe('きたごう');
         });
     });
 });

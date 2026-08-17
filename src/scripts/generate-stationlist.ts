@@ -70,6 +70,12 @@ function normalizeText(text: string | null): string {
     return normalized.trim();
 }
 
+// A few stations are registered on michi-no-eki.jp with a "道の駅" prefix
+// (e.g. "道の駅きたごう") while most are not, so drop it to keep names uniform.
+export function stripStationPrefix(name: string): string {
+    return name.replace(/^道の駅\s*/, '');
+}
+
 export async function* getPrefectures(): AsyncGenerator<Prefecture> {
     const $ = await fetchPage('/');
 
@@ -111,7 +117,7 @@ export async function getStationDetails(stationUri: string, prefId: string): Pro
 
             switch (key) {
                 case '道の駅名':
-                    name = value;
+                    name = stripStationPrefix(value);
                     break;
                 case '所在地':
                     address = value;
