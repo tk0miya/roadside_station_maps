@@ -6,6 +6,7 @@ export interface StationProperties {
     uri: string;
     mapcode: string;
     prefId: string;
+    prefName: string;
 }
 
 export interface StationFeature {

@@ -9,7 +9,7 @@ const BASEURI = 'https://www.michi-no-eki.jp/';
 const FETCH_INTERVAL = 1000; // 1 second in milliseconds
 const STATION_FILENAME = 'data/stations.geojson';
 
-interface Prefecture {
+export interface Prefecture {
     id: string;
     name: string;
     uri: string;
@@ -76,6 +76,22 @@ export function stripStationPrefix(name: string): string {
     return name.replace(/^道の駅\s*/, '');
 }
 
+// The site lists prefectures without their suffix ("東京", "岩手"), but a bare
+// name is not unambiguous as a place: "茨城" is also a town inside Ibaraki.
+// Restore the suffix so the name stands on its own.
+export function normalizePrefectureName(name: string): string {
+    if (name === '北海道') {
+        return name;
+    }
+    if (name === '東京') {
+        return '東京都';
+    }
+    if (name === '大阪' || name === '京都') {
+        return `${name}府`;
+    }
+    return `${name}県`;
+}
+
 export async function* getPrefectures(): AsyncGenerator<Prefecture> {
     const $ = await fetchPage('/');
 
@@ -86,12 +102,12 @@ export async function* getPrefectures(): AsyncGenerator<Prefecture> {
 
         if (uri) {
             const prefId = uri.split('/')[3];
-            yield { id: prefId, name, uri };
+            yield { id: prefId, name: normalizePrefectureName(name), uri };
         }
     }
 }
 
-export async function getStationDetails(stationUri: string, prefId: string): Promise<Station> {
+export async function getStationDetails(stationUri: string, pref: Pick<Prefecture, 'id' | 'name'>): Promise<Station> {
     const uri = getUrl(stationUri);
     const stationId = uri.split('/').pop() || '';
 
@@ -152,7 +168,8 @@ export async function getStationDetails(stationUri: string, prefId: string): Pro
     }
 
     return {
-        prefId,
+        prefId: pref.id,
+        prefName: pref.name,
         stationId,
         name,
         address,
@@ -178,7 +195,7 @@ export async function* getStations(pref: Prefecture): AsyncGenerator<Station> {
         if (!href) continue;
 
         try {
-            const station = await getStationDetails(href, pref.id);
+            const station = await getStationDetails(href, pref);
             yield station;
         } catch (error) {
             const uri = getUrl(href);

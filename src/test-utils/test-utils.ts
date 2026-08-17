@@ -95,6 +95,7 @@ export const createMockFeature = (stationId: string, overrides: Record<string, s
         uri: `https://example.com/station-${stationId}`,
         mapcode: '123 456*78',
         prefId: '01',
+        prefName: '北海道',
     };
 
     const properties = { ...defaultProperties, ...overrides };
@@ -125,6 +126,7 @@ export const createMockStations = (count: number, startId = 18786) => ({
             uri: '',
             mapcode: '',
             prefId: '01',
+            prefName: '北海道',
         },
     })),
 });

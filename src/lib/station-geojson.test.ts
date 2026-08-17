@@ -5,6 +5,7 @@ import type { Station } from './types';
 function station(overrides: Partial<Station> = {}): Station {
     return {
         prefId: '23',
+        prefName: '神奈川県',
         stationId: '19150',
         name: '箱根峠',
         address: '250-0521 神奈川県足柄下郡箱根町箱根381-22',
@@ -30,6 +31,7 @@ describe('toFeature', () => {
 
         expect(feature.properties).toEqual({
             prefId: '23',
+            prefName: '神奈川県',
             stationId: '19150',
             name: '箱根峠',
             address: '250-0521 神奈川県足柄下郡箱根町箱根381-22',

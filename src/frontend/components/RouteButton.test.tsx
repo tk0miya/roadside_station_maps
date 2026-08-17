@@ -8,15 +8,18 @@ import { createMockFeature, createMockMap, setupGoogleMapsMock } from '#test-uti
 import { buildDirectionsURL, RouteButton } from './RouteButton';
 
 describe('buildDirectionsURL', () => {
-    it('uses "道の駅 <name>" labels for origin and destination', () => {
-        const features = [createMockFeature('1', { name: '三笠' }), createMockFeature('2', { name: 'びふか' })];
+    it('appends the prefecture, telling two stations sharing a name apart', () => {
+        const features = [
+            createMockFeature('1', { name: 'さかい', prefName: '茨城県' }),
+            createMockFeature('2', { name: 'さかい', prefName: '福井県' }),
+        ];
 
         const url = new URL(buildDirectionsURL(features));
 
         expect(url.origin + url.pathname).toBe('https://www.google.com/maps/dir/');
         expect(url.searchParams.get('api')).toBe('1');
-        expect(url.searchParams.get('origin')).toBe('道の駅 三笠');
-        expect(url.searchParams.get('destination')).toBe('道の駅 びふか');
+        expect(url.searchParams.get('origin')).toBe('道の駅 さかい 茨城県');
+        expect(url.searchParams.get('destination')).toBe('道の駅 さかい 福井県');
     });
 
     it('omits the waypoints parameter when only two stations are given', () => {
@@ -37,9 +40,9 @@ describe('buildDirectionsURL', () => {
 
         const url = new URL(buildDirectionsURL(features));
 
-        expect(url.searchParams.get('origin')).toBe('道の駅 三笠');
-        expect(url.searchParams.get('destination')).toBe('道の駅 びふか');
-        expect(url.searchParams.get('waypoints')).toBe('道の駅 スタープラザ 芦別|道の駅 南ふらの');
+        expect(url.searchParams.get('origin')).toBe('道の駅 三笠 北海道');
+        expect(url.searchParams.get('destination')).toBe('道の駅 びふか 北海道');
+        expect(url.searchParams.get('waypoints')).toBe('道の駅 スタープラザ 芦別 北海道|道の駅 南ふらの 北海道');
     });
 
     it('handles the maximum 9-station route (7 waypoints)', () => {
@@ -47,16 +50,16 @@ describe('buildDirectionsURL', () => {
 
         const url = new URL(buildDirectionsURL(features));
 
-        expect(url.searchParams.get('origin')).toBe('道の駅 S0');
-        expect(url.searchParams.get('destination')).toBe('道の駅 S8');
+        expect(url.searchParams.get('origin')).toBe('道の駅 S0 北海道');
+        expect(url.searchParams.get('destination')).toBe('道の駅 S8 北海道');
         expect(url.searchParams.get('waypoints')?.split('|')).toEqual([
-            '道の駅 S1',
-            '道の駅 S2',
-            '道の駅 S3',
-            '道の駅 S4',
-            '道の駅 S5',
-            '道の駅 S6',
-            '道の駅 S7',
+            '道の駅 S1 北海道',
+            '道の駅 S2 北海道',
+            '道の駅 S3 北海道',
+            '道の駅 S4 北海道',
+            '道の駅 S5 北海道',
+            '道の駅 S6 北海道',
+            '道の駅 S7 北海道',
         ]);
     });
 });
