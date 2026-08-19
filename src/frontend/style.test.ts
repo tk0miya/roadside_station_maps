@@ -72,7 +72,7 @@ describe('entries', () => {
         storage.setItem('001', '1');
         storage.setItem('002', '4');
 
-        expect(entries(storage).sort()).toEqual([
+        expect(entries(storage).sort((a, b) => a[0].localeCompare(b[0]))).toEqual([
             ['001', 1],
             ['002', 4],
         ]);
