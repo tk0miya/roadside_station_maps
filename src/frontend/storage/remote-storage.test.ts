@@ -28,7 +28,7 @@ describe('RemoteStorage', () => {
         expect(storage.getItem('111')).toBe('1');
         expect(storage.getItem('222')).toBe('3');
         expect(storage.getItem('unknown')).toBeNull();
-        expect(storage.listItems().sort()).toEqual(['111', '222']);
+        expect(storage.listItems().sort((a, b) => a.localeCompare(b))).toEqual(['111', '222']);
     });
 
     it('returns updates synchronously from the cache', async () => {
