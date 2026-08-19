@@ -281,27 +281,31 @@
                 "url": "https://note.com/dokode/n/nd8c123190a27"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-19"
     },
     {
         "name": "道の駅 幌延町",
         "pref": "北海道",
         "city": "天塩郡幌延町",
-        "status": "計画中",
+        "status": "凍結",
         "date": "",
         "lat": 45.0177333,
         "lng": 141.8494103,
         "urls": [
             {
-                "title": "https://www.town.horonobe.lg.jp/www4/section/kikakuseisaku/le009f000001c9qd.html",
-                "url": "https://www.town.horonobe.lg.jp/www4/section/kikakuseisaku/le009f000001c9qd.html"
+                "title": "幌延町、多世代交流施設の建設を一時凍結 資材高騰で財政圧迫懸念",
+                "url": "https://www.hokkaido-np.co.jp/article/1325528/"
             },
             {
                 "title": "複合機能を備えた施設整備について",
                 "url": "https://www.town.horonobe.lg.jp/www4/section/soumu/le009f000001vk8a.html"
+            },
+            {
+                "title": "令和5年 第5回幌延町議会（定例会）会議録 第1日目（令和5年6月19日）",
+                "url": "https://www.town.horonobe.lg.jp/www4/section/gikai/le009f0000008a13-att/le009f000001qxgl.pdf"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-19"
     },
     {
         "name": "道の駅 白老町",
@@ -317,7 +321,7 @@
                 "url": "https://www.nikkei.com/article/DGXZQOFC1938K0Z11C22A0000000/"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-19"
     },
     {
         "name": "道の駅 平取町",
@@ -329,11 +333,11 @@
         "lng": 142.1285606,
         "urls": [
             {
-                "title": "http://www.town.biratori.hokkaido.jp/news/%E5%B9%B3%E5%8F%96%E7%94%BA%E9%81%93%E3%81%AE%E9%A7%85%E6%95%B4%E5%82%99%E6%A4%9C%E8%A8%8E%E4%BA%8B%E6%A5%AD%E3%81%AB%E4%BF%82%E3%82%8B%E3%82%A2%E3%83%B3%E3%82%B1%E3%83%BC%E3%83%88%E8%AA%BF%E6%9F%BB/",
-                "url": "http://www.town.biratori.hokkaido.jp/news/%E5%B9%B3%E5%8F%96%E7%94%BA%E9%81%93%E3%81%AE%E9%A7%85%E6%95%B4%E5%82%99%E6%A4%9C%E8%A8%8E%E4%BA%8B%E6%A5%AD%E3%81%AB%E4%BF%82%E3%82%8B%E3%82%A2%E3%83%B3%E3%82%B1%E3%83%BC%E3%83%88%E8%AA%BF%E6%9F%BB/"
+                "title": "平取町過疎地域持続的発展市町村計画 令和3年度～令和7年度(令和7年3月改訂)",
+                "url": "https://www.town.biratori.hokkaido.jp/material/files/group/7/kasokeiR703kaitei4.pdf"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-19"
     },
     {
         "name": "道の駅 新得町",
@@ -359,9 +363,13 @@
             {
                 "title": "新得・道の駅、イメージ図公表　30年3月開業目標、総工費26億円　道東道直結",
                 "url": "https://www.hokkaido-np.co.jp/article/1204595/"
+            },
+            {
+                "title": "新たな道の駅管理運営事業に関する公募型プロポーザル 選定結果",
+                "url": "https://www.shintoku-town.jp/gyousei/koukai_kouhyou/tiikisenryaku/mitinoeki/mitinoeki_puropo2/"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-19"
     },
     {
         "name": "道の駅 広尾町",
@@ -377,7 +385,7 @@
                 "url": "https://e-kensin.net/news/151060.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-19"
     },
     {
         "name": "道の駅 十和田湖",
@@ -429,7 +437,7 @@
                 "url": "https://www.kensetsu-sinbun.co.jp/information/aomori/36407/"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-19"
     },
     {
         "name": "道の駅 わきのさわ (再整備)",
@@ -449,7 +457,7 @@
                 "url": "https://www.city.mutsu.lg.jp/topics/release/20260325_mitinoekiwakinosawakyusi.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-19"
     },
     {
         "name": "道の駅 もりおか渋民",
@@ -489,15 +497,11 @@
         "lng": 141.1356631,
         "urls": [
             {
-                "title": "https://www.town.yahaba.iwate.jp/docs/2016020800344/files/zenbun.pdf",
-                "url": "https://www.town.yahaba.iwate.jp/docs/2016020800344/files/zenbun.pdf"
-            },
-            {
-                "title": "https://www.town.yahaba.iwate.jp/docs/2023120600040/files/001_plan.pdf",
-                "url": "https://www.town.yahaba.iwate.jp/docs/2023120600040/files/001_plan.pdf"
+                "title": "矢巾町都市計画マスタープラン 平成30年10月(令和6年3月一部改定)",
+                "url": "https://www.town.yahaba.iwate.jp/yahabatown/002_mirai/toshimp_r0603_all.pdf"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-19"
     },
     {
         "name": "道の駅 だいとう",
@@ -596,7 +600,7 @@
         "pref": "岩手県",
         "city": "二戸郡一戸町",
         "status": "計画中",
-        "date": "",
+        "date": "2031年度",
         "lat": 40.2085297,
         "lng": 141.3084772,
         "urls": [
@@ -605,15 +609,15 @@
                 "url": "https://www.town.ichinohe.iwate.jp/soshikikarasagasu/shokokankoka/michinoeki/index.html"
             },
             {
-                "title": "https://www.iwate-np.co.jp/article/2023/12/9/154913",
-                "url": "https://www.iwate-np.co.jp/article/2023/12/9/154913"
+                "title": "町長メッセージ：道の駅予定地の再調査結果(広報いちのへ 令和5年2月号より)",
+                "url": "https://www.town.ichinohe.iwate.jp/chochonoheya/4696.html"
             },
             {
                 "title": "一戸町の道の駅、建設候補地決定 当初予定の北側隣接地 – デーリー東北",
                 "url": "https://www.daily-tohoku.news/archives/201786"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-19"
     },
     {
         "name": "道の駅 石巻市",
