@@ -167,6 +167,15 @@ export async function getStationDetails(stationUri: string, pref: Pick<Prefectur
         }
     }
 
+    // Data patch: michi-no-eki.jp gives きなりの郷 下北山 a longitude of
+    // 35.9624087621255 -- the leading 1 of 135.96... is missing, which throws its
+    // marker onto the Turkey-Syria border. Substitute the real location until the
+    // source is corrected.
+    if (stationId === '22788') {
+        lat = 34.046677;
+        lng = 135.962517;
+    }
+
     return {
         prefId: pref.id,
         prefName: pref.name,
