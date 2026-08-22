@@ -18,16 +18,16 @@ describe('RouteModeButton', () => {
         cleanup();
     });
 
-    const topCenter = (mockMap: ReturnType<typeof createMockMap>) =>
-        mockMap.controls[google.maps.ControlPosition.TOP_CENTER].getArray();
+    const leftTop = (mockMap: ReturnType<typeof createMockMap>) =>
+        mockMap.controls[google.maps.ControlPosition.LEFT_TOP].getArray();
 
-    it('mounts a button into TOP_CENTER controls', () => {
+    it('mounts a button into LEFT_TOP controls', () => {
         const mockMap = createMockMap();
 
         render(<RouteModeButton map={mockMap} visible={true} onClick={() => {}} />);
 
-        expect(topCenter(mockMap)).toHaveLength(1);
-        expect(topCenter(mockMap)[0].textContent).toBe('ルート');
+        expect(leftTop(mockMap)).toHaveLength(1);
+        expect(leftTop(mockMap)[0].textContent).toBe('ルート');
     });
 
     it('renders nothing while hidden', () => {
@@ -35,7 +35,7 @@ describe('RouteModeButton', () => {
 
         render(<RouteModeButton map={mockMap} visible={false} onClick={() => {}} />);
 
-        expect(topCenter(mockMap)).toHaveLength(0);
+        expect(leftTop(mockMap)).toHaveLength(0);
     });
 
     it('reports a click', () => {
@@ -43,7 +43,7 @@ describe('RouteModeButton', () => {
         const onClick = vi.fn();
 
         render(<RouteModeButton map={mockMap} visible={true} onClick={onClick} />);
-        topCenter(mockMap)[0].click();
+        leftTop(mockMap)[0].click();
 
         expect(onClick).toHaveBeenCalledTimes(1);
     });
@@ -52,11 +52,11 @@ describe('RouteModeButton', () => {
         const mockMap = createMockMap();
 
         const { rerender } = render(<RouteModeButton map={mockMap} visible={true} onClick={() => {}} />);
-        expect(topCenter(mockMap)).toHaveLength(1);
+        expect(leftTop(mockMap)).toHaveLength(1);
 
         rerender(<RouteModeButton map={mockMap} visible={false} onClick={() => {}} />);
 
-        expect(topCenter(mockMap)).toHaveLength(0);
+        expect(leftTop(mockMap)).toHaveLength(0);
     });
 
     it('reaches the latest handler after a re-render', () => {
@@ -66,7 +66,7 @@ describe('RouteModeButton', () => {
 
         const { rerender } = render(<RouteModeButton map={mockMap} visible={true} onClick={first} />);
         rerender(<RouteModeButton map={mockMap} visible={true} onClick={second} />);
-        topCenter(mockMap)[0].click();
+        leftTop(mockMap)[0].click();
 
         expect(first).not.toHaveBeenCalled();
         expect(second).toHaveBeenCalledTimes(1);

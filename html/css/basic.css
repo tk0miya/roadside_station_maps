@@ -12,7 +12,11 @@ body,
     padding: 0px;
 }
 
-div.share {
+/* The share button and the route button. They follow the look of the controls
+   the Maps API draws in the same corner — the map-type buttons — rather than
+   announcing themselves against them. */
+div.share,
+div.route-button {
     margin-top: 10px;
     padding: 0 17px;
     height: 40px;
@@ -25,27 +29,14 @@ div.share {
     color: rgb(86, 86, 86);
 }
 
-div.share:hover {
+div.share:hover,
+div.route-button:hover {
     background-color: rgb(235, 235, 235);
 }
 
+/* Alone in its control position, which starts at the map's own edge. */
 div.route-button {
-    margin-top: 10px;
-    padding: 0 20px;
-    height: 44px;
-    line-height: 44px;
-    cursor: pointer;
-    background-color: #1a73e8;
-    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;
-    font-family: Roboto, Arial, sans-serif;
-    font-size: 16px;
-    font-weight: bold;
-    color: white;
-    border-radius: 2px;
-}
-
-div.route-button:hover {
-    background-color: #1558b8;
+    margin-left: 10px;
 }
 
 /* The state of the route being built. One line, held near the bottom of the

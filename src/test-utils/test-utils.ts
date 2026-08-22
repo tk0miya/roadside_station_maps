@@ -29,6 +29,7 @@ export const createMockMap = () => {
     const topLeftControls: HTMLElement[] = [];
     const topCenterControls: HTMLElement[] = [];
     const topRightControls: HTMLElement[] = [];
+    const leftTopControls: HTMLElement[] = [];
     const rightTopControls: HTMLElement[] = [];
 
     const controls = {
@@ -49,6 +50,12 @@ export const createMockMap = () => {
             push: vi.fn((element: HTMLElement) => topRightControls.push(element)),
             removeAt: vi.fn((index: number) => topRightControls.splice(index, 1)),
             getArray: vi.fn(() => topRightControls),
+        },
+        // LEFT_TOP
+        5: {
+            push: vi.fn((element: HTMLElement) => leftTopControls.push(element)),
+            removeAt: vi.fn((index: number) => leftTopControls.splice(index, 1)),
+            getArray: vi.fn(() => leftTopControls),
         },
         // RIGHT_TOP
         7: {
@@ -177,6 +184,7 @@ export const setupGoogleMapsMock = () => {
                 TOP_LEFT: 1,
                 TOP_CENTER: 2,
                 TOP_RIGHT: 3,
+                LEFT_TOP: 5,
                 RIGHT_TOP: 7,
             },
             Size: class {
