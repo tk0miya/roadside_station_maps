@@ -31,9 +31,9 @@ div.share:hover {
 
 div.route-button {
     margin-top: 10px;
-    padding: 0 17px;
-    height: 40px;
-    line-height: 40px;
+    padding: 0 20px;
+    height: 44px;
+    line-height: 44px;
     cursor: pointer;
     background-color: #1a73e8;
     box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;
@@ -46,6 +46,71 @@ div.route-button {
 
 div.route-button:hover {
     background-color: #1558b8;
+}
+
+/* The state of the route being built. One line, held near the bottom of the
+   viewport within thumb reach, and clear of the map's bottom edge: the Google
+   logo and the terms links sit in that strip, and the Maps terms of service
+   require them to stay visible. */
+div.route-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    padding: 6px 12px;
+    background-color: white;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px -1px 6px -1px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+/* Wide screens have room to spare, and a full-width bar there only pushes the
+   buttons apart. Kept off the right edge as well, clear of the terms links. */
+@media (min-width: 640px) {
+    div.route-bar {
+        left: auto;
+        margin-right: 10px;
+        border-radius: 8px;
+    }
+}
+
+span.route-bar-count {
+    flex: 1;
+    font-weight: bold;
+}
+
+div.route-bar button {
+    flex: none;
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+}
+
+button.route-bar-create {
+    background-color: #1a73e8;
+    border: none;
+    font-weight: bold;
+    color: white;
+}
+
+button.route-bar-create:disabled {
+    background-color: #f1f1f1;
+    color: #9e9e9e;
+    cursor: default;
+}
+
+button.route-bar-close {
+    background-color: white;
+    border: 1px solid #dddddd;
+    color: #555555;
 }
 
 div.share-message {

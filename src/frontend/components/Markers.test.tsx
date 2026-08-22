@@ -13,14 +13,13 @@ import {
     setupGoogleMapsMock,
 } from '#test-utils/test-utils';
 import { MARKER_ICONS } from '../marker-icons';
+import { isCustomPoint, MAX_ROUTE_SELECTION } from '../route';
 import { MemoryStorage } from '../storage/memory-storage';
 import {
     applyMultiSelection,
     changeStyle,
     cycleRouteNumber,
-    isCustomPoint,
     loadRoadStations,
-    MAX_ROUTE_SELECTION,
     Markers,
     resetStyle,
     resolveMarkerClick,
@@ -34,7 +33,10 @@ const buildClickEvent = (feature: google.maps.Data.Feature, modifier?: 'meta' | 
         domEvent: {
             metaKey: modifier === 'meta',
             ctrlKey: modifier === 'ctrl',
-        } as MouseEvent,
+            // A long press arrives as a right-click, whose route-mode branch
+            // suppresses the browser menu the press would otherwise open.
+            preventDefault: vi.fn(),
+        } as unknown as MouseEvent,
     }) as google.maps.Data.MouseEvent;
 
 const buildMapClickEvent = (modifier?: 'meta' | 'ctrl', lat = 36.5, lng = 140.5): google.maps.MapMouseEvent =>
@@ -43,7 +45,10 @@ const buildMapClickEvent = (modifier?: 'meta' | 'ctrl', lat = 36.5, lng = 140.5)
         domEvent: {
             metaKey: modifier === 'meta',
             ctrlKey: modifier === 'ctrl',
-        } as MouseEvent,
+            // A long press arrives as `contextmenu`, whose handler suppresses
+            // the browser menu the press would otherwise open.
+            preventDefault: vi.fn(),
+        } as unknown as MouseEvent,
     }) as google.maps.MapMouseEvent;
 
 describe('Markers', () => {
@@ -51,6 +56,7 @@ describe('Markers', () => {
         overrides: {
             multiSelected?: google.maps.Data.Feature[];
             selectedFeature?: google.maps.Data.Feature | null;
+            routeMode?: boolean;
         } = {}
     ) => {
         const mockMap = createMockMap();
@@ -66,6 +72,7 @@ describe('Markers', () => {
                 storage={new MemoryStorage()}
                 stations={stations}
                 onStyleChange={() => {}}
+                routeMode={overrides.routeMode ?? false}
             />
         );
         return { mockMap, onMultiSelectChange, onFeatureSelect };
@@ -94,6 +101,7 @@ describe('Markers', () => {
                 storage={new MemoryStorage()}
                 stations={stations}
                 onStyleChange={() => {}}
+                routeMode={false}
             />
         );
         expect(container.firstChild).toBeNull();
@@ -111,6 +119,7 @@ describe('Markers', () => {
                 storage={new MemoryStorage()}
                 stations={stations}
                 onStyleChange={() => {}}
+                routeMode={false}
             />
         );
         expect(mockMap.data.addGeoJson).toHaveBeenCalledWith(stations);
@@ -131,6 +140,7 @@ describe('Markers', () => {
                 storage={new MemoryStorage()}
                 stations={stations}
                 onStyleChange={() => {}}
+                routeMode={false}
             />
         );
 
@@ -345,6 +355,98 @@ describe('Markers', () => {
         });
     });
 
+    describe('route mode', () => {
+        beforeEach(() => {
+            setupGoogleMapsMock();
+        });
+
+        it('adds a plainly tapped marker to the route', () => {
+            const featureA = createMockFeature('A');
+            const featureB = createMockFeature('B');
+            const { mockMap, onMultiSelectChange, onFeatureSelect } = renderMarkers({
+                multiSelected: [featureA],
+                routeMode: true,
+            });
+
+            mockMap.data._emit('click', buildClickEvent(featureB));
+
+            expect(applyUpdater(onMultiSelectChange, [featureA])).toEqual([featureA, featureB]);
+            expect(onFeatureSelect).toHaveBeenCalledWith(null);
+        });
+
+        it('takes a marker back out of the route when it is tapped again', () => {
+            const featureA = createMockFeature('A');
+            const featureB = createMockFeature('B');
+            const { mockMap, onMultiSelectChange } = renderMarkers({
+                multiSelected: [featureA, featureB],
+                routeMode: true,
+            });
+
+            mockMap.data._emit('click', buildClickEvent(featureA));
+
+            expect(applyUpdater(onMultiSelectChange, [featureA, featureB])).toEqual([featureB]);
+        });
+
+        it('leaves the visit styles alone on a double tap or a long press', () => {
+            const featureA = createMockFeature('A');
+            const { mockMap, onMultiSelectChange, onFeatureSelect } = renderMarkers({
+                multiSelected: [featureA],
+                routeMode: true,
+            });
+            (mockMap.data.overrideStyle as ReturnType<typeof vi.fn>).mockClear();
+            const longPress = buildClickEvent(featureA);
+
+            mockMap.data._emit('dblclick', buildClickEvent(featureA));
+            mockMap.data._emit('rightclick', longPress);
+
+            expect(onMultiSelectChange).not.toHaveBeenCalled();
+            expect(onFeatureSelect).not.toHaveBeenCalled();
+            expect(mockMap.data.overrideStyle).not.toHaveBeenCalled();
+            // The press drops no point, but the browser menu is not the answer.
+            expect(longPress.domEvent.preventDefault).toHaveBeenCalledTimes(1);
+        });
+
+        it('drops a route point where the map is long-pressed', () => {
+            const featureA = createMockFeature('A');
+            const { mockMap, onMultiSelectChange } = renderMarkers({
+                multiSelected: [featureA],
+                routeMode: true,
+            });
+            const longPress = buildMapClickEvent(undefined, 36.5, 140.5);
+
+            mockMap._emit('contextmenu', longPress);
+
+            const point = (mockMap.data.add as ReturnType<typeof vi.fn>).mock.results[0]?.value;
+            expect(isCustomPoint(point)).toBe(true);
+            expect((point.getGeometry() as google.maps.Data.Point).get().lat()).toBe(36.5);
+            expect(applyUpdater(onMultiSelectChange, [featureA])).toEqual([featureA, point]);
+            expect(longPress.domEvent.preventDefault).toHaveBeenCalledTimes(1);
+        });
+
+        it('drops no point on a long press outside route mode, and leaves the browser menu alone', () => {
+            const { mockMap, onMultiSelectChange } = renderMarkers();
+            const event = buildMapClickEvent();
+
+            mockMap._emit('contextmenu', event);
+
+            expect(mockMap.data.add).not.toHaveBeenCalled();
+            expect(onMultiSelectChange).not.toHaveBeenCalled();
+            expect(event.domEvent.preventDefault).not.toHaveBeenCalled();
+        });
+
+        it('drops no point on a long press once the route is full, and still keeps the browser menu shut', () => {
+            const full = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) => createMockFeature(`${i}`));
+            const { mockMap, onMultiSelectChange } = renderMarkers({ multiSelected: full, routeMode: true });
+            const longPress = buildMapClickEvent();
+
+            mockMap._emit('contextmenu', longPress);
+
+            expect(mockMap.data.add).not.toHaveBeenCalled();
+            expect(onMultiSelectChange).not.toHaveBeenCalled();
+            expect(longPress.domEvent.preventDefault).toHaveBeenCalledTimes(1);
+        });
+    });
+
     it('does not leave stale features when remounted after storage switch', () => {
         const mockMap = createMockMap();
         const mockFeatures = [createMockFeature('18786'), createMockFeature('18787')];
@@ -359,6 +461,7 @@ describe('Markers', () => {
             storage: new MemoryStorage(),
             stations,
             onStyleChange: vi.fn(),
+            routeMode: false,
         };
 
         const { unmount } = render(<Markers {...props} />);
@@ -383,6 +486,7 @@ describe('resolveMarkerClick', () => {
             const result = resolveMarkerClick({
                 clickedFeature: b,
                 modifierPressed: true,
+                routeMode: false,
                 selectedFeature: a,
                 multiSelected: [],
             });
@@ -398,6 +502,7 @@ describe('resolveMarkerClick', () => {
             const result = resolveMarkerClick({
                 clickedFeature: a,
                 modifierPressed: true,
+                routeMode: false,
                 selectedFeature: a,
                 multiSelected: [],
             });
@@ -413,6 +518,7 @@ describe('resolveMarkerClick', () => {
             const result = resolveMarkerClick({
                 clickedFeature: a,
                 modifierPressed: true,
+                routeMode: false,
                 selectedFeature: null,
                 multiSelected: [a, b],
             });
@@ -428,6 +534,7 @@ describe('resolveMarkerClick', () => {
             const result = resolveMarkerClick({
                 clickedFeature: b,
                 modifierPressed: true,
+                routeMode: false,
                 selectedFeature: null,
                 multiSelected: [a],
             });
@@ -442,6 +549,7 @@ describe('resolveMarkerClick', () => {
             const result = resolveMarkerClick({
                 clickedFeature: extra,
                 modifierPressed: true,
+                routeMode: false,
                 selectedFeature: null,
                 multiSelected: existing,
             });
@@ -458,6 +566,7 @@ describe('resolveMarkerClick', () => {
             const result = resolveMarkerClick({
                 clickedFeature: point,
                 modifierPressed: true,
+                routeMode: false,
                 selectedFeature: null,
                 multiSelected: [a, point],
             });
@@ -473,6 +582,7 @@ describe('resolveMarkerClick', () => {
             const result = resolveMarkerClick({
                 clickedFeature: point,
                 modifierPressed: false,
+                routeMode: false,
                 selectedFeature: null,
                 multiSelected: [a, point],
             });
@@ -489,6 +599,7 @@ describe('resolveMarkerClick', () => {
             const result = resolveMarkerClick({
                 clickedFeature: b,
                 modifierPressed: false,
+                routeMode: false,
                 selectedFeature: null,
                 multiSelected: [a],
             });
@@ -504,6 +615,7 @@ describe('resolveMarkerClick', () => {
             const result = resolveMarkerClick({
                 clickedFeature: a,
                 modifierPressed: false,
+                routeMode: false,
                 selectedFeature: a,
                 multiSelected: [],
             });
@@ -520,6 +632,7 @@ describe('resolveMarkerClick', () => {
             const result = resolveMarkerClick({
                 clickedFeature: b,
                 modifierPressed: false,
+                routeMode: false,
                 selectedFeature: a,
                 multiSelected: [],
             });
@@ -532,7 +645,7 @@ describe('resolveMarkerClick', () => {
 });
 
 describe('cycleRouteNumber', () => {
-    it('swaps the feature with the one numbered just before it', () => {
+    it('swaps a feature with the one numbered before it', () => {
         const a = createMockFeature('A');
         const b = createMockFeature('B');
         const c = createMockFeature('C');
@@ -540,7 +653,7 @@ describe('cycleRouteNumber', () => {
         expect(cycleRouteNumber([a, b, c], c)).toEqual([a, c, b]);
     });
 
-    it('sends the feature holding the first number to the end', () => {
+    it('wraps the first feature around to the end', () => {
         const a = createMockFeature('A');
         const b = createMockFeature('B');
         const c = createMockFeature('C');
@@ -548,14 +661,14 @@ describe('cycleRouteNumber', () => {
         expect(cycleRouteNumber([a, b, c], a)).toEqual([b, c, a]);
     });
 
-    it('returns the same array when the feature is the only marker in the route set', () => {
+    it('returns the same array for a single-feature selection', () => {
         const a = createMockFeature('A');
         const multiSelected = [a];
 
         expect(cycleRouteNumber(multiSelected, a)).toBe(multiSelected);
     });
 
-    it('returns the same array when the feature is not in the route set', () => {
+    it('returns the same array for a feature outside the selection', () => {
         const a = createMockFeature('A');
         const b = createMockFeature('B');
         const outsider = createMockFeature('C');
@@ -564,7 +677,7 @@ describe('cycleRouteNumber', () => {
         expect(cycleRouteNumber(multiSelected, outsider)).toBe(multiSelected);
     });
 
-    it('does not mutate the input array', () => {
+    it('leaves the input untouched', () => {
         const a = createMockFeature('A');
         const b = createMockFeature('B');
         const multiSelected = [a, b];
