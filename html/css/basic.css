@@ -61,37 +61,40 @@ button.route-control-enter:hover {
 }
 
 /* In route mode the same box opens onto the state of the route being built.
-   Stacked rather than set in a row: the box grows downward out of the corner it
-   already holds, so it takes no more of the map's width than the column above
-   it, and the reader's eye stays where the button was. */
+   One row deep, growing to the right out of the corner it already holds. The
+   row has to end before the legend at the map's other corner, and the legend is
+   pinned to the right edge, so the budget shrinks with the screen: 285px on a
+   375px phone, against the 266px this row measures — which is what the short
+   "作成" label buys. Below about 360px the two would meet. */
 div.route-control-panel {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 8px;
-    min-width: 140px;
-    padding: 0 17px 12px;
+    padding: 6px 17px;
     font-family: Arial, sans-serif;
     font-size: 14px;
 }
 
-/* The heading keeps the type and the box of the button it replaces, so the word
-   "ルート" holds still across the switch and only the rest unfolds under it. */
+/* The heading keeps the type of the button it replaces and starts at the same
+   left edge. It does not keep the button's vertical box: the row is as tall as
+   the buttons in it, so the word "ルート" sits lower once the box opens. */
 h2.route-control-heading {
     margin: 0;
-    height: 40px;
-    line-height: 40px;
     font-family: Roboto, Arial, sans-serif;
     font-size: 18px;
     font-weight: normal;
+    white-space: nowrap;
 }
 
 span.route-control-count {
     font-weight: bold;
+    white-space: nowrap;
 }
 
 /* Taller than the 40px of the map's controls: these are tap targets, and they
    sit inside the box rather than lined up with that column. */
 div.route-control-panel button {
+    flex: none;
     height: 44px;
     padding: 0 16px;
     border-radius: 4px;
