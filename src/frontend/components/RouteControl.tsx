@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { buildDirectionsURL, isRouteFull, MAX_ROUTE_SELECTION } from '../route';
 
@@ -23,13 +23,33 @@ interface RouteControlProps {
 // what reports which way the switch is thrown; the track it draws to say so is
 // aria-hidden, having nothing to add to that.
 //
+// ESC leaves the mode too, and is handled here because this is what owns leaving
+// it: the switch is the way out that has to be aimed at, ESC the one that does
+// not.
+//
 // The second row carries what docs/station-map.md keeps on screen for the route
 // being built: how far the stop count is from the limit, the way to put a stop
 // where no station stands, and the button that hands the route over. Dropping
-// the route is not among them — that is the switch again, since leaving the mode
-// is what clears the stops.
+// the route is not among them — that is either way out again, since leaving the
+// mode is what clears the stops.
 export function RouteControl({ map, active, stops, onEnter, onAddPoint, onClose }: RouteControlProps) {
     const labelId = useId();
+    // The listener is installed once per spell in the mode, so what it calls has
+    // to come from a ref rather than the render it was created in.
+    const onCloseRef = useRef(onClose);
+
+    useEffect(() => {
+        onCloseRef.current = onClose;
+    }, [onClose]);
+
+    useEffect(() => {
+        if (!active) return;
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') onCloseRef.current();
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [active]);
 
     // The Maps API places the control, so the box is a bare node handed to it
     // once and drawn into from then on. The node outlives the flip between the
