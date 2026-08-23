@@ -12,71 +12,86 @@ body,
     padding: 0px;
 }
 
-/* The share button and the route button. They follow the look of the controls
+/* The share button and the route control. They follow the look of the controls
    the Maps API draws in the same corner — the map-type buttons — rather than
    announcing themselves against them. */
 div.share,
-div.route-button {
+div.route-control {
     margin-top: 10px;
+    background-color: white;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;
+    font-family: Roboto, Arial, sans-serif;
+    color: rgb(86, 86, 86);
+}
+
+div.share {
     padding: 0 17px;
     height: 40px;
     line-height: 40px;
     cursor: pointer;
-    background-color: white;
-    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;
-    font-family: Roboto, Arial, sans-serif;
     font-size: 18px;
-    color: rgb(86, 86, 86);
 }
 
-div.share:hover,
-div.route-button:hover {
+div.share:hover {
     background-color: rgb(235, 235, 235);
 }
 
 /* Alone in its control position, which starts at the map's own edge. */
-div.route-button {
+div.route-control {
     margin-left: 10px;
 }
 
-/* The state of the route being built. One line, held near the bottom of the
-   viewport within thumb reach, and clear of the map's bottom edge: the Google
-   logo and the terms links sit in that strip, and the Maps terms of service
-   require them to stay visible. */
-div.route-bar {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: calc(24px + env(safe-area-inset-bottom));
-    z-index: 1000;
+/* Out of route mode the box holds the way in and nothing else, so it reads as
+   one more button in the column. The white and the shadow are the box's; the
+   button only fills it. */
+button.route-control-enter {
+    display: block;
+    padding: 0 17px;
+    height: 40px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 18px;
+    color: inherit;
+}
+
+button.route-control-enter:hover {
+    background-color: rgb(235, 235, 235);
+}
+
+/* In route mode the same box opens onto the state of the route being built.
+   Stacked rather than set in a row: the box grows downward out of the corner it
+   already holds, so it takes no more of the map's width than the column above
+   it, and the reader's eye stays where the button was. */
+div.route-control-panel {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
-    box-sizing: border-box;
-    padding: 6px 12px;
-    background-color: white;
-    box-shadow: rgba(0, 0, 0, 0.3) 0px -1px 6px -1px;
+    min-width: 140px;
+    padding: 0 17px 12px;
     font-family: Arial, sans-serif;
     font-size: 14px;
 }
 
-/* Wide screens have room to spare, and a full-width bar there only pushes the
-   buttons apart. Kept off the right edge as well, clear of the terms links. */
-@media (min-width: 640px) {
-    div.route-bar {
-        left: auto;
-        margin-right: 10px;
-        border-radius: 8px;
-    }
+/* The heading keeps the type and the box of the button it replaces, so the word
+   "ルート" holds still across the switch and only the rest unfolds under it. */
+h2.route-control-heading {
+    margin: 0;
+    height: 40px;
+    line-height: 40px;
+    font-family: Roboto, Arial, sans-serif;
+    font-size: 18px;
+    font-weight: normal;
 }
 
-span.route-bar-count {
-    flex: 1;
+span.route-control-count {
     font-weight: bold;
 }
 
-div.route-bar button {
-    flex: none;
+/* Taller than the 40px of the map's controls: these are tap targets, and they
+   sit inside the box rather than lined up with that column. */
+div.route-control-panel button {
     height: 44px;
     padding: 0 16px;
     border-radius: 4px;
@@ -85,20 +100,20 @@ div.route-bar button {
     font-size: 15px;
 }
 
-button.route-bar-create {
+button.route-control-create {
     background-color: #1a73e8;
     border: none;
     font-weight: bold;
     color: white;
 }
 
-button.route-bar-create:disabled {
+button.route-control-create:disabled {
     background-color: #f1f1f1;
     color: #9e9e9e;
     cursor: default;
 }
 
-button.route-bar-close {
+button.route-control-close {
     background-color: white;
     border: 1px solid #dddddd;
     color: #555555;

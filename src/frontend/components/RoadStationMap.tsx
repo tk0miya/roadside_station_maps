@@ -8,8 +8,7 @@ import type { StationsGeoJSON } from '../types/geojson';
 import { InfoWindow } from './InfoWindow';
 import { LoginButton } from './LoginButton';
 import { isModifierPressed, Markers } from './Markers';
-import { RouteBar } from './RouteBar';
-import { RouteModeButton } from './RouteModeButton';
+import { RouteControl } from './RouteControl';
 import { ShareButton } from './ShareButton';
 import { StationCounter } from './StationCounter';
 
@@ -36,9 +35,9 @@ export function RoadStationMap() {
     // mode has to come from a ref rather than the render it was created in.
     const routeModeRef = useRef(routeMode);
 
-    // The bar stands in for the route: it is up while one is being built,
-    // whether route mode or a modifier-click started it.
-    const isRouteBarVisible = routeMode || multiSelected.length > 0;
+    // The control stands in for the route: it is open while one is being
+    // built, whether route mode or a modifier-click started it.
+    const isRouteOpen = routeMode || multiSelected.length > 0;
 
     useEffect(() => {
         routeModeRef.current = routeMode;
@@ -124,7 +123,7 @@ export function RoadStationMap() {
         setRouteMode(true);
     };
 
-    const closeRouteBar = () => {
+    const closeRoute = () => {
         setRouteMode(false);
         setMultiSelected([]);
     };
@@ -155,8 +154,13 @@ export function RoadStationMap() {
                     <StationCounter storage={storage} stations={stations} styleVersion={styleVersion} map={map} />
                 </>
             )}
-            <RouteModeButton map={map} visible={!isRouteBarVisible} onClick={enterRouteMode} />
-            {isRouteBarVisible && <RouteBar stops={multiSelected} onClose={closeRouteBar} />}
+            <RouteControl
+                map={map}
+                active={isRouteOpen}
+                stops={multiSelected}
+                onEnter={enterRouteMode}
+                onClose={closeRoute}
+            />
             <InfoWindow selectedFeature={multiSelected.length > 0 ? null : feature} map={map} />
             <LoginButton map={map} />
         </>
