@@ -5,6 +5,7 @@ import { isRouteFull } from '../route';
 import { fetchStations, reconcileVisits } from '../station';
 import { createStorage, type Storage } from '../storage';
 import type { StationsGeoJSON } from '../types/geojson';
+import type { MapMode } from '../types/station-map';
 import { InfoWindow } from './InfoWindow';
 import { LoginButton } from './LoginButton';
 import { dropRoutePoint, Markers } from './Markers';
@@ -24,20 +25,19 @@ export function RoadStationMap() {
     useSessionRefresh(authManager);
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const [map, setMap] = useState<google.maps.Map | null>(null);
-    const [feature, setFeature] = useState<google.maps.Data.Feature | null>(null);
-    const [multiSelected, setMultiSelected] = useState<google.maps.Data.Feature[]>([]);
     const [stations, setStations] = useState<StationsGeoJSON | null>(null);
     const [styleVersion, setStyleVersion] = useState(0);
     const [storage, setStorage] = useState<Storage | null>(null);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [routeMode, setRouteMode] = useState(false);
-    // The map click listener is installed once, so what it reads about route
-    // mode has to come from a ref rather than the render it was created in.
-    const routeModeRef = useRef(routeMode);
+    const [mode, setMode] = useState<MapMode>('normal');
+    const [selected, setSelected] = useState<google.maps.Data.Feature[]>([]);
+    // The map click listener is installed once, so what it reads about the mode
+    // has to come from a ref rather than the render it was created in.
+    const modeRef = useRef(mode);
 
     useEffect(() => {
-        routeModeRef.current = routeMode;
-    }, [routeMode]);
+        modeRef.current = mode;
+    }, [mode]);
 
     useEffect(() => {
         if (mapContainerRef.current) {
@@ -93,13 +93,11 @@ export function RoadStationMap() {
     useEffect(() => {
         if (!map) return;
 
-        // A tap on the map puts the open station away. In route mode it does
-        // nothing at all — the mode answers markers and its own control, not the
-        // ground between them — and the guard says so even though route mode
-        // leaves no open station for it to put away.
         map.addListener('click', () => {
-            if (routeModeRef.current) return;
-            setFeature(null);
+            if (modeRef.current === 'route') return;
+            // Handing `prev` back when nothing is open keeps the tap from
+            // re-rendering.
+            setSelected((prev) => (prev.length ? [] : prev));
         });
         getCurrentPosition().then(onLocationDetected);
     }, [map]);
@@ -111,30 +109,27 @@ export function RoadStationMap() {
         }
     };
 
-    // Open route mode. `seed` is the stop the way in came with — the switch
-    // brings none and starts an empty route, the modifier gestures bring the
-    // station or the point they landed on. Either way the info window closes:
-    // from here a tap on a marker adds it to the route rather than opening it.
     const enterRouteMode = (seed?: google.maps.Data.Feature) => {
-        setFeature(null);
-        setMultiSelected(seed ? [seed] : []);
-        setRouteMode(true);
+        setMode('route');
+        setSelected(seed ? [seed] : []);
     };
 
-    // Put a route point at the middle of the map, where the crosshair is.
+    // Put a route point at the middle of the map, where the crosshair is. The
+    // mode is checked here rather than left to the button that calls it, since
+    // this writes a pick and nothing else vouches for the mode it is written in.
     const addPointAtCenter = () => {
         const center = map?.getCenter();
-        if (!map || !center) return;
-        const route = dropRoutePoint(map, center, multiSelected);
-        if (route) setMultiSelected(route);
+        if (mode !== 'route' || !map || !center) return;
+        const stops = dropRoutePoint(map, center, selected);
+        if (stops) setSelected(stops);
     };
 
-    // Leave route mode. The route lives exactly as long as the mode, so it goes
-    // with it.
     const closeRoute = () => {
-        setRouteMode(false);
-        setMultiSelected([]);
+        setMode('normal');
+        setSelected([]);
     };
+
+    const openStation = mode === 'normal' ? (selected[0] ?? null) : null;
 
     return (
         <>
@@ -149,35 +144,35 @@ export function RoadStationMap() {
                 <>
                     <Markers
                         map={map}
-                        selectedFeature={feature}
-                        onFeatureSelect={setFeature}
-                        multiSelected={multiSelected}
-                        onMultiSelectChange={setMultiSelected}
+                        mode={mode}
+                        selected={selected}
+                        onSelectedChange={setSelected}
                         storage={storage}
                         stations={stations}
                         onStyleChange={() => setStyleVersion((v) => v + 1)}
-                        routeMode={routeMode}
                         onEnterRouteMode={enterRouteMode}
                     />
                     <ShareButton map={map} />
                     <StationCounter storage={storage} stations={stations} styleVersion={styleVersion} map={map} />
                     {/* Aimed at by panning the map, and shown only while there is
                         room for another point. */}
-                    {routeMode && !isRouteFull(multiSelected) && <div className="route-crosshair" aria-hidden="true" />}
+                    {mode === 'route' && !isRouteFull(selected) && (
+                        <div className="route-crosshair" aria-hidden="true" />
+                    )}
                     {/* Route mode rides on the markers: Markers puts them on the
                         map, numbers the chosen ones and takes the dropped points
                         off again, so there is no route to build without it. */}
                     <RouteControl
                         map={map}
-                        active={routeMode}
-                        stops={multiSelected}
+                        active={mode === 'route'}
+                        stops={selected}
                         onEnter={() => enterRouteMode()}
                         onAddPoint={addPointAtCenter}
                         onClose={closeRoute}
                     />
                 </>
             )}
-            <InfoWindow selectedFeature={feature} map={map} />
+            <InfoWindow selectedFeature={openStation} map={map} />
             <LoginButton map={map} />
         </>
     );

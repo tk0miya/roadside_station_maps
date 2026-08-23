@@ -15,6 +15,7 @@ import {
 import { MARKER_ICONS } from '../marker-icons';
 import { isCustomPoint, MAX_ROUTE_SELECTION } from '../route';
 import { MemoryStorage } from '../storage/memory-storage';
+import type { MapMode } from '../types/station-map';
 import {
     applyMultiSelection,
     changeStyle,
@@ -47,36 +48,27 @@ const buildMapClickEvent = (modifier?: 'meta' | 'ctrl', lat = 36.5, lng = 140.5)
     }) as google.maps.MapMouseEvent;
 
 describe('Markers', () => {
-    const renderMarkers = (
-        overrides: {
-            multiSelected?: google.maps.Data.Feature[];
-            selectedFeature?: google.maps.Data.Feature | null;
-            routeMode?: boolean;
-        } = {}
-    ) => {
+    const renderMarkers = (overrides: { mode?: MapMode; selected?: google.maps.Data.Feature[] } = {}) => {
         const mockMap = createMockMap();
-        const onMultiSelectChange = vi.fn();
-        const onFeatureSelect = vi.fn();
+        const onSelectedChange = vi.fn();
         const onEnterRouteMode = vi.fn();
         render(
             <Markers
                 map={mockMap}
-                selectedFeature={overrides.selectedFeature ?? null}
-                onFeatureSelect={onFeatureSelect}
-                multiSelected={overrides.multiSelected ?? []}
-                onMultiSelectChange={onMultiSelectChange}
+                mode={overrides.mode ?? 'normal'}
+                selected={overrides.selected ?? []}
+                onSelectedChange={onSelectedChange}
                 storage={new MemoryStorage()}
                 stations={stations}
                 onStyleChange={() => {}}
-                routeMode={overrides.routeMode ?? false}
                 onEnterRouteMode={onEnterRouteMode}
             />
         );
-        return { mockMap, onMultiSelectChange, onFeatureSelect, onEnterRouteMode };
+        return { mockMap, onSelectedChange, onEnterRouteMode };
     };
 
-    // Read back the selection a handler asked for, by running the updater it
-    // handed to onMultiSelectChange against the selection it started from.
+    // Read back the picks a handler asked for, by running the updater it handed
+    // to onSelectedChange against the picks it started from.
     const applyUpdater = (
         mock: ReturnType<typeof vi.fn>,
         prev: google.maps.Data.Feature[]
@@ -91,14 +83,12 @@ describe('Markers', () => {
         const { container } = render(
             <Markers
                 map={mockMap}
-                selectedFeature={null}
-                onFeatureSelect={() => {}}
-                multiSelected={[]}
-                onMultiSelectChange={() => {}}
+                mode="normal"
+                selected={[]}
+                onSelectedChange={() => {}}
                 storage={new MemoryStorage()}
                 stations={stations}
                 onStyleChange={() => {}}
-                routeMode={false}
                 onEnterRouteMode={() => {}}
             />
         );
@@ -110,14 +100,12 @@ describe('Markers', () => {
         render(
             <Markers
                 map={mockMap}
-                selectedFeature={null}
-                onFeatureSelect={() => {}}
-                multiSelected={[]}
-                onMultiSelectChange={() => {}}
+                mode="normal"
+                selected={[]}
+                onSelectedChange={() => {}}
                 storage={new MemoryStorage()}
                 stations={stations}
                 onStyleChange={() => {}}
-                routeMode={false}
                 onEnterRouteMode={() => {}}
             />
         );
@@ -132,14 +120,12 @@ describe('Markers', () => {
         const { unmount } = render(
             <Markers
                 map={mockMap}
-                selectedFeature={null}
-                onFeatureSelect={() => {}}
-                multiSelected={[]}
-                onMultiSelectChange={() => {}}
+                mode="normal"
+                selected={[]}
+                onSelectedChange={() => {}}
                 storage={new MemoryStorage()}
                 stations={stations}
                 onStyleChange={() => {}}
-                routeMode={false}
                 onEnterRouteMode={() => {}}
             />
         );
@@ -162,13 +148,12 @@ describe('Markers', () => {
         // the resolved intent must flow through the props correctly.
         it('dispatches the resolved click intent through props', () => {
             const featureB = createMockFeature('B');
-            const { mockMap, onMultiSelectChange, onFeatureSelect } = renderMarkers();
+            const { mockMap, onSelectedChange } = renderMarkers();
 
             mockMap.data._emit('click', buildClickEvent(featureB));
 
-            expect(onFeatureSelect).toHaveBeenCalledWith(featureB);
-            // Outside route mode there is no route for a click to touch.
-            expect(onMultiSelectChange).not.toHaveBeenCalled();
+            // Normal mode picks the one station whose details are open.
+            expect(applyUpdater(onSelectedChange, [])).toEqual([featureB]);
         });
 
         it('cycles the style on a double-click', () => {
@@ -185,11 +170,12 @@ describe('Markers', () => {
 
         it('resets the style on a right-click', () => {
             const featureB = createMockFeature('B');
-            const { mockMap, onFeatureSelect } = renderMarkers();
+            const { mockMap, onSelectedChange } = renderMarkers({ selected: [featureB] });
 
             mockMap.data._emit('rightclick', buildClickEvent(featureB));
 
-            expect(onFeatureSelect).toHaveBeenCalledWith(null);
+            // The station whose style was reset is put away with it.
+            expect(applyUpdater(onSelectedChange, [featureB])).toEqual([]);
         });
     });
 
@@ -204,14 +190,13 @@ describe('Markers', () => {
 
         it('opens the mode with the station a Cmd + click landed on', () => {
             const featureA = createMockFeature('A');
-            const { mockMap, onEnterRouteMode, onMultiSelectChange, onFeatureSelect } = renderMarkers();
+            const { mockMap, onEnterRouteMode, onSelectedChange } = renderMarkers();
 
             mockMap.data._emit('click', buildClickEvent(featureA, 'meta'));
 
             expect(onEnterRouteMode).toHaveBeenCalledWith(featureA);
-            // The mode owns the route from here; the click itself edits nothing.
-            expect(onMultiSelectChange).not.toHaveBeenCalled();
-            expect(onFeatureSelect).not.toHaveBeenCalled();
+            // The way in owns the seed from here; the click itself picks nothing.
+            expect(onSelectedChange).not.toHaveBeenCalled();
         });
 
         it('opens the mode with a point where a Ctrl + double-click landed', () => {
@@ -236,7 +221,7 @@ describe('Markers', () => {
 
         it('is not a way in once already inside: the modifier is not read there', () => {
             const featureA = createMockFeature('A');
-            const { mockMap, onEnterRouteMode, onMultiSelectChange } = renderMarkers({ routeMode: true });
+            const { mockMap, onEnterRouteMode, onSelectedChange } = renderMarkers({ mode: 'route' });
 
             mockMap.data._emit('click', buildClickEvent(featureA, 'meta'));
             mockMap._emit('dblclick', buildMapClickEvent('ctrl'));
@@ -244,7 +229,7 @@ describe('Markers', () => {
             expect(onEnterRouteMode).not.toHaveBeenCalled();
             expect(mockMap.data.add).not.toHaveBeenCalled();
             // The marker click is an ordinary route edit, modifier or not.
-            expect(applyUpdater(onMultiSelectChange, [])).toEqual([featureA]);
+            expect(applyUpdater(onSelectedChange, [])).toEqual([featureA]);
         });
     });
 
@@ -255,22 +240,19 @@ describe('Markers', () => {
 
         it('keeps the point when the click closes a drag of it', () => {
             const point = createMockCustomPoint();
-            const { mockMap, onMultiSelectChange } = renderMarkers({
-                multiSelected: [point],
-                routeMode: true,
-            });
+            const { mockMap, onSelectedChange } = renderMarkers({ mode: 'route', selected: [point] });
 
             mockMap.data._emit('mousedown', buildClickEvent(point));
             mockMap.data._emit('setgeometry', { feature: point });
             mockMap.data._emit('click', buildClickEvent(point));
 
-            expect(onMultiSelectChange).not.toHaveBeenCalled();
+            expect(onSelectedChange).not.toHaveBeenCalled();
 
             // The press that starts the next gesture clears the drag.
             mockMap.data._emit('mousedown', buildClickEvent(point));
             mockMap.data._emit('click', buildClickEvent(point));
 
-            expect(onMultiSelectChange).toHaveBeenCalledTimes(1);
+            expect(onSelectedChange).toHaveBeenCalledTimes(1);
         });
 
         it('stops the map from zooming while the modifier is held', () => {
@@ -302,7 +284,7 @@ describe('Markers', () => {
         });
 
         it('leaves the map its double-click zoom inside route mode', () => {
-            const { mockMap } = renderMarkers({ routeMode: true });
+            const { mockMap } = renderMarkers({ mode: 'route' });
 
             fireEvent.keyDown(window, { key: 'Control', ctrlKey: true });
 
@@ -318,43 +300,31 @@ describe('Markers', () => {
         it('adds a plainly tapped marker to the route', () => {
             const featureA = createMockFeature('A');
             const featureB = createMockFeature('B');
-            const { mockMap, onMultiSelectChange, onFeatureSelect } = renderMarkers({
-                multiSelected: [featureA],
-                routeMode: true,
-            });
+            const { mockMap, onSelectedChange } = renderMarkers({ mode: 'route', selected: [featureA] });
 
             mockMap.data._emit('click', buildClickEvent(featureB));
 
-            expect(applyUpdater(onMultiSelectChange, [featureA])).toEqual([featureA, featureB]);
-            // The info window is already closed in route mode; nothing reopens it.
-            expect(onFeatureSelect).not.toHaveBeenCalled();
+            expect(applyUpdater(onSelectedChange, [featureA])).toEqual([featureA, featureB]);
         });
 
         it('takes a marker back out of the route when it is tapped again', () => {
             const featureA = createMockFeature('A');
             const featureB = createMockFeature('B');
-            const { mockMap, onMultiSelectChange } = renderMarkers({
-                multiSelected: [featureA, featureB],
-                routeMode: true,
-            });
+            const { mockMap, onSelectedChange } = renderMarkers({ mode: 'route', selected: [featureA, featureB] });
 
             mockMap.data._emit('click', buildClickEvent(featureA));
 
-            expect(applyUpdater(onMultiSelectChange, [featureA, featureB])).toEqual([featureB]);
+            expect(applyUpdater(onSelectedChange, [featureA, featureB])).toEqual([featureB]);
         });
 
         it('leaves the visit styles alone on a double tap', () => {
             const featureA = createMockFeature('A');
-            const { mockMap, onMultiSelectChange, onFeatureSelect } = renderMarkers({
-                multiSelected: [featureA],
-                routeMode: true,
-            });
+            const { mockMap, onSelectedChange } = renderMarkers({ mode: 'route', selected: [featureA] });
             (mockMap.data.overrideStyle as ReturnType<typeof vi.fn>).mockClear();
 
             mockMap.data._emit('dblclick', buildClickEvent(featureA));
 
-            expect(onMultiSelectChange).not.toHaveBeenCalled();
-            expect(onFeatureSelect).not.toHaveBeenCalled();
+            expect(onSelectedChange).not.toHaveBeenCalled();
             expect(mockMap.data.overrideStyle).not.toHaveBeenCalled();
         });
 
@@ -362,36 +332,87 @@ describe('Markers', () => {
             const featureA = createMockFeature('A');
             const featureB = createMockFeature('B');
             const featureC = createMockFeature('C');
-            const { mockMap, onMultiSelectChange, onFeatureSelect } = renderMarkers({
-                multiSelected: [featureA, featureB, featureC],
-                routeMode: true,
+            const { mockMap, onSelectedChange } = renderMarkers({
+                mode: 'route',
+                selected: [featureA, featureB, featureC],
             });
             (mockMap.data.overrideStyle as ReturnType<typeof vi.fn>).mockClear();
 
             mockMap.data._emit('rightclick', buildClickEvent(featureC));
 
-            expect(applyUpdater(onMultiSelectChange, [featureA, featureB, featureC])).toEqual([
+            expect(applyUpdater(onSelectedChange, [featureA, featureB, featureC])).toEqual([
                 featureA,
                 featureC,
                 featureB,
             ]);
             // Reordering is not a visit-style change.
-            expect(onFeatureSelect).not.toHaveBeenCalled();
             expect(mockMap.data.overrideStyle).not.toHaveBeenCalled();
         });
 
         it('takes no more stops once the route is full', () => {
             const full = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) => createMockFeature(`${i}`));
             const extra = createMockFeature('extra');
-            const { mockMap, onMultiSelectChange, onFeatureSelect } = renderMarkers({
-                multiSelected: full,
-                routeMode: true,
-            });
+            const { mockMap, onSelectedChange } = renderMarkers({ mode: 'route', selected: full });
 
             mockMap.data._emit('click', buildClickEvent(extra));
 
-            expect(onMultiSelectChange).not.toHaveBeenCalled();
-            expect(onFeatureSelect).not.toHaveBeenCalled();
+            expect(onSelectedChange).not.toHaveBeenCalled();
+        });
+    });
+
+    // What the map is told to draw is derived from the mode, not read off
+    // `selected`. The first of these holds that leaving the mode reaches the map
+    // as a change to apply rather than a redraw to skip; the second holds the
+    // derivation itself, since `selected` on its own would number a station
+    // whose details were merely opened.
+    describe('what the map is told to draw', () => {
+        beforeEach(() => {
+            setupGoogleMapsMock();
+        });
+
+        it('takes the route off the map when route mode is left', () => {
+            const mockMap = createMockMap();
+            const station = createMockFeature('A');
+            const point = createMockCustomPoint();
+            const props = {
+                map: mockMap,
+                onSelectedChange: () => {},
+                storage: new MemoryStorage(),
+                stations,
+                onStyleChange: () => {},
+                onEnterRouteMode: () => {},
+            };
+
+            const { rerender } = render(<Markers {...props} mode="route" selected={[station, point]} />);
+            (mockMap.data.overrideStyle as ReturnType<typeof vi.fn>).mockClear();
+
+            rerender(<Markers {...props} mode="normal" selected={[]} />);
+
+            // The dropped point leaves the map, and the station takes its stored
+            // icon back in place of its number.
+            expect(mockMap.data.remove).toHaveBeenCalledWith(point);
+            expect(mockMap.data.overrideStyle).toHaveBeenCalledWith(station, { icon: MARKER_ICONS[0] });
+        });
+
+        it('numbers nothing in normal mode: a station opened there is not a stop', () => {
+            const mockMap = createMockMap();
+            const station = createMockFeature('A');
+            const props = {
+                map: mockMap,
+                mode: 'normal' as MapMode,
+                onSelectedChange: () => {},
+                storage: new MemoryStorage(),
+                stations,
+                onStyleChange: () => {},
+                onEnterRouteMode: () => {},
+            };
+
+            const { rerender } = render(<Markers {...props} selected={[]} />);
+            (mockMap.data.overrideStyle as ReturnType<typeof vi.fn>).mockClear();
+
+            rerender(<Markers {...props} selected={[station]} />);
+
+            expect(mockMap.data.overrideStyle).not.toHaveBeenCalled();
         });
     });
 
@@ -402,14 +423,12 @@ describe('Markers', () => {
 
         const props = {
             map: mockMap,
-            selectedFeature: null as google.maps.Data.Feature | null,
-            onFeatureSelect: vi.fn(),
-            multiSelected: [] as google.maps.Data.Feature[],
-            onMultiSelectChange: vi.fn(),
+            mode: 'normal' as MapMode,
+            selected: [] as google.maps.Data.Feature[],
+            onSelectedChange: vi.fn(),
             storage: new MemoryStorage(),
             stations,
             onStyleChange: vi.fn(),
-            routeMode: false,
             onEnterRouteMode: vi.fn(),
         };
 
@@ -432,15 +451,9 @@ describe('resolveMarkerClick', () => {
             const a = createMockFeature('A');
             const b = createMockFeature('B');
 
-            const result = resolveMarkerClick({
-                clickedFeature: b,
-                routeMode: true,
-                selectedFeature: null,
-                multiSelected: [a],
-            });
+            const result = resolveMarkerClick('route', [a], b);
 
-            expect(result.multiSelected).toEqual([a, b]);
-            expect(result.selectedFeature).toBeUndefined();
+            expect(result.selected).toEqual([a, b]);
             expect(result.cycleStyleOn).toBeUndefined();
         });
 
@@ -448,90 +461,57 @@ describe('resolveMarkerClick', () => {
             const a = createMockFeature('A');
             const b = createMockFeature('B');
 
-            const result = resolveMarkerClick({
-                clickedFeature: a,
-                routeMode: true,
-                selectedFeature: null,
-                multiSelected: [a, b],
-            });
+            const result = resolveMarkerClick('route', [a, b], a);
 
-            expect(result.multiSelected).toEqual([b]);
+            expect(result.selected).toEqual([b]);
         });
 
         it('takes a custom point back out the same way a station goes', () => {
             const a = createMockFeature('A');
             const point = createMockCustomPoint();
 
-            const result = resolveMarkerClick({
-                clickedFeature: point,
-                routeMode: true,
-                selectedFeature: null,
-                multiSelected: [a, point],
-            });
+            const result = resolveMarkerClick('route', [a, point], point);
 
-            expect(result.multiSelected).toEqual([a]);
+            expect(result.selected).toEqual([a]);
         });
 
         it('leaves a full route untouched', () => {
             const existing = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) => createMockFeature(`${i}`));
             const extra = createMockFeature('extra');
 
-            const result = resolveMarkerClick({
-                clickedFeature: extra,
-                routeMode: true,
-                selectedFeature: null,
-                multiSelected: existing,
-            });
+            const result = resolveMarkerClick('route', existing, extra);
 
             expect(result).toEqual({});
         });
     });
 
-    describe('outside route mode', () => {
-        it('single-selects the clicked feature', () => {
+    describe('in normal mode', () => {
+        it('opens the clicked feature', () => {
             const b = createMockFeature('B');
 
-            const result = resolveMarkerClick({
-                clickedFeature: b,
-                routeMode: false,
-                selectedFeature: null,
-                multiSelected: [],
-            });
+            const result = resolveMarkerClick('normal', [], b);
 
-            expect(result.selectedFeature).toBe(b);
-            expect(result.multiSelected).toBeUndefined();
+            expect(result.selected).toEqual([b]);
             expect(result.cycleStyleOn).toBeUndefined();
         });
 
-        it('cycles the style when re-clicking the currently selected feature', () => {
+        it('cycles the style when re-clicking the feature already open', () => {
             const a = createMockFeature('A');
 
-            const result = resolveMarkerClick({
-                clickedFeature: a,
-                routeMode: false,
-                selectedFeature: a,
-                multiSelected: [],
-            });
+            const result = resolveMarkerClick('normal', [a], a);
 
             expect(result.cycleStyleOn).toBe(a);
-            expect(result.selectedFeature).toBeUndefined();
-            expect(result.multiSelected).toBeUndefined();
+            expect(result.selected).toBeUndefined();
         });
 
-        it('single-selects a different feature without touching style', () => {
+        it('opens a different feature without touching style', () => {
             const a = createMockFeature('A');
             const b = createMockFeature('B');
 
-            const result = resolveMarkerClick({
-                clickedFeature: b,
-                routeMode: false,
-                selectedFeature: a,
-                multiSelected: [],
-            });
+            const result = resolveMarkerClick('normal', [a], b);
 
-            expect(result.selectedFeature).toBe(b);
+            expect(result.selected).toEqual([b]);
             expect(result.cycleStyleOn).toBeUndefined();
-            expect(result.multiSelected).toBeUndefined();
         });
     });
 });
