@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
-
 import { MARKER_ICONS, numberedMarkerIcon } from '../marker-icons';
 import { hasPointAt, isCustomPoint, isRouteFull } from '../route';
 import type { Storage } from '../storage';
 import * as style from '../style';
 import { getStyle } from '../style';
 import type { StationsGeoJSON } from '../types/geojson';
+import type { MapMode } from '../types/station-map';
 import { useModifierHeld } from '../use-modifier-held';
 
 // Add a custom route point at `position` and return its feature. It is created
@@ -32,44 +32,34 @@ export function dropRoutePoint(
     return [...multiSelected, addCustomPoint(map, position)];
 }
 
-export interface MarkerClickContext {
-    clickedFeature: google.maps.Data.Feature;
-    routeMode: boolean;
-    selectedFeature: google.maps.Data.Feature | null;
-    multiSelected: google.maps.Data.Feature[];
-}
-
 // `undefined` fields mean "no change".
 export interface MarkerClickResult {
-    selectedFeature?: google.maps.Data.Feature;
-    multiSelected?: google.maps.Data.Feature[];
+    selected?: google.maps.Data.Feature[];
     cycleStyleOn?: google.maps.Data.Feature;
 }
 
-// What a click on a marker does. The mode decides, and nothing else does: a
-// route only exists inside route mode, and a single selection only outside it,
-// so the two halves never have to undo each other's state.
-export function resolveMarkerClick({
-    clickedFeature,
-    routeMode,
-    selectedFeature,
-    multiSelected,
-}: MarkerClickContext): MarkerClickResult {
-    if (routeMode) {
-        if (multiSelected.includes(clickedFeature)) {
-            return { multiSelected: multiSelected.filter((feature) => feature !== clickedFeature) };
+// What a click on a marker does. It never changes the mode, only what is picked
+// in it.
+export function resolveMarkerClick(
+    mode: MapMode,
+    selected: google.maps.Data.Feature[],
+    clickedFeature: google.maps.Data.Feature
+): MarkerClickResult {
+    if (mode === 'route') {
+        if (selected.includes(clickedFeature)) {
+            return { selected: selected.filter((stop) => stop !== clickedFeature) };
         }
         // A full route takes no more, and says so by leaving the click alone.
-        if (isRouteFull(multiSelected)) {
+        if (isRouteFull(selected)) {
             return {};
         }
-        return { multiSelected: [...multiSelected, clickedFeature] };
+        return { selected: [...selected, clickedFeature] };
     }
 
-    if (selectedFeature === clickedFeature) {
+    if (selected[0] === clickedFeature) {
         return { cycleStyleOn: clickedFeature };
     }
-    return { selectedFeature: clickedFeature };
+    return { selected: [clickedFeature] };
 }
 
 // Move `feature` one number earlier in the route order, wrapping the first
@@ -198,24 +188,25 @@ export function applyMultiSelection(
 
 interface MarkersProps {
     map: google.maps.Map | null;
-    selectedFeature: google.maps.Data.Feature | null;
-    onFeatureSelect: (feature: google.maps.Data.Feature | null) => void;
-    multiSelected: google.maps.Data.Feature[];
-    onMultiSelectChange: (update: (prev: google.maps.Data.Feature[]) => google.maps.Data.Feature[]) => void;
+    mode: MapMode;
+    selected: google.maps.Data.Feature[];
+    onSelectedChange: (update: (prev: google.maps.Data.Feature[]) => google.maps.Data.Feature[]) => void;
     storage: Storage;
     stations: StationsGeoJSON | null;
     onStyleChange: () => void;
-    routeMode: boolean;
-    // Called by the modifier gestures, which are the shortcut into route mode:
-    // the mode opens with `seed` as its first stop.
+    // Called by the modifier gestures, which open the mode with `seed` in it.
     onEnterRouteMode: (seed: google.maps.Data.Feature) => void;
 }
 
 export function Markers(props: MarkersProps) {
-    const selectedFeatureRef = useRef<google.maps.Data.Feature | null>(null);
-    const multiSelectedRef = useRef<google.maps.Data.Feature[]>(props.multiSelected);
+    // The listeners are installed once, so what they read has to come from a ref
+    // rather than the render they were created in.
+    const modeRef = useRef<MapMode>(props.mode);
+    const selectedRef = useRef<google.maps.Data.Feature[]>(props.selected);
+    // The stops as the map currently draws them, which the next change diffs
+    // against to know which markers to re-number and which to take off.
+    const drawnStopsRef = useRef<google.maps.Data.Feature[]>([]);
     const storageRef = useRef<Storage>(props.storage);
-    const routeModeRef = useRef<boolean>(props.routeMode);
     // Set when a drag moved a custom point, cleared by the next press on a
     // marker. Dragging a point ends with a mouseup on it, and a click on a
     // chosen marker takes it back out of the route, so the release that finishes
@@ -225,12 +216,9 @@ export function Markers(props: MarkersProps) {
     const modifierHeld = useModifierHeld();
 
     useEffect(() => {
-        selectedFeatureRef.current = props.selectedFeature;
-    }, [props.selectedFeature]);
-
-    useEffect(() => {
-        routeModeRef.current = props.routeMode;
-    }, [props.routeMode]);
+        modeRef.current = props.mode;
+        selectedRef.current = props.selected;
+    }, [props.mode, props.selected]);
 
     // Keep handlers and the data-layer style callback bound to the latest storage
     // so login/logout transitions immediately switch storage backends without remounting.
@@ -263,27 +251,23 @@ export function Markers(props: MarkersProps) {
         return () => listener.remove();
     }, [props.map]);
 
-    // Outside route mode the modifier turns a double-click into "start a route
-    // here", so the map must not read the same gesture as a zoom-in while it is
-    // held. Inside the mode the modifier is not read at all, and the map keeps
-    // its double-click.
+    // The modifier turns a double-click into the way into route mode, so the map
+    // must not read the same gesture as a zoom-in while it is held.
     useEffect(() => {
-        props.map?.setOptions({ disableDoubleClickZoom: modifierHeld && !props.routeMode });
-    }, [props.map, modifierHeld, props.routeMode]);
+        props.map?.setOptions({ disableDoubleClickZoom: modifierHeld && props.mode === 'normal' });
+    }, [props.map, modifierHeld, props.mode]);
 
     useEffect(() => {
         if (!props.map) return;
-        applyMultiSelection(props.map, multiSelectedRef.current, props.multiSelected, storageRef.current);
-        multiSelectedRef.current = props.multiSelected;
-    }, [props.map, props.multiSelected]);
+        const stops = props.mode === 'route' ? props.selected : [];
+        applyMultiSelection(props.map, drawnStopsRef.current, stops, storageRef.current);
+        drawnStopsRef.current = stops;
+    }, [props.map, props.mode, props.selected]);
 
     const applyClickResult = (result: MarkerClickResult) => {
-        if (result.selectedFeature !== undefined) {
-            props.onFeatureSelect(result.selectedFeature);
-        }
-        if (result.multiSelected !== undefined) {
-            const { multiSelected } = result;
-            props.onMultiSelectChange(() => multiSelected);
+        if (result.selected !== undefined) {
+            const { selected } = result;
+            props.onSelectedChange(() => selected);
         }
         if (result.cycleStyleOn && props.map) {
             changeStyle(props.map, result.cycleStyleOn, storageRef.current);
@@ -295,53 +279,36 @@ export function Markers(props: MarkersProps) {
         if (!props.map) return;
         if (draggedRef.current) return;
 
-        // Outside the mode, the modifier makes this click the way in, with the
-        // station clicked as the first stop.
-        if (!routeModeRef.current && isModifierPressed(event)) {
+        if (modeRef.current === 'normal' && isModifierPressed(event)) {
             props.onEnterRouteMode(event.feature);
             return;
         }
-        applyClickResult(
-            resolveMarkerClick({
-                clickedFeature: event.feature,
-                routeMode: routeModeRef.current,
-                selectedFeature: selectedFeatureRef.current,
-                multiSelected: multiSelectedRef.current,
-            })
-        );
+        applyClickResult(resolveMarkerClick(modeRef.current, selectedRef.current, event.feature));
     };
 
-    // Modifier + double-click on the map is the other way in, with a point at
-    // the cursor as the first stop. Inside the mode the crosshair places points
-    // and this gesture is the map's own again, so only the way in reads it.
     const onMapDoubleClick = (event: google.maps.MapMouseEvent) => {
-        if (!props.map || routeModeRef.current) return;
+        if (!props.map || modeRef.current === 'route') return;
         if (!isModifierPressed(event) || !event.latLng) return;
         props.onEnterRouteMode(addCustomPoint(props.map, event.latLng));
     };
 
     const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {
         if (!props.map) return;
-        // Route mode edits the route, not the visit styles: a double tap there
-        // is two taps that added and removed a stop, and cycling the style on
-        // top of that is not what was asked.
-        // A modifier + double-click is caught by the same guard: its first click
+        // A modifier + double-click is stopped here as well: its first click
         // already opened route mode.
-        if (routeModeRef.current) return;
+        if (modeRef.current === 'route') return;
         changeStyle(props.map, event.feature, storageRef.current);
         props.onStyleChange();
     };
 
     const onMarkerRightClick = (event: google.maps.Data.MouseEvent) => {
         if (!props.map) return;
-        // In route mode a gesture on a marker edits the route, and reordering is
-        // what a tap does not already do.
-        if (routeModeRef.current) {
-            props.onMultiSelectChange((prev) => cycleRouteNumber(prev, event.feature));
+        if (modeRef.current === 'route') {
+            props.onSelectedChange((prev) => cycleRouteNumber(prev, event.feature));
             return;
         }
         resetStyle(props.map, event.feature, storageRef.current);
-        props.onFeatureSelect(null);
+        props.onSelectedChange(() => []);
         props.onStyleChange();
     };
 

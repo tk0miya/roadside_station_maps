@@ -5,6 +5,7 @@ import { buildDirectionsURL, isRouteFull, MAX_ROUTE_SELECTION } from '../route';
 interface RouteControlProps {
     map: google.maps.Map | null;
     active: boolean;
+    // Handed over as it stands: read as a route only while the switch is on.
     stops: google.maps.Data.Feature[];
     onEnter: () => void;
     onAddPoint: () => void;
