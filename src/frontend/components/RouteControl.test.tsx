@@ -63,7 +63,7 @@ describe('RouteControl', () => {
         );
 
         expect(screen.getByText('ルート')).toBeTruthy();
-        expect(screen.queryByText('ルートを作成')).toBeNull();
+        expect(screen.queryByText('作成')).toBeNull();
     });
 
     it('reports the way in', () => {
@@ -92,7 +92,7 @@ describe('RouteControl', () => {
 
         expect(leftTop(mockMap)).toHaveLength(1);
         expect(leftTop(mockMap)[0]).toBe(box);
-        expect(screen.getByText('ルートを作成')).toBeTruthy();
+        expect(screen.getByText('作成')).toBeTruthy();
     });
 
     it('reports the stop count against the limit', () => {
@@ -116,7 +116,7 @@ describe('RouteControl', () => {
             <RouteControl map={mockMap} active={true} stops={stops} onEnter={() => {}} onClose={() => {}} />,
             mockMap
         );
-        fireEvent.click(screen.getByText('ルートを作成'));
+        fireEvent.click(screen.getByText('作成'));
 
         expect(openSpy).toHaveBeenCalledWith(buildDirectionsURL(stops), '_blank', 'noopener');
     });
@@ -135,7 +135,9 @@ describe('RouteControl', () => {
             mockMap
         );
 
-        expect((screen.getByText('ルートを作成') as HTMLButtonElement).disabled).toBe(true);
+        // By its accessible name: the visible label is shortened to fit the
+        // row, and the full wording only survives in aria-label.
+        expect((screen.getByLabelText('ルートを作成') as HTMLButtonElement).disabled).toBe(true);
     });
 
     it('offers the directions once two stops are in', () => {
@@ -147,7 +149,7 @@ describe('RouteControl', () => {
             mockMap
         );
 
-        expect((screen.getByText('ルートを作成') as HTMLButtonElement).disabled).toBe(false);
+        expect((screen.getByText('作成') as HTMLButtonElement).disabled).toBe(false);
     });
 
     it('asks to leave route mode', () => {

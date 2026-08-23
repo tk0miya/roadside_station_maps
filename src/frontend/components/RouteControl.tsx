@@ -55,13 +55,17 @@ export function RouteControl({ map, active, stops, onEnter, onClose }: RouteCont
                 <span className="route-control-count">
                     {stops.length} / {MAX_ROUTE_SELECTION}
                 </span>
+                {/* "作成" rather than "ルートを作成": the row has a width to
+                    stay inside, spelled out in the CSS. The accessible name
+                    carries the full wording. */}
                 <button
                     type="button"
                     className="route-control-create"
+                    aria-label="ルートを作成"
                     disabled={stops.length < 2}
                     onClick={() => window.open(buildDirectionsURL(stops), '_blank', 'noopener')}
                 >
-                    ルートを作成
+                    作成
                 </button>
                 <button type="button" className="route-control-close" onClick={onClose}>
                     終了
