@@ -26,7 +26,10 @@ export function RouteModeButton(props: RouteModeButtonProps) {
         const onClick = () => onClickRef.current();
         div.addEventListener('click', onClick);
 
-        const controls = props.map.controls[google.maps.ControlPosition.TOP_CENTER];
+        // LEFT_TOP, not TOP_LEFT: it stacks the button below the row the
+        // map-type and share buttons flow into, rather than joining that row and
+        // competing with them for width on a narrow screen.
+        const controls = props.map.controls[google.maps.ControlPosition.LEFT_TOP];
         controls.push(div);
 
         return () => {
