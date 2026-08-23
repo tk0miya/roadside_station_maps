@@ -33,9 +33,6 @@ const buildClickEvent = (feature: google.maps.Data.Feature, modifier?: 'meta' | 
         domEvent: {
             metaKey: modifier === 'meta',
             ctrlKey: modifier === 'ctrl',
-            // A long press arrives as a right-click, whose route-mode branch
-            // suppresses the browser menu the press would otherwise open.
-            preventDefault: vi.fn(),
         } as unknown as MouseEvent,
     }) as google.maps.Data.MouseEvent;
 
@@ -45,9 +42,6 @@ const buildMapClickEvent = (modifier?: 'meta' | 'ctrl', lat = 36.5, lng = 140.5)
         domEvent: {
             metaKey: modifier === 'meta',
             ctrlKey: modifier === 'ctrl',
-            // A long press arrives as `contextmenu`, whose handler suppresses
-            // the browser menu the press would otherwise open.
-            preventDefault: vi.fn(),
         } as unknown as MouseEvent,
     }) as google.maps.MapMouseEvent;
 
@@ -309,6 +303,16 @@ describe('Markers', () => {
             expect(onMultiSelectChange).not.toHaveBeenCalled();
         });
 
+        it('adds no second point where one already stands', () => {
+            const point = createMockCustomPoint(36.5, 140.5);
+            const { mockMap, onMultiSelectChange } = renderMarkers({ multiSelected: [point] });
+
+            mockMap._emit('dblclick', buildMapClickEvent('ctrl', 36.5, 140.5));
+
+            expect(mockMap.data.add).not.toHaveBeenCalled();
+            expect(onMultiSelectChange).not.toHaveBeenCalled();
+        });
+
         it('keeps the point when the click closes a drag of it', () => {
             const point = createMockCustomPoint();
             const { mockMap, onMultiSelectChange } = renderMarkers({ multiSelected: [point] });
@@ -387,63 +391,19 @@ describe('Markers', () => {
             expect(applyUpdater(onMultiSelectChange, [featureA, featureB])).toEqual([featureB]);
         });
 
-        it('leaves the visit styles alone on a double tap or a long press', () => {
+        it('leaves the visit styles alone on a double tap', () => {
             const featureA = createMockFeature('A');
             const { mockMap, onMultiSelectChange, onFeatureSelect } = renderMarkers({
                 multiSelected: [featureA],
                 routeMode: true,
             });
             (mockMap.data.overrideStyle as ReturnType<typeof vi.fn>).mockClear();
-            const longPress = buildClickEvent(featureA);
 
             mockMap.data._emit('dblclick', buildClickEvent(featureA));
-            mockMap.data._emit('rightclick', longPress);
 
             expect(onMultiSelectChange).not.toHaveBeenCalled();
             expect(onFeatureSelect).not.toHaveBeenCalled();
             expect(mockMap.data.overrideStyle).not.toHaveBeenCalled();
-            // The press drops no point, but the browser menu is not the answer.
-            expect(longPress.domEvent.preventDefault).toHaveBeenCalledTimes(1);
-        });
-
-        it('drops a route point where the map is long-pressed', () => {
-            const featureA = createMockFeature('A');
-            const { mockMap, onMultiSelectChange } = renderMarkers({
-                multiSelected: [featureA],
-                routeMode: true,
-            });
-            const longPress = buildMapClickEvent(undefined, 36.5, 140.5);
-
-            mockMap._emit('contextmenu', longPress);
-
-            const point = (mockMap.data.add as ReturnType<typeof vi.fn>).mock.results[0]?.value;
-            expect(isCustomPoint(point)).toBe(true);
-            expect((point.getGeometry() as google.maps.Data.Point).get().lat()).toBe(36.5);
-            expect(applyUpdater(onMultiSelectChange, [featureA])).toEqual([featureA, point]);
-            expect(longPress.domEvent.preventDefault).toHaveBeenCalledTimes(1);
-        });
-
-        it('drops no point on a long press outside route mode, and leaves the browser menu alone', () => {
-            const { mockMap, onMultiSelectChange } = renderMarkers();
-            const event = buildMapClickEvent();
-
-            mockMap._emit('contextmenu', event);
-
-            expect(mockMap.data.add).not.toHaveBeenCalled();
-            expect(onMultiSelectChange).not.toHaveBeenCalled();
-            expect(event.domEvent.preventDefault).not.toHaveBeenCalled();
-        });
-
-        it('drops no point on a long press once the route is full, and still keeps the browser menu shut', () => {
-            const full = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) => createMockFeature(`${i}`));
-            const { mockMap, onMultiSelectChange } = renderMarkers({ multiSelected: full, routeMode: true });
-            const longPress = buildMapClickEvent();
-
-            mockMap._emit('contextmenu', longPress);
-
-            expect(mockMap.data.add).not.toHaveBeenCalled();
-            expect(onMultiSelectChange).not.toHaveBeenCalled();
-            expect(longPress.domEvent.preventDefault).toHaveBeenCalledTimes(1);
         });
     });
 

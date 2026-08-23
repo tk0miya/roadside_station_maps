@@ -3,7 +3,7 @@
  */
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import type { ReactElement } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockFeature, createMockMap, setupGoogleMapsMock } from '#test-utils/test-utils';
 import { buildDirectionsURL, MAX_ROUTE_SELECTION } from '../route';
@@ -43,13 +43,27 @@ describe('RouteControl', () => {
         return result;
     };
 
+    // Only what a case turns on is worth writing down; the rest is the control
+    // as RoadStationMap hands it over.
+    const control = (
+        map: google.maps.Map | null,
+        overrides: Partial<ComponentProps<typeof RouteControl>> = {}
+    ): ReactElement => (
+        <RouteControl
+            map={map}
+            active={false}
+            stops={[]}
+            onEnter={() => {}}
+            onAddPoint={() => {}}
+            onClose={() => {}}
+            {...overrides}
+        />
+    );
+
     it('puts one box into LEFT_TOP controls', () => {
         const mockMap = createMockMap();
 
-        renderControl(
-            <RouteControl map={mockMap} active={false} stops={[]} onEnter={() => {}} onClose={() => {}} />,
-            mockMap
-        );
+        renderControl(control(mockMap), mockMap);
 
         expect(leftTop(mockMap)).toHaveLength(1);
     });
@@ -57,26 +71,21 @@ describe('RouteControl', () => {
     it('holds the switch alone while route mode is off', () => {
         const mockMap = createMockMap();
 
-        renderControl(
-            <RouteControl map={mockMap} active={false} stops={[]} onEnter={() => {}} onClose={() => {}} />,
-            mockMap
-        );
+        renderControl(control(mockMap), mockMap);
 
         // The label is text beside the switch rather than part of it, and reaches
         // it as its accessible name.
         const routeSwitch = screen.getByRole('switch', { name: 'ルート' });
         expect(routeSwitch.getAttribute('aria-checked')).toBe('false');
         expect(screen.queryByText('作成')).toBeNull();
+        expect(screen.queryByText('地点追加')).toBeNull();
     });
 
     it('reports the way in when the switch goes on', () => {
         const mockMap = createMockMap();
         const onEnter = vi.fn();
 
-        renderControl(
-            <RouteControl map={mockMap} active={false} stops={[]} onEnter={onEnter} onClose={() => {}} />,
-            mockMap
-        );
+        renderControl(control(mockMap, { onEnter }), mockMap);
         fireEvent.click(screen.getByRole('switch'));
 
         expect(onEnter).toHaveBeenCalledTimes(1);
@@ -85,14 +94,11 @@ describe('RouteControl', () => {
     it('opens under the same switch rather than moving once route mode starts', () => {
         const mockMap = createMockMap();
 
-        const { rerender } = renderControl(
-            <RouteControl map={mockMap} active={false} stops={[]} onEnter={() => {}} onClose={() => {}} />,
-            mockMap
-        );
+        const { rerender } = renderControl(control(mockMap), mockMap);
         const box = leftTop(mockMap)[0];
         const routeSwitch = screen.getByRole('switch');
 
-        rerender(<RouteControl map={mockMap} active={true} stops={[]} onEnter={() => {}} onClose={() => {}} />);
+        rerender(control(mockMap, { active: true }));
 
         expect(leftTop(mockMap)).toHaveLength(1);
         expect(leftTop(mockMap)[0]).toBe(box);
@@ -107,10 +113,7 @@ describe('RouteControl', () => {
         const mockMap = createMockMap();
         const stops = [createMockFeature('1'), createMockFeature('2')];
 
-        renderControl(
-            <RouteControl map={mockMap} active={true} stops={stops} onEnter={() => {}} onClose={() => {}} />,
-            mockMap
-        );
+        renderControl(control(mockMap, { active: true, stops }), mockMap);
 
         expect(screen.getByText(`2 / ${MAX_ROUTE_SELECTION}`)).toBeTruthy();
     });
@@ -120,10 +123,7 @@ describe('RouteControl', () => {
         const openSpy = mockWindowOpen();
         const stops = [createMockFeature('1', { name: '三笠' }), createMockFeature('2', { name: 'びふか' })];
 
-        renderControl(
-            <RouteControl map={mockMap} active={true} stops={stops} onEnter={() => {}} onClose={() => {}} />,
-            mockMap
-        );
+        renderControl(control(mockMap, { active: true, stops }), mockMap);
         fireEvent.click(screen.getByText('作成'));
 
         expect(openSpy).toHaveBeenCalledWith(buildDirectionsURL(stops), '_blank', 'noopener');
@@ -132,16 +132,7 @@ describe('RouteControl', () => {
     it('keeps the directions button out of reach until a route needs two stops', () => {
         const mockMap = createMockMap();
 
-        renderControl(
-            <RouteControl
-                map={mockMap}
-                active={true}
-                stops={[createMockFeature('1')]}
-                onEnter={() => {}}
-                onClose={() => {}}
-            />,
-            mockMap
-        );
+        renderControl(control(mockMap, { active: true, stops: [createMockFeature('1')] }), mockMap);
 
         // By its accessible name: the visible label is shortened to fit the
         // row, and the full wording only survives in aria-label.
@@ -152,10 +143,7 @@ describe('RouteControl', () => {
         const mockMap = createMockMap();
         const stops = [createMockFeature('1'), createMockFeature('2')];
 
-        renderControl(
-            <RouteControl map={mockMap} active={true} stops={stops} onEnter={() => {}} onClose={() => {}} />,
-            mockMap
-        );
+        renderControl(control(mockMap, { active: true, stops }), mockMap);
 
         expect((screen.getByText('作成') as HTMLButtonElement).disabled).toBe(false);
     });
@@ -164,28 +152,37 @@ describe('RouteControl', () => {
         const mockMap = createMockMap();
         const onClose = vi.fn();
 
-        renderControl(
-            <RouteControl
-                map={mockMap}
-                active={true}
-                stops={[createMockFeature('1')]}
-                onEnter={() => {}}
-                onClose={onClose}
-            />,
-            mockMap
-        );
+        renderControl(control(mockMap, { active: true, stops: [createMockFeature('1')], onClose }), mockMap);
         fireEvent.click(screen.getByRole('switch'));
 
         expect(onClose).toHaveBeenCalledTimes(1);
     });
 
+    it('asks for a point at the middle of the map', () => {
+        const mockMap = createMockMap();
+        const onAddPoint = vi.fn();
+
+        renderControl(control(mockMap, { active: true, onAddPoint }), mockMap);
+        fireEvent.click(screen.getByLabelText('地図の中心に地点を追加'));
+
+        expect(onAddPoint).toHaveBeenCalledTimes(1);
+    });
+
+    // The limit belongs to the route, not to the button: a full route has
+    // nowhere to put another point, and the button says so before it is pressed.
+    it('stops offering a point once the route is full', () => {
+        const mockMap = createMockMap();
+        const full = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) => createMockFeature(`${i}`));
+
+        renderControl(control(mockMap, { active: true, stops: full }), mockMap);
+
+        expect((screen.getByLabelText('地図の中心に地点を追加') as HTMLButtonElement).disabled).toBe(true);
+    });
+
     it('takes the box away when it goes', () => {
         const mockMap = createMockMap();
 
-        const { unmount } = renderControl(
-            <RouteControl map={mockMap} active={false} stops={[]} onEnter={() => {}} onClose={() => {}} />,
-            mockMap
-        );
+        const { unmount } = renderControl(control(mockMap), mockMap);
         unmount();
 
         expect(leftTop(mockMap)).toHaveLength(0);
@@ -196,12 +193,10 @@ describe('RouteControl', () => {
     it('waits for the map before taking a place on it', () => {
         const mockMap = createMockMap();
 
-        const { rerender, container } = render(
-            <RouteControl map={null} active={false} stops={[]} onEnter={() => {}} onClose={() => {}} />
-        );
+        const { rerender, container } = render(control(null));
         expect(leftTop(mockMap)).toHaveLength(0);
 
-        rerender(<RouteControl map={mockMap} active={false} stops={[]} onEnter={() => {}} onClose={() => {}} />);
+        rerender(control(mockMap));
         container.appendChild(leftTop(mockMap)[0]);
 
         expect(leftTop(mockMap)).toHaveLength(1);

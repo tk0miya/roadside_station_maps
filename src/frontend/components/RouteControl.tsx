@@ -1,12 +1,13 @@
 import { useEffect, useId, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { buildDirectionsURL, MAX_ROUTE_SELECTION } from '../route';
+import { buildDirectionsURL, isRouteFull, MAX_ROUTE_SELECTION } from '../route';
 
 interface RouteControlProps {
     map: google.maps.Map | null;
     active: boolean;
     stops: google.maps.Data.Feature[];
     onEnter: () => void;
+    onAddPoint: () => void;
     onClose: () => void;
 }
 
@@ -22,11 +23,12 @@ interface RouteControlProps {
 // what reports which way the switch is thrown; the track it draws to say so is
 // aria-hidden, having nothing to add to that.
 //
-// The second row carries the two things docs/station-map.md keeps on screen for
-// the route being built: how far the stop count is from the limit, and the button
-// that hands the route over. Dropping the route is not among them — that is the
-// switch again, since leaving the mode is what clears the stops.
-export function RouteControl({ map, active, stops, onEnter, onClose }: RouteControlProps) {
+// The second row carries what docs/station-map.md keeps on screen for the route
+// being built: how far the stop count is from the limit, the way to put a stop
+// where no station stands, and the button that hands the route over. Dropping
+// the route is not among them — that is the switch again, since leaving the mode
+// is what clears the stops.
+export function RouteControl({ map, active, stops, onEnter, onAddPoint, onClose }: RouteControlProps) {
     const labelId = useId();
 
     // The Maps API places the control, so the box is a bare node handed to it
@@ -76,9 +78,21 @@ export function RouteControl({ map, active, stops, onEnter, onClose }: RouteCont
                     <span className="route-control-count">
                         {stops.length} / {MAX_ROUTE_SELECTION}
                     </span>
-                    {/* "作成" rather than "ルートを作成": the row is as narrow as
-                        the switch above it. The accessible name carries the full
-                        wording. */}
+                    {/* A station joins the route by its marker being tapped; a
+                        place with no station has no marker to tap, so this puts
+                        one where the crosshair over the map's middle sits. The
+                        label leaves out where the point lands, as the button
+                        beside it leaves out what it creates: the row carries
+                        three things, and the accessible names carry the rest. */}
+                    <button
+                        type="button"
+                        className="route-control-add"
+                        aria-label="地図の中心に地点を追加"
+                        disabled={isRouteFull(stops)}
+                        onClick={onAddPoint}
+                    >
+                        地点追加
+                    </button>
                     <button
                         type="button"
                         className="route-control-create"

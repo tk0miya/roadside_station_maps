@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuthManager } from '../auth/auth-context';
 import { useSessionRefresh } from '../auth/use-session-refresh';
-import { clearsSelectionOnMapClick } from '../route';
+import { clearsSelectionOnMapClick, isRouteFull } from '../route';
 import { fetchStations, reconcileVisits } from '../station';
 import { createStorage, type Storage } from '../storage';
 import type { StationsGeoJSON } from '../types/geojson';
 import { InfoWindow } from './InfoWindow';
 import { LoginButton } from './LoginButton';
-import { isModifierPressed, Markers } from './Markers';
+import { dropRoutePoint, isModifierPressed, Markers } from './Markers';
 import { RouteControl } from './RouteControl';
 import { ShareButton } from './ShareButton';
 import { StationCounter } from './StationCounter';
@@ -123,6 +123,16 @@ export function RoadStationMap() {
         setRouteMode(true);
     };
 
+    // Put a route point at the middle of the map, where the crosshair is.
+    const addPointAtCenter = () => {
+        const center = map?.getCenter();
+        if (!map || !center) return;
+        const result = dropRoutePoint(map, center, { selectedFeature: feature, multiSelected });
+        if (!result) return;
+        if (result.selectedFeature !== undefined) setFeature(result.selectedFeature);
+        if (result.multiSelected !== undefined) setMultiSelected(result.multiSelected);
+    };
+
     const closeRoute = () => {
         setRouteMode(false);
         setMultiSelected([]);
@@ -152,15 +162,24 @@ export function RoadStationMap() {
                     />
                     <ShareButton map={map} />
                     <StationCounter storage={storage} stations={stations} styleVersion={styleVersion} map={map} />
+                    {/* Aimed at by panning the map, and shown only while there is
+                        room for another point. */}
+                    {isRouteOpen && !isRouteFull(multiSelected) && (
+                        <div className="route-crosshair" aria-hidden="true" />
+                    )}
+                    {/* Route mode rides on the markers: Markers puts them on the
+                        map, numbers the chosen ones and takes the dropped points
+                        off again, so there is no route to build without it. */}
+                    <RouteControl
+                        map={map}
+                        active={isRouteOpen}
+                        stops={multiSelected}
+                        onEnter={enterRouteMode}
+                        onAddPoint={addPointAtCenter}
+                        onClose={closeRoute}
+                    />
                 </>
             )}
-            <RouteControl
-                map={map}
-                active={isRouteOpen}
-                stops={multiSelected}
-                onEnter={enterRouteMode}
-                onClose={closeRoute}
-            />
             <InfoWindow selectedFeature={multiSelected.length > 0 ? null : feature} map={map} />
             <LoginButton map={map} />
         </>

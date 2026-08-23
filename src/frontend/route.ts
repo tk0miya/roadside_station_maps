@@ -10,6 +10,11 @@ export const MAX_ROUTE_SELECTION = 9;
 // ground, past what the point is placed with by eye.
 const PRECISION = 6;
 
+// Whether the route has taken all the stops it can.
+export function isRouteFull(stops: google.maps.Data.Feature[]): boolean {
+    return stops.length >= MAX_ROUTE_SELECTION;
+}
+
 // A custom point is a feature the user dropped on the map to route through a
 // place that is not a station. It carries no station data, so a branch that
 // assumes some has to step around it.
@@ -32,6 +37,21 @@ function toStopQuery(feature: google.maps.Data.Feature): string {
     // wrong one. The prefecture comes from its own field rather than the
     // address, because a handful of addresses omit it.
     return `道の駅 ${name} ${prefName}`;
+}
+
+// Whether the route already has a custom point standing where `position` is.
+// Pressing the add button twice without moving the map asks for exactly that,
+// and two points on one spot are a single marker to look at, two stops to pay
+// for, and one of them impossible to reach without taking the other off first.
+export function hasPointAt(stops: google.maps.Data.Feature[], position: google.maps.LatLng): boolean {
+    return stops.some((stop) => {
+        if (!isCustomPoint(stop)) return false;
+        const at = positionOf(stop);
+        return (
+            at.lat().toFixed(PRECISION) === position.lat().toFixed(PRECISION) &&
+            at.lng().toFixed(PRECISION) === position.lng().toFixed(PRECISION)
+        );
+    });
 }
 
 export function buildDirectionsURL(features: google.maps.Data.Feature[]): string {
