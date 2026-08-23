@@ -158,6 +158,37 @@ describe('RouteControl', () => {
         expect(onClose).toHaveBeenCalledTimes(1);
     });
 
+    it('asks to leave route mode on ESC', () => {
+        const mockMap = createMockMap();
+        const onClose = vi.fn();
+
+        renderControl(control(mockMap, { active: true, stops: [createMockFeature('1')], onClose }), mockMap);
+        fireEvent.keyDown(window, { key: 'Escape' });
+
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves other keys alone', () => {
+        const mockMap = createMockMap();
+        const onClose = vi.fn();
+
+        renderControl(control(mockMap, { active: true, onClose }), mockMap);
+        fireEvent.keyDown(window, { key: 'Enter' });
+
+        expect(onClose).not.toHaveBeenCalled();
+    });
+
+    // ESC belongs to whatever else is on screen while route mode is off.
+    it('ignores ESC outside route mode', () => {
+        const mockMap = createMockMap();
+        const onClose = vi.fn();
+
+        renderControl(control(mockMap, { active: false, onClose }), mockMap);
+        fireEvent.keyDown(window, { key: 'Escape' });
+
+        expect(onClose).not.toHaveBeenCalled();
+    });
+
     it('asks for a point at the middle of the map', () => {
         const mockMap = createMockMap();
         const onAddPoint = vi.fn();

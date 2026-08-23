@@ -1,6 +1,5 @@
-// The route domain: which features a route is built from, what a gesture on the
-// map means while one is being built, and how the finished route is handed over
-// to Google Maps.
+// The route domain: which features a route is built from, how many of them fit,
+// and how the finished route is handed over to Google Maps.
 
 // Google Maps directions support at most 10 stops (origin + destination
 // + 8 waypoints), so the route-selection set is capped just under that bound.
@@ -67,21 +66,4 @@ export function buildDirectionsURL(features: google.maps.Data.Feature[]): string
         url.searchParams.set('waypoints', waypoints.join('|'));
     }
     return url.toString();
-}
-
-export interface MapClickContext {
-    modifierPressed: boolean;
-    routeMode: boolean;
-}
-
-// Whether a click on the map itself — as opposed to one on a marker — puts the
-// current selection away. It does so only when no route is being edited:
-//
-//   - a modifier-click is the click that precedes the double-click dropping a
-//     route point, and must not clear the route that point is about to join;
-//   - in route mode the route is only dropped by throwing the route switch off,
-//     since a stray tap on the map is far too easy on a phone to let it undo
-//     nine taps of work.
-export function clearsSelectionOnMapClick({ modifierPressed, routeMode }: MapClickContext): boolean {
-    return !modifierPressed && !routeMode;
 }

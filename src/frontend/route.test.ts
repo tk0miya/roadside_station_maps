@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createMockCustomPoint, createMockFeature, createMockLatLng } from '#test-utils/test-utils';
-import { buildDirectionsURL, clearsSelectionOnMapClick, hasPointAt } from './route';
+import { buildDirectionsURL, hasPointAt } from './route';
 
 describe('buildDirectionsURL', () => {
     it('appends the prefecture, telling two stations sharing a name apart', () => {
@@ -90,25 +90,5 @@ describe('hasPointAt', () => {
 
         expect(hasPointAt(stops, createMockLatLng(36.5000001, 140.5))).toBe(true);
         expect(hasPointAt(stops, createMockLatLng(36.500001, 140.5))).toBe(false);
-    });
-});
-
-describe('clearsSelectionOnMapClick', () => {
-    const context = (overrides: Partial<Parameters<typeof clearsSelectionOnMapClick>[0]> = {}) => ({
-        modifierPressed: false,
-        routeMode: false,
-        ...overrides,
-    });
-
-    it('clears on a plain click outside route editing', () => {
-        expect(clearsSelectionOnMapClick(context())).toBe(true);
-    });
-
-    it('keeps the route on the click that precedes dropping a point', () => {
-        expect(clearsSelectionOnMapClick(context({ modifierPressed: true }))).toBe(false);
-    });
-
-    it('keeps the route while route mode is on', () => {
-        expect(clearsSelectionOnMapClick(context({ routeMode: true }))).toBe(false);
     });
 });

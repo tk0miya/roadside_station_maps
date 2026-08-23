@@ -18,87 +18,54 @@ function addCustomPoint(map: google.maps.Map, position: google.maps.LatLng): goo
     });
 }
 
-// Put a custom route point at `position` and work out the selection it joins,
-// or nothing at all when the route is full or already has a point standing
-// there. Both are checked before the point is created, so a refused point
-// leaves no marker behind. The point takes the number after the ones already
-// chosen, which is what a modifier-click on a marker created there would have
-// done, so the click resolver decides the new order too.
+// Put a custom route point at `position` and return the route it joins, or
+// nothing at all when the route is full or already has a point standing there.
+// Both are checked before the point is created, so a refused point leaves no
+// marker behind. The point goes on the end, the same place a tapped marker
+// takes.
 export function dropRoutePoint(
     map: google.maps.Map,
     position: google.maps.LatLng,
-    context: { selectedFeature: google.maps.Data.Feature | null; multiSelected: google.maps.Data.Feature[] }
-): MarkerClickResult | null {
-    if (isRouteFull(context.multiSelected) || hasPointAt(context.multiSelected, position)) return null;
-    return resolveMarkerClick({
-        clickedFeature: addCustomPoint(map, position),
-        modifierPressed: true,
-        routeMode: true,
-        ...context,
-    });
+    multiSelected: google.maps.Data.Feature[]
+): google.maps.Data.Feature[] | null {
+    if (isRouteFull(multiSelected) || hasPointAt(multiSelected, position)) return null;
+    return [...multiSelected, addCustomPoint(map, position)];
 }
 
 export interface MarkerClickContext {
     clickedFeature: google.maps.Data.Feature;
-    modifierPressed: boolean;
-    // In route mode a plain click does what a modifier-click does.
     routeMode: boolean;
     selectedFeature: google.maps.Data.Feature | null;
     multiSelected: google.maps.Data.Feature[];
 }
 
-// `undefined` fields mean "no change". Explicit `null` for `selectedFeature`
-// represents clearing the single selection.
+// `undefined` fields mean "no change".
 export interface MarkerClickResult {
-    selectedFeature?: google.maps.Data.Feature | null;
+    selectedFeature?: google.maps.Data.Feature;
     multiSelected?: google.maps.Data.Feature[];
     cycleStyleOn?: google.maps.Data.Feature;
 }
 
+// What a click on a marker does. The mode decides, and nothing else does: a
+// route only exists inside route mode, and a single selection only outside it,
+// so the two halves never have to undo each other's state.
 export function resolveMarkerClick({
     clickedFeature,
-    modifierPressed,
     routeMode,
     selectedFeature,
     multiSelected,
 }: MarkerClickContext): MarkerClickResult {
-    if (modifierPressed || routeMode) {
-        // A click that edits the route always suppresses single-selection
-        // regardless of prior state, so always emit a (possibly redundant) clear.
-        if (selectedFeature) {
-            // Extending a single selection: lift the previously selected
-            // marker into the set together with the newly clicked one.
-            return {
-                selectedFeature: null,
-                multiSelected:
-                    selectedFeature === clickedFeature ? [selectedFeature] : [selectedFeature, clickedFeature],
-            };
-        }
+    if (routeMode) {
         if (multiSelected.includes(clickedFeature)) {
-            return {
-                selectedFeature: null,
-                multiSelected: multiSelected.filter((feature) => feature !== clickedFeature),
-            };
+            return { multiSelected: multiSelected.filter((feature) => feature !== clickedFeature) };
         }
+        // A full route takes no more, and says so by leaving the click alone.
         if (isRouteFull(multiSelected)) {
-            return { selectedFeature: null, multiSelected };
+            return {};
         }
-        return {
-            selectedFeature: null,
-            multiSelected: [...multiSelected, clickedFeature],
-        };
+        return { multiSelected: [...multiSelected, clickedFeature] };
     }
 
-    // A custom route point has no station behind it, so a plain click has
-    // nothing to open or cycle.
-    if (isCustomPoint(clickedFeature)) {
-        return {};
-    }
-    // Plain click clears any in-progress multi-selection before the
-    // single-selection logic runs.
-    if (multiSelected.length > 0) {
-        return { selectedFeature: clickedFeature, multiSelected: [] };
-    }
     if (selectedFeature === clickedFeature) {
         return { cycleStyleOn: clickedFeature };
     }
@@ -239,6 +206,9 @@ interface MarkersProps {
     stations: StationsGeoJSON | null;
     onStyleChange: () => void;
     routeMode: boolean;
+    // Called by the modifier gestures, which are the shortcut into route mode:
+    // the mode opens with `seed` as its first stop.
+    onEnterRouteMode: (seed: google.maps.Data.Feature) => void;
 }
 
 export function Markers(props: MarkersProps) {
@@ -247,9 +217,10 @@ export function Markers(props: MarkersProps) {
     const storageRef = useRef<Storage>(props.storage);
     const routeModeRef = useRef<boolean>(props.routeMode);
     // Set when a drag moved a custom point, cleared by the next press on a
-    // marker. Dragging a point ends with a mouseup on it, and a modifier-click
-    // deletes the point, so the release that finishes a drag must not be taken
-    // for the click that removes what was just positioned.
+    // marker. Dragging a point ends with a mouseup on it, and a click on a
+    // chosen marker takes it back out of the route, so the release that finishes
+    // a drag must not be taken for the click that removes what was just
+    // positioned.
     const draggedRef = useRef(false);
     const modifierHeld = useModifierHeld();
 
@@ -292,11 +263,13 @@ export function Markers(props: MarkersProps) {
         return () => listener.remove();
     }, [props.map]);
 
-    // The modifier turns a double-click into "drop a route point here", so the
-    // map must not read the same gesture as a zoom-in while it is held.
+    // Outside route mode the modifier turns a double-click into "start a route
+    // here", so the map must not read the same gesture as a zoom-in while it is
+    // held. Inside the mode the modifier is not read at all, and the map keeps
+    // its double-click.
     useEffect(() => {
-        props.map?.setOptions({ disableDoubleClickZoom: modifierHeld });
-    }, [props.map, modifierHeld]);
+        props.map?.setOptions({ disableDoubleClickZoom: modifierHeld && !props.routeMode });
+    }, [props.map, modifierHeld, props.routeMode]);
 
     useEffect(() => {
         if (!props.map) return;
@@ -322,10 +295,15 @@ export function Markers(props: MarkersProps) {
         if (!props.map) return;
         if (draggedRef.current) return;
 
+        // Outside the mode, the modifier makes this click the way in, with the
+        // station clicked as the first stop.
+        if (!routeModeRef.current && isModifierPressed(event)) {
+            props.onEnterRouteMode(event.feature);
+            return;
+        }
         applyClickResult(
             resolveMarkerClick({
                 clickedFeature: event.feature,
-                modifierPressed: isModifierPressed(event),
                 routeMode: routeModeRef.current,
                 selectedFeature: selectedFeatureRef.current,
                 multiSelected: multiSelectedRef.current,
@@ -333,50 +311,34 @@ export function Markers(props: MarkersProps) {
         );
     };
 
-    // Modifier + double-click on the map is the pointer way to drop a route
-    // point, where the cursor is.
+    // Modifier + double-click on the map is the other way in, with a point at
+    // the cursor as the first stop. Inside the mode the crosshair places points
+    // and this gesture is the map's own again, so only the way in reads it.
     const onMapDoubleClick = (event: google.maps.MapMouseEvent) => {
-        if (!props.map || !isModifierPressed(event) || !event.latLng) return;
-        const result = dropRoutePoint(props.map, event.latLng, {
-            selectedFeature: selectedFeatureRef.current,
-            multiSelected: multiSelectedRef.current,
-        });
-        if (result) applyClickResult(result);
+        if (!props.map || routeModeRef.current) return;
+        if (!isModifierPressed(event) || !event.latLng) return;
+        props.onEnterRouteMode(addCustomPoint(props.map, event.latLng));
     };
 
     const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {
         if (!props.map) return;
-        // Modifier + double-click drops a route point, and only the map itself
-        // answers that gesture; on a marker it does nothing.
-        if (isModifierPressed(event)) return;
         // Route mode edits the route, not the visit styles: a double tap there
         // is two taps that added and removed a stop, and cycling the style on
-        // top of that — let alone dropping the route — is not what was asked.
+        // top of that is not what was asked.
+        // A modifier + double-click is caught by the same guard: its first click
+        // already opened route mode.
         if (routeModeRef.current) return;
-        if (isCustomPoint(event.feature)) return;
-        if (multiSelectedRef.current.length > 0) {
-            props.onMultiSelectChange(() => []);
-        }
         changeStyle(props.map, event.feature, storageRef.current);
         props.onStyleChange();
     };
 
     const onMarkerRightClick = (event: google.maps.Data.MouseEvent) => {
         if (!props.map) return;
-        // Modifier + right-click reorders the route, as the counterpart to
-        // modifier-click appending a marker at its end.
-        if (isModifierPressed(event)) {
+        // In route mode a gesture on a marker edits the route, and reordering is
+        // what a tap does not already do.
+        if (routeModeRef.current) {
             props.onMultiSelectChange((prev) => cycleRouteNumber(prev, event.feature));
             return;
-        }
-        // In route mode a gesture on a marker edits the route — reordering is the
-        // modifier + right-click above, and dropping a stop is a second tap on it
-        // — so resetting a visit style is not on offer. Nothing is left for the
-        // plain right-click to do, which leaves the browser its own menu.
-        if (routeModeRef.current) return;
-        if (isCustomPoint(event.feature)) return;
-        if (multiSelectedRef.current.length > 0) {
-            props.onMultiSelectChange(() => []);
         }
         resetStyle(props.map, event.feature, storageRef.current);
         props.onFeatureSelect(null);
