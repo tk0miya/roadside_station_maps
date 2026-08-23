@@ -59,8 +59,9 @@ export interface MapClickContext {
 //
 //   - a modifier-click is the click that precedes the double-click dropping a
 //     route point, and must not clear the route that point is about to join;
-//   - in route mode the route is only dropped from the route bar, since a stray
-//     tap on the map is far too easy on a phone to let it undo nine taps of work.
+//   - in route mode the route is only dropped by throwing the route switch off,
+//     since a stray tap on the map is far too easy on a phone to let it undo
+//     nine taps of work.
 export function clearsSelectionOnMapClick({ modifierPressed, routeMode }: MapClickContext): boolean {
     return !modifierPressed && !routeMode;
 }

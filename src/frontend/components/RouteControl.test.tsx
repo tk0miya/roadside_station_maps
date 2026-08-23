@@ -54,7 +54,7 @@ describe('RouteControl', () => {
         expect(leftTop(mockMap)).toHaveLength(1);
     });
 
-    it('holds the way into route mode while out of it', () => {
+    it('holds the switch alone while route mode is off', () => {
         const mockMap = createMockMap();
 
         renderControl(
@@ -62,11 +62,14 @@ describe('RouteControl', () => {
             mockMap
         );
 
-        expect(screen.getByText('ルート')).toBeTruthy();
+        // The label is text beside the switch rather than part of it, and reaches
+        // it as its accessible name.
+        const routeSwitch = screen.getByRole('switch', { name: 'ルート' });
+        expect(routeSwitch.getAttribute('aria-checked')).toBe('false');
         expect(screen.queryByText('作成')).toBeNull();
     });
 
-    it('reports the way in', () => {
+    it('reports the way in when the switch goes on', () => {
         const mockMap = createMockMap();
         const onEnter = vi.fn();
 
@@ -74,12 +77,12 @@ describe('RouteControl', () => {
             <RouteControl map={mockMap} active={false} stops={[]} onEnter={onEnter} onClose={() => {}} />,
             mockMap
         );
-        fireEvent.click(screen.getByText('ルート'));
+        fireEvent.click(screen.getByRole('switch'));
 
         expect(onEnter).toHaveBeenCalledTimes(1);
     });
 
-    it('opens in place rather than moving once route mode starts', () => {
+    it('opens under the same switch rather than moving once route mode starts', () => {
         const mockMap = createMockMap();
 
         const { rerender } = renderControl(
@@ -87,11 +90,16 @@ describe('RouteControl', () => {
             mockMap
         );
         const box = leftTop(mockMap)[0];
+        const routeSwitch = screen.getByRole('switch');
 
         rerender(<RouteControl map={mockMap} active={true} stops={[]} onEnter={() => {}} onClose={() => {}} />);
 
         expect(leftTop(mockMap)).toHaveLength(1);
         expect(leftTop(mockMap)[0]).toBe(box);
+        // The way out is the way in, thrown the other way: the same element,
+        // reporting the mode it is now in.
+        expect(screen.getByRole('switch')).toBe(routeSwitch);
+        expect(routeSwitch.getAttribute('aria-checked')).toBe('true');
         expect(screen.getByText('作成')).toBeTruthy();
     });
 
@@ -152,7 +160,7 @@ describe('RouteControl', () => {
         expect((screen.getByText('作成') as HTMLButtonElement).disabled).toBe(false);
     });
 
-    it('asks to leave route mode', () => {
+    it('asks to leave route mode when the switch goes off', () => {
         const mockMap = createMockMap();
         const onClose = vi.fn();
 
@@ -166,7 +174,7 @@ describe('RouteControl', () => {
             />,
             mockMap
         );
-        fireEvent.click(screen.getByText('終了'));
+        fireEvent.click(screen.getByRole('switch'));
 
         expect(onClose).toHaveBeenCalledTimes(1);
     });
@@ -197,6 +205,6 @@ describe('RouteControl', () => {
         container.appendChild(leftTop(mockMap)[0]);
 
         expect(leftTop(mockMap)).toHaveLength(1);
-        expect(screen.getByText('ルート')).toBeTruthy();
+        expect(screen.getByRole('switch')).toBeTruthy();
     });
 });
