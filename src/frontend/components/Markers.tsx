@@ -251,11 +251,12 @@ export function Markers(props: MarkersProps) {
         return () => listener.remove();
     }, [props.map]);
 
-    // The modifier turns a double-click into the way into route mode, so the map
-    // must not read the same gesture as a zoom-in while it is held.
+    // The modifier turns a double-click into "put a route point here", so the
+    // map must not read the same gesture as a zoom-in while it is held. The mode
+    // is deliberately not part of the answer — docs/station-map.md says why.
     useEffect(() => {
-        props.map?.setOptions({ disableDoubleClickZoom: modifierHeld && props.mode === 'normal' });
-    }, [props.map, modifierHeld, props.mode]);
+        props.map?.setOptions({ disableDoubleClickZoom: modifierHeld });
+    }, [props.map, modifierHeld]);
 
     useEffect(() => {
         if (!props.map) return;
@@ -286,9 +287,17 @@ export function Markers(props: MarkersProps) {
         applyClickResult(resolveMarkerClick(modeRef.current, selectedRef.current, event.feature));
     };
 
+    // Modifier + double-click on the map puts a route point where it landed.
+    // Inside the mode the point joins the route being built; outside, it is the
+    // other way in, with the point as the first stop.
     const onMapDoubleClick = (event: google.maps.MapMouseEvent) => {
-        if (!props.map || modeRef.current === 'route') return;
+        if (!props.map) return;
         if (!isModifierPressed(event) || !event.latLng) return;
+        if (modeRef.current === 'route') {
+            const stops = dropRoutePoint(props.map, event.latLng, selectedRef.current);
+            if (stops) props.onSelectedChange(() => stops);
+            return;
+        }
         props.onEnterRouteMode(addCustomPoint(props.map, event.latLng));
     };
 

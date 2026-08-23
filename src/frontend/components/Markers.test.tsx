@@ -219,16 +219,13 @@ describe('Markers', () => {
             expect(onEnterRouteMode).not.toHaveBeenCalled();
         });
 
-        it('is not a way in once already inside: the modifier is not read there', () => {
+        it('is not a way in once already inside: a Cmd + marker click is an ordinary route edit', () => {
             const featureA = createMockFeature('A');
             const { mockMap, onEnterRouteMode, onSelectedChange } = renderMarkers({ mode: 'route' });
 
             mockMap.data._emit('click', buildClickEvent(featureA, 'meta'));
-            mockMap._emit('dblclick', buildMapClickEvent('ctrl'));
 
             expect(onEnterRouteMode).not.toHaveBeenCalled();
-            expect(mockMap.data.add).not.toHaveBeenCalled();
-            // The marker click is an ordinary route edit, modifier or not.
             expect(applyUpdater(onSelectedChange, [])).toEqual([featureA]);
         });
     });
@@ -283,12 +280,50 @@ describe('Markers', () => {
             expect(mockMap.setOptions).toHaveBeenLastCalledWith({ disableDoubleClickZoom: false });
         });
 
-        it('leaves the map its double-click zoom inside route mode', () => {
+        // The gesture places a point on both sides of the mode, so the zoom stays
+        // off on both.
+        it('stops the map from zooming inside route mode too', () => {
             const { mockMap } = renderMarkers({ mode: 'route' });
 
             fireEvent.keyDown(window, { key: 'Control', ctrlKey: true });
 
-            expect(mockMap.setOptions).toHaveBeenLastCalledWith({ disableDoubleClickZoom: false });
+            expect(mockMap.setOptions).toHaveBeenLastCalledWith({ disableDoubleClickZoom: true });
+        });
+
+        it('adds a point where a Cmd + double-click landed inside route mode', () => {
+            const featureA = createMockFeature('A');
+            const { mockMap, onSelectedChange, onEnterRouteMode } = renderMarkers({
+                mode: 'route',
+                selected: [featureA],
+            });
+
+            mockMap._emit('dblclick', buildMapClickEvent('meta', 36.5, 140.5));
+
+            const point = (mockMap.data.add as ReturnType<typeof vi.fn>).mock.results[0]?.value;
+            expect(isCustomPoint(point)).toBe(true);
+            expect((point.getGeometry() as google.maps.Data.Point).get().lat()).toBe(36.5);
+            expect(applyUpdater(onSelectedChange, [featureA])).toEqual([featureA, point]);
+            // Already inside; nothing reopens the mode.
+            expect(onEnterRouteMode).not.toHaveBeenCalled();
+        });
+
+        it('leaves a full route alone on a Cmd + double-click', () => {
+            const stops = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) => createMockFeature(`S${i}`));
+            const { mockMap, onSelectedChange } = renderMarkers({ mode: 'route', selected: stops });
+
+            mockMap._emit('dblclick', buildMapClickEvent('meta'));
+
+            expect(mockMap.data.add).not.toHaveBeenCalled();
+            expect(onSelectedChange).not.toHaveBeenCalled();
+        });
+
+        it('leaves the double-click alone inside route mode without the modifier', () => {
+            const { mockMap, onSelectedChange } = renderMarkers({ mode: 'route' });
+
+            mockMap._emit('dblclick', buildMapClickEvent());
+
+            expect(mockMap.data.add).not.toHaveBeenCalled();
+            expect(onSelectedChange).not.toHaveBeenCalled();
         });
     });
 
