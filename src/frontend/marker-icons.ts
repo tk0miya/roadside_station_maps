@@ -7,7 +7,7 @@ export const MARKER_ICONS: readonly string[] = [
 ];
 
 // Build a pin-shaped marker icon embedding the given number, used to indicate
-// the order of stations chosen for multi-select route building.
+// the order the route visits the stops chosen for it.
 export function numberedMarkerIcon(n: number): google.maps.Icon {
     const svg =
         `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">` +
@@ -17,6 +17,8 @@ export function numberedMarkerIcon(n: number): google.maps.Icon {
     return {
         url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
         scaledSize: new google.maps.Size(32, 40),
+        // Not a coordinate: the pixel in the image to line up with the stop's
+        // position, which is the tip of the pin.
         anchor: new google.maps.Point(16, 40),
     };
 }

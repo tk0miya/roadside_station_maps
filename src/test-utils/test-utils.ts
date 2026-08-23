@@ -144,11 +144,11 @@ export const createMockFeature = (
     } as unknown as google.maps.Data.Feature;
 };
 
-// Create a mock feature standing for a custom route point: no station data,
-// just the marker property and a position.
-export const createMockCustomPoint = (lat = 36.0, lng = 140.0) =>
+// Create a mock feature standing for a custom stop: no station data, just the
+// custom-stop property and a position.
+export const createMockCustomStop = (lat = 36.0, lng = 140.0) =>
     ({
-        getProperty: (name: string) => (name === 'customPoint' ? true : undefined),
+        getProperty: (name: string) => (name === 'customStop' ? true : undefined),
         getGeometry: () => ({
             get: () => createMockLatLng(lat, lng),
         }),

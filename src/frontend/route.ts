@@ -2,30 +2,30 @@
 // and how the finished route is handed over to Google Maps.
 
 // Google Maps directions support at most 10 stops (origin + destination
-// + 8 waypoints), so the route-selection set is capped just under that bound.
-export const MAX_ROUTE_SELECTION = 9;
+// + 8 waypoints), so the number of stops a route takes is capped just under
+// that bound.
+export const MAX_ROUTE_STOPS = 9;
 
-// Decimal places kept in a custom point's coordinate. 6 places is ~11cm on the
-// ground, past what the point is placed with by eye.
+// Decimal places kept in a custom stop's coordinate. 6 places is ~11cm on the
+// ground, past what the stop is placed with by eye.
 const PRECISION = 6;
 
 // Whether the route has taken all the stops it can.
 export function isRouteFull(stops: google.maps.Data.Feature[]): boolean {
-    return stops.length >= MAX_ROUTE_SELECTION;
+    return stops.length >= MAX_ROUTE_STOPS;
 }
 
-// A custom point is a feature the user dropped on the map to route through a
-// place that is not a station. It carries no station data, so a branch that
-// assumes some has to step around it.
-export function isCustomPoint(feature: google.maps.Data.Feature): boolean {
-    return Boolean(feature.getProperty('customPoint'));
+// A custom stop is a stop the user placed on the map to route through somewhere
+// that is not a station, and carries no station data.
+export function isCustomStop(feature: google.maps.Data.Feature): boolean {
+    return Boolean(feature.getProperty('customStop'));
 }
 
 const positionOf = (feature: google.maps.Data.Feature): google.maps.LatLng =>
     (feature.getGeometry() as google.maps.Data.Point).get();
 
 function toStopQuery(feature: google.maps.Data.Feature): string {
-    if (isCustomPoint(feature)) {
+    if (isCustomStop(feature)) {
         const position = positionOf(feature);
         return `${position.lat().toFixed(PRECISION)},${position.lng().toFixed(PRECISION)}`;
     }
@@ -38,13 +38,9 @@ function toStopQuery(feature: google.maps.Data.Feature): string {
     return `道の駅 ${name} ${prefName}`;
 }
 
-// Whether the route already has a custom point standing where `position` is.
-// Pressing the add button twice without moving the map asks for exactly that,
-// and two points on one spot are a single marker to look at, two stops to pay
-// for, and one of them impossible to reach without taking the other off first.
-export function hasPointAt(stops: google.maps.Data.Feature[], position: google.maps.LatLng): boolean {
+export function hasCustomStopAt(stops: google.maps.Data.Feature[], position: google.maps.LatLng): boolean {
     return stops.some((stop) => {
-        if (!isCustomPoint(stop)) return false;
+        if (!isCustomStop(stop)) return false;
         const at = positionOf(stop);
         return (
             at.lat().toFixed(PRECISION) === position.lat().toFixed(PRECISION) &&

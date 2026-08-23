@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { buildDirectionsURL, isRouteFull, MAX_ROUTE_SELECTION } from '../route';
+import { buildDirectionsURL, isRouteFull, MAX_ROUTE_STOPS } from '../route';
 
 interface RouteControlProps {
     map: google.maps.Map | null;
@@ -8,7 +8,7 @@ interface RouteControlProps {
     // Handed over as it stands: read as a route only while the switch is on.
     stops: google.maps.Data.Feature[];
     onEnter: () => void;
-    onAddPoint: () => void;
+    onAddCustomStop: () => void;
     onClose: () => void;
 }
 
@@ -29,11 +29,11 @@ interface RouteControlProps {
 // not.
 //
 // The second row carries what docs/station-map.md keeps on screen for the route
-// being built: how far the stop count is from the limit, the way to put a stop
-// where no station stands, and the button that hands the route over. Dropping
-// the route is not among them — that is either way out again, since leaving the
-// mode is what clears the stops.
-export function RouteControl({ map, active, stops, onEnter, onAddPoint, onClose }: RouteControlProps) {
+// being built: how far the stop count is from the limit, the way to put a custom
+// stop where no station stands, and the button that hands the route over.
+// Dropping the route is not among them — that is either way out again, since
+// leaving the mode is what clears the stops.
+export function RouteControl({ map, active, stops, onEnter, onAddCustomStop, onClose }: RouteControlProps) {
     const labelId = useId();
     // The listener is installed once per spell in the mode, so what it calls has
     // to come from a ref rather than the render it was created in.
@@ -97,20 +97,21 @@ export function RouteControl({ map, active, stops, onEnter, onAddPoint, onClose 
             {active && (
                 <div className="route-control-status">
                     <span className="route-control-count">
-                        {stops.length} / {MAX_ROUTE_SELECTION}
+                        {stops.length} / {MAX_ROUTE_STOPS}
                     </span>
                     {/* A station joins the route by its marker being tapped; a
                         place with no station has no marker to tap, so this puts
                         one where the crosshair over the map's middle sits. The
-                        label leaves out where the point lands, as the button
-                        beside it leaves out what it creates: the row carries
-                        three things, and the accessible names carry the rest. */}
+                        label leaves out where the custom stop lands, as the
+                        button beside it leaves out what it creates: the row
+                        carries three things, and the accessible names carry the
+                        rest. */}
                     <button
                         type="button"
                         className="route-control-add"
                         aria-label="地図の中心に地点を追加"
                         disabled={isRouteFull(stops)}
-                        onClick={onAddPoint}
+                        onClick={onAddCustomStop}
                     >
                         地点追加
                     </button>

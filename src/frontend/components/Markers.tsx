@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { MARKER_ICONS, numberedMarkerIcon } from '../marker-icons';
-import { hasPointAt, isCustomPoint, isRouteFull } from '../route';
+import { hasCustomStopAt, isCustomStop, isRouteFull } from '../route';
 import type { Storage } from '../storage';
 import * as style from '../style';
 import { getStyle } from '../style';
@@ -8,28 +8,28 @@ import type { StationsGeoJSON } from '../types/geojson';
 import type { MapMode } from '../types/station-map';
 import { useModifierHeld } from '../use-modifier-held';
 
-// Add a custom route point at `position` and return its feature. It is created
-// hidden: applyMultiSelection reveals it once the selection gives it a number,
-// which keeps it from flashing a station icon in between.
-function addCustomPoint(map: google.maps.Map, position: google.maps.LatLng): google.maps.Data.Feature {
+// Create a custom stop at `position` and return its feature, without putting it
+// in a route. It is created hidden: drawStops reveals it once the route gives it
+// a number, which keeps it from flashing a station icon in between.
+function createCustomStop(map: google.maps.Map, position: google.maps.LatLng): google.maps.Data.Feature {
     return map.data.add({
         geometry: new google.maps.Data.Point(position),
-        properties: { customPoint: true },
+        properties: { customStop: true },
     });
 }
 
-// Put a custom route point at `position` and return the route it joins, or
-// nothing at all when the route is full or already has a point standing there.
-// Both are checked before the point is created, so a refused point leaves no
-// marker behind. The point goes on the end, the same place a tapped marker
+// The duplicate-position refusal answers pressing the add button twice without
+// moving the map: two custom stops on one spot are a single marker to look at,
+// two stops to pay for, and one of them impossible to reach without taking the
+// other off first. The stop goes on the end, the same place a tapped marker
 // takes.
-export function dropRoutePoint(
+export function addCustomStopAt(
     map: google.maps.Map,
-    position: google.maps.LatLng,
-    multiSelected: google.maps.Data.Feature[]
+    stops: google.maps.Data.Feature[],
+    position: google.maps.LatLng
 ): google.maps.Data.Feature[] | null {
-    if (isRouteFull(multiSelected) || hasPointAt(multiSelected, position)) return null;
-    return [...multiSelected, addCustomPoint(map, position)];
+    if (isRouteFull(stops) || hasCustomStopAt(stops, position)) return null;
+    return [...stops, createCustomStop(map, position)];
 }
 
 // `undefined` fields mean "no change".
@@ -67,15 +67,15 @@ export function resolveMarkerClick(
 // position. Returns the input array itself when the order cannot change, so the
 // state update bails out instead of re-numbering markers for nothing.
 export function cycleRouteNumber(
-    multiSelected: google.maps.Data.Feature[],
+    stops: google.maps.Data.Feature[],
     feature: google.maps.Data.Feature
 ): google.maps.Data.Feature[] {
-    const index = multiSelected.indexOf(feature);
-    if (index < 0 || multiSelected.length === 1) return multiSelected;
-    if (index === 0) return [...multiSelected.slice(1), feature];
-    const next = [...multiSelected];
+    const index = stops.indexOf(feature);
+    if (index < 0 || stops.length === 1) return stops;
+    if (index === 0) return [...stops.slice(1), feature];
+    const next = [...stops];
     next[index - 1] = feature;
-    next[index] = multiSelected[index - 1];
+    next[index] = stops[index - 1];
     return next;
 }
 
@@ -84,9 +84,9 @@ const styleOptionsFor = (styleId: number): google.maps.Data.StyleOptions => ({
 });
 
 // Base style of the data layer: a station shows the icon its stored style id
-// maps to, and a custom route point has none to show.
+// maps to, and a custom stop has none to show.
 const baseStyleFor = (feature: google.maps.Data.Feature, storage: Storage): google.maps.Data.StyleOptions => {
-    if (isCustomPoint(feature)) {
+    if (isCustomStop(feature)) {
         return { visible: false };
     }
     return styleOptionsFor(getStyle(storage, feature.getProperty('stationId') as string));
@@ -136,7 +136,7 @@ export function loadRoadStations(
         map.data.addListener('dblclick', handlers.onMarkerDoubleClick),
         map.data.addListener('rightclick', handlers.onMarkerRightClick),
         map.data.addListener('mousedown', handlers.onMarkerMouseDown),
-        // Dragging a custom point is the only thing that moves a geometry.
+        // Dragging a custom stop is the only thing that moves a geometry.
         map.data.addListener('setgeometry', handlers.onFeatureDragged),
     ];
     map.data.setStyle((feature: google.maps.Data.Feature) => baseStyleFor(feature, storage));
@@ -155,14 +155,14 @@ export function loadRoadStations(
     };
 }
 
-// Diff `previous` against `next` and reapply icons on the data layer:
-// features no longer selected fall back to their storage-driven icon, while
-// features in `next` receive a 1-based numbered icon matching their position.
-// A custom point exists only as part of a route, so leaving the selection
-// takes its marker off the map rather than restoring a station icon. It is
-// draggable the whole time it is on the map: unlike a station, it stands for
-// nothing but the position the user gave it.
-export function applyMultiSelection(
+// Draw `next` as the route's stops by diffing it against `previous`: features
+// that are no longer stops fall back to their storage-driven icon, while the
+// stops in `next` receive a 1-based numbered icon matching their position.
+// A custom stop exists only as part of a route, so leaving the route takes its
+// marker off the map rather than restoring a station icon. It is draggable the
+// whole time it is on the map: unlike a station, it stands for nothing but the
+// position the user gave it.
+export function drawStops(
     map: google.maps.Map,
     previous: google.maps.Data.Feature[],
     next: google.maps.Data.Feature[],
@@ -170,7 +170,7 @@ export function applyMultiSelection(
 ): void {
     for (const feature of previous) {
         if (next.includes(feature)) continue;
-        if (isCustomPoint(feature)) {
+        if (isCustomStop(feature)) {
             map.data.remove(feature);
             continue;
         }
@@ -181,7 +181,7 @@ export function applyMultiSelection(
         const numbered: google.maps.Data.StyleOptions = { icon: numberedMarkerIcon(index + 1) };
         map.data.overrideStyle(
             feature,
-            isCustomPoint(feature) ? { ...numbered, visible: true, draggable: true } : numbered
+            isCustomStop(feature) ? { ...numbered, visible: true, draggable: true } : numbered
         );
     });
 }
@@ -207,8 +207,8 @@ export function Markers(props: MarkersProps) {
     // against to know which markers to re-number and which to take off.
     const drawnStopsRef = useRef<google.maps.Data.Feature[]>([]);
     const storageRef = useRef<Storage>(props.storage);
-    // Set when a drag moved a custom point, cleared by the next press on a
-    // marker. Dragging a point ends with a mouseup on it, and a click on a
+    // Set when a drag moved a custom stop, cleared by the next press on a
+    // marker. Dragging a stop ends with a mouseup on it, and a click on a
     // chosen marker takes it back out of the route, so the release that finishes
     // a drag must not be taken for the click that removes what was just
     // positioned.
@@ -251,9 +251,9 @@ export function Markers(props: MarkersProps) {
         return () => listener.remove();
     }, [props.map]);
 
-    // The modifier turns a double-click into "put a route point here", so the
-    // map must not read the same gesture as a zoom-in while it is held. The mode
-    // is deliberately not part of the answer — docs/station-map.md says why.
+    // The modifier turns a double-click into "put a custom stop here", so the map
+    // must not read the same gesture as a zoom-in while it is held. The mode is
+    // deliberately not part of the answer — docs/station-map.md says why.
     useEffect(() => {
         props.map?.setOptions({ disableDoubleClickZoom: modifierHeld });
     }, [props.map, modifierHeld]);
@@ -261,7 +261,7 @@ export function Markers(props: MarkersProps) {
     useEffect(() => {
         if (!props.map) return;
         const stops = props.mode === 'route' ? props.selected : [];
-        applyMultiSelection(props.map, drawnStopsRef.current, stops, storageRef.current);
+        drawStops(props.map, drawnStopsRef.current, stops, storageRef.current);
         drawnStopsRef.current = stops;
     }, [props.map, props.mode, props.selected]);
 
@@ -287,18 +287,18 @@ export function Markers(props: MarkersProps) {
         applyClickResult(resolveMarkerClick(modeRef.current, selectedRef.current, event.feature));
     };
 
-    // Modifier + double-click on the map puts a route point where it landed.
-    // Inside the mode the point joins the route being built; outside, it is the
-    // other way in, with the point as the first stop.
+    // Modifier + double-click on the map puts a custom stop where it landed.
+    // Inside the mode the stop joins the route being built; outside, it is the
+    // other way in, with that stop first.
     const onMapDoubleClick = (event: google.maps.MapMouseEvent) => {
         if (!props.map) return;
         if (!isModifierPressed(event) || !event.latLng) return;
         if (modeRef.current === 'route') {
-            const stops = dropRoutePoint(props.map, event.latLng, selectedRef.current);
+            const stops = addCustomStopAt(props.map, selectedRef.current, event.latLng);
             if (stops) props.onSelectedChange(() => stops);
             return;
         }
-        props.onEnterRouteMode(addCustomPoint(props.map, event.latLng));
+        props.onEnterRouteMode(createCustomStop(props.map, event.latLng));
     };
 
     const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {

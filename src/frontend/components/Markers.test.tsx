@@ -5,7 +5,7 @@
 import { fireEvent, render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-    createMockCustomPoint,
+    createMockCustomStop,
     createMockFeature,
     createMockLatLng,
     createMockMap,
@@ -13,14 +13,14 @@ import {
     setupGoogleMapsMock,
 } from '#test-utils/test-utils';
 import { MARKER_ICONS } from '../marker-icons';
-import { isCustomPoint, MAX_ROUTE_SELECTION } from '../route';
+import { isCustomStop, MAX_ROUTE_STOPS } from '../route';
 import { MemoryStorage } from '../storage/memory-storage';
 import type { MapMode } from '../types/station-map';
 import {
-    applyMultiSelection,
+    addCustomStopAt,
     changeStyle,
     cycleRouteNumber,
-    dropRoutePoint,
+    drawStops,
     loadRoadStations,
     Markers,
     resetStyle,
@@ -185,7 +185,7 @@ describe('Markers', () => {
         });
 
         // The feature map.data.add() handed back for the double-click.
-        const addedPoint = (mockMap: ReturnType<typeof createMockMap>) =>
+        const addedStop = (mockMap: ReturnType<typeof createMockMap>) =>
             (mockMap.data.add as ReturnType<typeof vi.fn>).mock.results[0]?.value;
 
         it('opens the mode with the station a Cmd + click landed on', () => {
@@ -199,15 +199,15 @@ describe('Markers', () => {
             expect(onSelectedChange).not.toHaveBeenCalled();
         });
 
-        it('opens the mode with a point where a Ctrl + double-click landed', () => {
+        it('opens the mode with a custom stop where a Ctrl + double-click landed', () => {
             const { mockMap, onEnterRouteMode } = renderMarkers();
 
             mockMap._emit('dblclick', buildMapClickEvent('ctrl', 36.5, 140.5));
 
-            const point = addedPoint(mockMap);
-            expect(isCustomPoint(point)).toBe(true);
-            expect((point.getGeometry() as google.maps.Data.Point).get().lat()).toBe(36.5);
-            expect(onEnterRouteMode).toHaveBeenCalledWith(point);
+            const stop = addedStop(mockMap);
+            expect(isCustomStop(stop)).toBe(true);
+            expect((stop.getGeometry() as google.maps.Data.Point).get().lat()).toBe(36.5);
+            expect(onEnterRouteMode).toHaveBeenCalledWith(stop);
         });
 
         it('opens nothing on a double-click without the modifier', () => {
@@ -230,24 +230,24 @@ describe('Markers', () => {
         });
     });
 
-    describe('custom route points', () => {
+    describe('custom stops', () => {
         beforeEach(() => {
             setupGoogleMapsMock();
         });
 
-        it('keeps the point when the click closes a drag of it', () => {
-            const point = createMockCustomPoint();
-            const { mockMap, onSelectedChange } = renderMarkers({ mode: 'route', selected: [point] });
+        it('keeps the stop when the click closes a drag of it', () => {
+            const stop = createMockCustomStop();
+            const { mockMap, onSelectedChange } = renderMarkers({ mode: 'route', selected: [stop] });
 
-            mockMap.data._emit('mousedown', buildClickEvent(point));
-            mockMap.data._emit('setgeometry', { feature: point });
-            mockMap.data._emit('click', buildClickEvent(point));
+            mockMap.data._emit('mousedown', buildClickEvent(stop));
+            mockMap.data._emit('setgeometry', { feature: stop });
+            mockMap.data._emit('click', buildClickEvent(stop));
 
             expect(onSelectedChange).not.toHaveBeenCalled();
 
             // The press that starts the next gesture clears the drag.
-            mockMap.data._emit('mousedown', buildClickEvent(point));
-            mockMap.data._emit('click', buildClickEvent(point));
+            mockMap.data._emit('mousedown', buildClickEvent(stop));
+            mockMap.data._emit('click', buildClickEvent(stop));
 
             expect(onSelectedChange).toHaveBeenCalledTimes(1);
         });
@@ -280,8 +280,8 @@ describe('Markers', () => {
             expect(mockMap.setOptions).toHaveBeenLastCalledWith({ disableDoubleClickZoom: false });
         });
 
-        // The gesture places a point on both sides of the mode, so the zoom stays
-        // off on both.
+        // The gesture places a custom stop on both sides of the mode, so the
+        // zoom stays off on both.
         it('stops the map from zooming inside route mode too', () => {
             const { mockMap } = renderMarkers({ mode: 'route' });
 
@@ -290,7 +290,7 @@ describe('Markers', () => {
             expect(mockMap.setOptions).toHaveBeenLastCalledWith({ disableDoubleClickZoom: true });
         });
 
-        it('adds a point where a Cmd + double-click landed inside route mode', () => {
+        it('adds a custom stop where a Cmd + double-click landed inside route mode', () => {
             const featureA = createMockFeature('A');
             const { mockMap, onSelectedChange, onEnterRouteMode } = renderMarkers({
                 mode: 'route',
@@ -299,16 +299,16 @@ describe('Markers', () => {
 
             mockMap._emit('dblclick', buildMapClickEvent('meta', 36.5, 140.5));
 
-            const point = (mockMap.data.add as ReturnType<typeof vi.fn>).mock.results[0]?.value;
-            expect(isCustomPoint(point)).toBe(true);
-            expect((point.getGeometry() as google.maps.Data.Point).get().lat()).toBe(36.5);
-            expect(applyUpdater(onSelectedChange, [featureA])).toEqual([featureA, point]);
+            const stop = (mockMap.data.add as ReturnType<typeof vi.fn>).mock.results[0]?.value;
+            expect(isCustomStop(stop)).toBe(true);
+            expect((stop.getGeometry() as google.maps.Data.Point).get().lat()).toBe(36.5);
+            expect(applyUpdater(onSelectedChange, [featureA])).toEqual([featureA, stop]);
             // Already inside; nothing reopens the mode.
             expect(onEnterRouteMode).not.toHaveBeenCalled();
         });
 
         it('leaves a full route alone on a Cmd + double-click', () => {
-            const stops = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) => createMockFeature(`S${i}`));
+            const stops = Array.from({ length: MAX_ROUTE_STOPS }, (_, i) => createMockFeature(`S${i}`));
             const { mockMap, onSelectedChange } = renderMarkers({ mode: 'route', selected: stops });
 
             mockMap._emit('dblclick', buildMapClickEvent('meta'));
@@ -385,7 +385,7 @@ describe('Markers', () => {
         });
 
         it('takes no more stops once the route is full', () => {
-            const full = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) => createMockFeature(`${i}`));
+            const full = Array.from({ length: MAX_ROUTE_STOPS }, (_, i) => createMockFeature(`${i}`));
             const extra = createMockFeature('extra');
             const { mockMap, onSelectedChange } = renderMarkers({ mode: 'route', selected: full });
 
@@ -408,7 +408,7 @@ describe('Markers', () => {
         it('takes the route off the map when route mode is left', () => {
             const mockMap = createMockMap();
             const station = createMockFeature('A');
-            const point = createMockCustomPoint();
+            const stop = createMockCustomStop();
             const props = {
                 map: mockMap,
                 onSelectedChange: () => {},
@@ -418,14 +418,14 @@ describe('Markers', () => {
                 onEnterRouteMode: () => {},
             };
 
-            const { rerender } = render(<Markers {...props} mode="route" selected={[station, point]} />);
+            const { rerender } = render(<Markers {...props} mode="route" selected={[station, stop]} />);
             (mockMap.data.overrideStyle as ReturnType<typeof vi.fn>).mockClear();
 
             rerender(<Markers {...props} mode="normal" selected={[]} />);
 
-            // The dropped point leaves the map, and the station takes its stored
+            // The custom stop leaves the map, and the station takes its stored
             // icon back in place of its number.
-            expect(mockMap.data.remove).toHaveBeenCalledWith(point);
+            expect(mockMap.data.remove).toHaveBeenCalledWith(stop);
             expect(mockMap.data.overrideStyle).toHaveBeenCalledWith(station, { icon: MARKER_ICONS[0] });
         });
 
@@ -501,17 +501,17 @@ describe('resolveMarkerClick', () => {
             expect(result.selected).toEqual([b]);
         });
 
-        it('takes a custom point back out the same way a station goes', () => {
+        it('takes a custom stop back out the same way a station goes', () => {
             const a = createMockFeature('A');
-            const point = createMockCustomPoint();
+            const stop = createMockCustomStop();
 
-            const result = resolveMarkerClick('route', [a, point], point);
+            const result = resolveMarkerClick('route', [a, stop], stop);
 
             expect(result.selected).toEqual([a]);
         });
 
         it('leaves a full route untouched', () => {
-            const existing = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) => createMockFeature(`${i}`));
+            const existing = Array.from({ length: MAX_ROUTE_STOPS }, (_, i) => createMockFeature(`${i}`));
             const extra = createMockFeature('extra');
 
             const result = resolveMarkerClick('route', existing, extra);
@@ -551,35 +551,35 @@ describe('resolveMarkerClick', () => {
     });
 });
 
-describe('dropRoutePoint', () => {
+describe('addCustomStopAt', () => {
     beforeEach(() => {
         setupGoogleMapsMock();
     });
 
-    it('puts a point at the position and numbers it after the stops already chosen', () => {
+    it('puts a custom stop at the position, on the end of the stops already chosen', () => {
         const mockMap = createMockMap();
         const a = createMockFeature('A');
 
-        const result = dropRoutePoint(mockMap, createMockLatLng(36.5, 140.5), [a]);
+        const result = addCustomStopAt(mockMap, [a], createMockLatLng(36.5, 140.5));
 
-        const point = (mockMap.data.add as ReturnType<typeof vi.fn>).mock.results[0]?.value;
-        expect(isCustomPoint(point)).toBe(true);
-        expect(result).toEqual([a, point]);
+        const stop = (mockMap.data.add as ReturnType<typeof vi.fn>).mock.results[0]?.value;
+        expect(isCustomStop(stop)).toBe(true);
+        expect(result).toEqual([a, stop]);
     });
 
     it('refuses once the route is full, leaving no marker behind', () => {
         const mockMap = createMockMap();
-        const full = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) => createMockFeature(`${i}`));
+        const full = Array.from({ length: MAX_ROUTE_STOPS }, (_, i) => createMockFeature(`${i}`));
 
-        expect(dropRoutePoint(mockMap, createMockLatLng(36.5, 140.5), full)).toBeNull();
+        expect(addCustomStopAt(mockMap, full, createMockLatLng(36.5, 140.5))).toBeNull();
         expect(mockMap.data.add).not.toHaveBeenCalled();
     });
 
-    it('refuses a second point where one already stands', () => {
+    it('refuses a second custom stop where one already stands', () => {
         const mockMap = createMockMap();
-        const point = createMockCustomPoint(36.5, 140.5);
+        const stop = createMockCustomStop(36.5, 140.5);
 
-        expect(dropRoutePoint(mockMap, createMockLatLng(36.5, 140.5), [point])).toBeNull();
+        expect(addCustomStopAt(mockMap, [stop], createMockLatLng(36.5, 140.5))).toBeNull();
         expect(mockMap.data.add).not.toHaveBeenCalled();
     });
 });
@@ -601,31 +601,31 @@ describe('cycleRouteNumber', () => {
         expect(cycleRouteNumber([a, b, c], a)).toEqual([b, c, a]);
     });
 
-    it('returns the same array for a single-feature selection', () => {
+    it('returns the same array for a single-stop route', () => {
         const a = createMockFeature('A');
-        const multiSelected = [a];
+        const stops = [a];
 
-        expect(cycleRouteNumber(multiSelected, a)).toBe(multiSelected);
+        expect(cycleRouteNumber(stops, a)).toBe(stops);
     });
 
-    it('returns the same array for a feature outside the selection', () => {
+    it('returns the same array for a feature outside the route', () => {
         const a = createMockFeature('A');
         const b = createMockFeature('B');
         const outsider = createMockFeature('C');
-        const multiSelected = [a, b];
+        const stops = [a, b];
 
-        expect(cycleRouteNumber(multiSelected, outsider)).toBe(multiSelected);
+        expect(cycleRouteNumber(stops, outsider)).toBe(stops);
     });
 
     it('leaves the input untouched', () => {
         const a = createMockFeature('A');
         const b = createMockFeature('B');
-        const multiSelected = [a, b];
+        const stops = [a, b];
 
-        cycleRouteNumber(multiSelected, b);
-        cycleRouteNumber(multiSelected, a);
+        cycleRouteNumber(stops, b);
+        cycleRouteNumber(stops, a);
 
-        expect(multiSelected).toEqual([a, b]);
+        expect(stops).toEqual([a, b]);
     });
 });
 
@@ -719,8 +719,8 @@ describe('loadRoadStations', () => {
         ) => google.maps.Data.StyleOptions;
         expect(styleFor(createMockFeature('A'))).toEqual({ icon: MARKER_ICONS[2] });
         expect(styleFor(createMockFeature('B'))).toEqual({ icon: MARKER_ICONS[0] });
-        // A custom route point has no stored style and waits for its number.
-        expect(styleFor(createMockCustomPoint())).toEqual({ visible: false });
+        // A custom stop has no stored style and waits for its number.
+        expect(styleFor(createMockCustomStop())).toEqual({ visible: false });
     });
 
     it('cleanup detaches every listener so subsequent events are ignored', () => {
@@ -760,7 +760,7 @@ describe('loadRoadStations', () => {
     });
 });
 
-describe('applyMultiSelection', () => {
+describe('drawStops', () => {
     beforeEach(() => {
         setupGoogleMapsMock();
     });
@@ -771,7 +771,7 @@ describe('applyMultiSelection', () => {
         const b = createMockFeature('B');
         const storage = new MemoryStorage();
 
-        applyMultiSelection(mockMap, [], [a, b], storage);
+        drawStops(mockMap, [], [a, b], storage);
 
         const calls = (mockMap.data.overrideStyle as ReturnType<typeof vi.fn>).mock.calls;
         expect(calls).toHaveLength(2);
@@ -780,14 +780,14 @@ describe('applyMultiSelection', () => {
         expect(calls[1][0]).toBe(b);
     });
 
-    it('restores storage-driven icons for features dropped from the selection', () => {
+    it('restores storage-driven icons for features that are no longer stops', () => {
         const mockMap = createMockMap();
         const a = createMockFeature('A');
         const b = createMockFeature('B');
         const storage = new MemoryStorage();
         storage.setItem('A', '2');
 
-        applyMultiSelection(mockMap, [a, b], [], storage);
+        drawStops(mockMap, [a, b], [], storage);
 
         expect(mockMap.data.overrideStyle).toHaveBeenCalledWith(a, {
             icon: MARKER_ICONS[2],
@@ -797,43 +797,43 @@ describe('applyMultiSelection', () => {
         });
     });
 
-    it('reveals a custom point with its number and leaves it draggable', () => {
+    it('reveals a custom stop with its number and leaves it draggable', () => {
         const mockMap = createMockMap();
-        const point = createMockCustomPoint();
+        const stop = createMockCustomStop();
         const storage = new MemoryStorage();
 
-        applyMultiSelection(mockMap, [], [point], storage);
+        drawStops(mockMap, [], [stop], storage);
 
-        expect(mockMap.data.overrideStyle).toHaveBeenCalledWith(point, {
+        expect(mockMap.data.overrideStyle).toHaveBeenCalledWith(stop, {
             icon: expect.objectContaining({ url: expect.stringContaining('svg') }),
             visible: true,
             draggable: true,
         });
     });
 
-    it('takes a custom point off the map when it leaves the selection', () => {
+    it('takes a custom stop off the map when it leaves the route', () => {
         const mockMap = createMockMap();
         const a = createMockFeature('A');
-        const point = createMockCustomPoint();
+        const stop = createMockCustomStop();
         const storage = new MemoryStorage();
 
-        applyMultiSelection(mockMap, [a, point], [a], storage);
+        drawStops(mockMap, [a, stop], [a], storage);
 
-        expect(mockMap.data.remove).toHaveBeenCalledWith(point);
+        expect(mockMap.data.remove).toHaveBeenCalledWith(stop);
         // The station keeps its marker; only its icon goes back to the stored one.
         expect(mockMap.data.remove).toHaveBeenCalledTimes(1);
     });
 
-    it('only re-numbers features still in the selection while resetting the rest', () => {
+    it('only re-numbers features that are still stops while resetting the rest', () => {
         const mockMap = createMockMap();
         const a = createMockFeature('A');
         const b = createMockFeature('B');
         const c = createMockFeature('C');
         const storage = new MemoryStorage();
 
-        applyMultiSelection(mockMap, [a, b], [b, c], storage);
+        drawStops(mockMap, [a, b], [b, c], storage);
 
-        // `a` was deselected → restored to default icon
+        // `a` is no longer a stop → restored to default icon
         expect(mockMap.data.overrideStyle).toHaveBeenCalledWith(a, {
             icon: MARKER_ICONS[0],
         });

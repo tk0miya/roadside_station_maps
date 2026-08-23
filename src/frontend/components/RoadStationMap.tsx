@@ -8,7 +8,7 @@ import type { StationsGeoJSON } from '../types/geojson';
 import type { MapMode } from '../types/station-map';
 import { InfoWindow } from './InfoWindow';
 import { LoginButton } from './LoginButton';
-import { dropRoutePoint, Markers } from './Markers';
+import { addCustomStopAt, Markers } from './Markers';
 import { RouteControl } from './RouteControl';
 import { ShareButton } from './ShareButton';
 import { StationCounter } from './StationCounter';
@@ -114,13 +114,13 @@ export function RoadStationMap() {
         setSelected(seed ? [seed] : []);
     };
 
-    // Put a route point at the middle of the map, where the crosshair is. The
+    // Put a custom stop at the middle of the map, where the crosshair is. The
     // mode is checked here rather than left to the button that calls it, since
     // this writes a pick and nothing else vouches for the mode it is written in.
-    const addPointAtCenter = () => {
+    const addCustomStopAtCrosshair = () => {
         const center = map?.getCenter();
         if (mode !== 'route' || !map || !center) return;
-        const stops = dropRoutePoint(map, center, selected);
+        const stops = addCustomStopAt(map, selected, center);
         if (stops) setSelected(stops);
     };
 
@@ -155,19 +155,19 @@ export function RoadStationMap() {
                     <ShareButton map={map} />
                     <StationCounter storage={storage} stations={stations} styleVersion={styleVersion} map={map} />
                     {/* Aimed at by panning the map, and shown only while there is
-                        room for another point. */}
+                        room for another stop. */}
                     {mode === 'route' && !isRouteFull(selected) && (
                         <div className="route-crosshair" aria-hidden="true" />
                     )}
                     {/* Route mode rides on the markers: Markers puts them on the
-                        map, numbers the chosen ones and takes the dropped points
+                        map, numbers the chosen ones and takes the custom stops
                         off again, so there is no route to build without it. */}
                     <RouteControl
                         map={map}
                         active={mode === 'route'}
                         stops={selected}
                         onEnter={() => enterRouteMode()}
-                        onAddPoint={addPointAtCenter}
+                        onAddCustomStop={addCustomStopAtCrosshair}
                         onClose={closeRoute}
                     />
                 </>
