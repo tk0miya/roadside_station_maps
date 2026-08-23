@@ -42,26 +42,24 @@ div.share:hover {
    that turns the mode on, and under it what the markers cannot say about the
    route being built. Two short rows rather than one long one — the box stays as
    narrow as its widest row, so it never reaches the legend at the map's other
-   corner. The widest row is the switch's, at 128px against the second row's
-   125px, which is what keeps the switch still as that row appears under it; a
-   two-digit MAX_ROUTE_SELECTION would take the second row past it and widen the
-   box by the difference. */
+   corner. The second row is the wider of the two, carrying the count and two
+   buttons; the switch above it is anchored to the left edge, so the box growing
+   to fit that row leaves the switch where it was. */
 div.route-control {
     margin-left: 10px;
     width: max-content;
 }
 
-/* The row that turns the mode on and off: the label at the box's left edge, the
-   switch at its right. The label is text — the press belongs to the switch alone,
-   so the row carries no hover of its own to suggest otherwise. */
+/* The row that turns the mode on and off: the switch immediately beside its
+   label, both at the box's left edge, so the eye reads the word and the state it
+   is in together. The label is text — the press belongs to the switch alone, so
+   the row carries no hover of its own to suggest otherwise. */
 div.route-control-mode {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 6px;
     height: 44px;
-    /* 9px, not 14px: the switch's own 5px lines the track up with the button in
-       the row below, both 14px from the box's edge. */
+    /* The switch's own 5px makes the right side up to the 14px of the left. */
     padding: 0 9px 0 14px;
     font-size: 18px;
     white-space: nowrap;
@@ -120,10 +118,29 @@ button.route-control-switch[aria-checked="true"] span.route-control-track::after
     transform: translateX(16px);
 }
 
-/* The row that carries the state of the route lines up with the row above it: the
-   count under the label, the button under the switch, both against the same
-   edges. It sits clear of the switch, so the tap targets do not run into each
-   other. */
+/* The same box as the 作成 button beside it, in white: adding a point is a step
+   in building the route, not the act of handing it over. */
+button.route-control-add {
+    flex: none;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #dddddd;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+    color: #555555;
+}
+
+button.route-control-add:disabled {
+    border-color: #f1f1f1;
+    background-color: #f1f1f1;
+    color: #9e9e9e;
+    cursor: default;
+}
+
+/* The wider of the two rows, so the box's width follows this one. */
 div.route-control-status {
     display: flex;
     align-items: center;
@@ -158,6 +175,43 @@ button.route-control-create:disabled {
     background-color: #f1f1f1;
     color: #9e9e9e;
     cursor: default;
+}
+
+/* Where the control's button drops a point: the middle of the map. Fixed to the
+   centre of the viewport, which the map canvas fills, and inert — every gesture
+   that lands on it belongs to the map underneath. The white outline keeps the
+   mark readable over both a pale road and a dark forest. */
+div.route-crosshair {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 28px;
+    height: 28px;
+    margin: -14px 0 0 -14px;
+    z-index: 1;
+    pointer-events: none;
+}
+
+div.route-crosshair::before,
+div.route-crosshair::after {
+    content: "";
+    position: absolute;
+    background-color: #1a73e8;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+}
+
+div.route-crosshair::before {
+    top: 13px;
+    left: 0;
+    right: 0;
+    height: 2px;
+}
+
+div.route-crosshair::after {
+    top: 0;
+    bottom: 0;
+    left: 13px;
+    width: 2px;
 }
 
 div.share-message {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createMockCustomPoint, createMockFeature } from '#test-utils/test-utils';
-import { buildDirectionsURL, clearsSelectionOnMapClick } from './route';
+import { createMockCustomPoint, createMockFeature, createMockLatLng } from '#test-utils/test-utils';
+import { buildDirectionsURL, clearsSelectionOnMapClick, hasPointAt } from './route';
 
 describe('buildDirectionsURL', () => {
     it('appends the prefecture, telling two stations sharing a name apart', () => {
@@ -65,6 +65,31 @@ describe('buildDirectionsURL', () => {
             '道の駅 S6 北海道',
             '道の駅 S7 北海道',
         ]);
+    });
+});
+
+describe('hasPointAt', () => {
+    it('finds the custom point already standing there', () => {
+        const stops = [createMockCustomPoint(36.5, 140.5)];
+
+        expect(hasPointAt(stops, createMockLatLng(36.5, 140.5))).toBe(true);
+    });
+
+    // A station at the same spot is a stop of its own, and a point beside it is
+    // the user's to place: only a point over a point is the pressed-twice case.
+    it('leaves a station standing there out of it', () => {
+        const stops = [createMockFeature('1', {}, { lat: 36.5, lng: 140.5 })];
+
+        expect(hasPointAt(stops, createMockLatLng(36.5, 140.5))).toBe(false);
+    });
+
+    // Coordinates are compared to the same 6 places the route URL carries, so a
+    // difference the URL would not keep is not a different place either.
+    it('reads a difference past the sixth decimal place as the same place', () => {
+        const stops = [createMockCustomPoint(36.5, 140.5)];
+
+        expect(hasPointAt(stops, createMockLatLng(36.5000001, 140.5))).toBe(true);
+        expect(hasPointAt(stops, createMockLatLng(36.500001, 140.5))).toBe(false);
     });
 });
 
