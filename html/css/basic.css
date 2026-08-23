@@ -36,54 +36,102 @@ div.share:hover {
     background-color: rgb(235, 235, 235);
 }
 
-/* Alone in its control position, which starts at the map's own edge. */
+/* Alone in its control position, which starts at the map's own edge.
+
+   The box holds two rows, and only the first while route mode is off: the switch
+   that turns the mode on, and under it what the markers cannot say about the
+   route being built. Two short rows rather than one long one — the box stays as
+   narrow as its widest row, so it never reaches the legend at the map's other
+   corner. The widest row is the switch's, at 128px against the second row's
+   125px, which is what keeps the switch still as that row appears under it; a
+   two-digit MAX_ROUTE_SELECTION would take the second row past it and widen the
+   box by the difference. */
 div.route-control {
     margin-left: 10px;
+    width: max-content;
 }
 
-/* Out of route mode the box holds the way in and nothing else, so it reads as
-   one more button in the column. The white and the shadow are the box's; the
-   button only fills it. */
-button.route-control-enter {
-    display: block;
-    padding: 0 17px;
-    height: 40px;
+/* The row that turns the mode on and off: the label at the box's left edge, the
+   switch at its right. The label is text — the press belongs to the switch alone,
+   so the row carries no hover of its own to suggest otherwise. */
+div.route-control-mode {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    height: 44px;
+    /* 9px, not 14px: the switch's own 5px lines the track up with the button in
+       the row below, both 14px from the box's edge. */
+    padding: 0 9px 0 14px;
+    font-size: 18px;
+    white-space: nowrap;
+}
+
+/* The way in and the way out in one control, drawn as a track and nothing else.
+   The padding around it is what makes a 34x18px switch a 44x44px target for a
+   thumb, which is why the button is bigger than what it draws. */
+button.route-control-switch {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    padding: 0 5px;
     border: none;
     background: none;
     cursor: pointer;
-    font-family: inherit;
-    font-size: 18px;
-    color: inherit;
 }
 
-button.route-control-enter:hover {
-    background-color: rgb(235, 235, 235);
+/* Which way the switch is thrown: off is the grey of a control at rest, on is
+   the blue the 作成 button already uses. */
+span.route-control-track {
+    position: relative;
+    flex: none;
+    width: 34px;
+    height: 18px;
+    border-radius: 9px;
+    background-color: #bdbdbd;
+    transition: background-color 0.15s;
 }
 
-/* In route mode the same box opens onto the state of the route being built.
-   One row deep, growing to the right out of the corner it already holds. The
-   row has to end before the legend at the map's other corner, and the legend is
-   pinned to the right edge, so the budget shrinks with the screen: 285px on a
-   375px phone, against the 266px this row measures — which is what the short
-   "作成" label buys. Below about 360px the two would meet. */
-div.route-control-panel {
+span.route-control-track::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: white;
+    transition: transform 0.15s;
+}
+
+button.route-control-switch:hover span.route-control-track {
+    background-color: #9e9e9e;
+}
+
+button.route-control-switch[aria-checked="true"] span.route-control-track {
+    background-color: #1a73e8;
+}
+
+button.route-control-switch[aria-checked="true"]:hover span.route-control-track {
+    background-color: #1765cc;
+}
+
+button.route-control-switch[aria-checked="true"] span.route-control-track::after {
+    transform: translateX(16px);
+}
+
+/* The row that carries the state of the route lines up with the row above it: the
+   count under the label, the button under the switch, both against the same
+   edges. It sits clear of the switch, so the tap targets do not run into each
+   other. */
+div.route-control-status {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
-    padding: 6px 17px;
+    padding: 6px 14px 8px;
     font-family: Arial, sans-serif;
     font-size: 14px;
-}
-
-/* The heading keeps the type of the button it replaces and starts at the same
-   left edge. It does not keep the button's vertical box: the row is as tall as
-   the buttons in it, so the word "ルート" sits lower once the box opens. */
-h2.route-control-heading {
-    margin: 0;
-    font-family: Roboto, Arial, sans-serif;
-    font-size: 18px;
-    font-weight: normal;
-    white-space: nowrap;
 }
 
 span.route-control-count {
@@ -91,21 +139,17 @@ span.route-control-count {
     white-space: nowrap;
 }
 
-/* Taller than the 40px of the map's controls: these are tap targets, and they
-   sit inside the box rather than lined up with that column. */
-div.route-control-panel button {
+/* As tall as the switch above it, and a tap target on the same terms. */
+button.route-control-create {
     flex: none;
     height: 44px;
     padding: 0 16px;
+    border: none;
     border-radius: 4px;
+    background-color: #1a73e8;
     cursor: pointer;
     font-family: inherit;
     font-size: 15px;
-}
-
-button.route-control-create {
-    background-color: #1a73e8;
-    border: none;
     font-weight: bold;
     color: white;
 }
@@ -114,12 +158,6 @@ button.route-control-create:disabled {
     background-color: #f1f1f1;
     color: #9e9e9e;
     cursor: default;
-}
-
-button.route-control-close {
-    background-color: white;
-    border: 1px solid #dddddd;
-    color: #555555;
 }
 
 div.share-message {

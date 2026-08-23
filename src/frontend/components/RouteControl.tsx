@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { buildDirectionsURL, MAX_ROUTE_SELECTION } from '../route';
 
@@ -10,20 +10,28 @@ interface RouteControlProps {
     onClose: () => void;
 }
 
-// The way into route mode and the state of the route once in it, as one box in
-// one corner. On a desktop the modifier gestures reach the same place, but a
-// touch screen has no modifier to hold, so the mode needs a control of its own.
-// Entering the mode grows that control open rather than moving it: what the box
-// says changes, where the reader looks does not.
+// Route mode as one switch in one corner, with the state of the route under it
+// while the mode is on. On a desktop the modifier gestures reach the same place,
+// but a touch screen has no modifier to hold, so the mode needs a control of its
+// own. Why the mode is a switch rather than a button in and another button out
+// is in docs/station-map.md; the shape of the box is in the CSS.
 //
-// The route itself is read off the map, where the chosen markers carry their
-// numbers, so the open box only holds what the markers cannot say: how many
-// stops are in, how many the limit allows, and the two things left to do with
-// the route — hand it to Google Maps, or drop it.
+// The switch is the only thing in its row that takes a press: the label beside it
+// is text, and reaches the switch as its accessible name through aria-labelledby
+// rather than by being part of the target. role="switch" with aria-checked is
+// what reports which way the switch is thrown; the track it draws to say so is
+// aria-hidden, having nothing to add to that.
+//
+// The second row carries the two things docs/station-map.md keeps on screen for
+// the route being built: how far the stop count is from the limit, and the button
+// that hands the route over. Dropping the route is not among them — that is the
+// switch again, since leaving the mode is what clears the stops.
 export function RouteControl({ map, active, stops, onEnter, onClose }: RouteControlProps) {
+    const labelId = useId();
+
     // The Maps API places the control, so the box is a bare node handed to it
-    // once and drawn into from then on. The node outlives the switch between
-    // the two states, which is what keeps the control in one place.
+    // once and drawn into from then on. The node outlives the flip between the
+    // two states, which is what keeps the control in one place.
     const [container] = useState(() => {
         const div = document.createElement('div');
         div.className = 'route-control';
@@ -49,33 +57,40 @@ export function RouteControl({ map, active, stops, onEnter, onClose }: RouteCont
     if (!map) return null;
 
     return createPortal(
-        active ? (
-            <div className="route-control-panel">
-                <h2 className="route-control-heading">ルート</h2>
-                <span className="route-control-count">
-                    {stops.length} / {MAX_ROUTE_SELECTION}
-                </span>
-                {/* "作成" rather than "ルートを作成": the row has a width to
-                    stay inside, spelled out in the CSS. The accessible name
-                    carries the full wording. */}
+        <>
+            <div className="route-control-mode">
+                <span id={labelId}>ルート</span>
                 <button
                     type="button"
-                    className="route-control-create"
-                    aria-label="ルートを作成"
-                    disabled={stops.length < 2}
-                    onClick={() => window.open(buildDirectionsURL(stops), '_blank', 'noopener')}
+                    role="switch"
+                    aria-checked={active}
+                    aria-labelledby={labelId}
+                    className="route-control-switch"
+                    onClick={active ? onClose : onEnter}
                 >
-                    作成
-                </button>
-                <button type="button" className="route-control-close" onClick={onClose}>
-                    終了
+                    <span className="route-control-track" aria-hidden="true" />
                 </button>
             </div>
-        ) : (
-            <button type="button" className="route-control-enter" onClick={onEnter}>
-                ルート
-            </button>
-        ),
+            {active && (
+                <div className="route-control-status">
+                    <span className="route-control-count">
+                        {stops.length} / {MAX_ROUTE_SELECTION}
+                    </span>
+                    {/* "作成" rather than "ルートを作成": the row is as narrow as
+                        the switch above it. The accessible name carries the full
+                        wording. */}
+                    <button
+                        type="button"
+                        className="route-control-create"
+                        aria-label="ルートを作成"
+                        disabled={stops.length < 2}
+                        onClick={() => window.open(buildDirectionsURL(stops), '_blank', 'noopener')}
+                    >
+                        作成
+                    </button>
+                </div>
+            )}
+        </>,
         container
     );
 }
