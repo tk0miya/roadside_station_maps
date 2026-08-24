@@ -31,3 +31,10 @@ export function useModifierHeld(): boolean {
 
     return held;
 }
+
+// Whether the modifier was held down for a single Maps event already in hand,
+// as opposed to `useModifierHeld`'s continuously tracked state.
+export const isModifierPressed = (event: google.maps.MapMouseEvent): boolean => {
+    const domEvent = event.domEvent as MouseEvent | undefined;
+    return Boolean(domEvent && (domEvent.metaKey || domEvent.ctrlKey));
+};

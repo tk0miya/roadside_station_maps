@@ -6,6 +6,7 @@ import { fetchStations, reconcileVisits } from '../station';
 import { createStorage, type Storage } from '../storage';
 import type { StationsGeoJSON } from '../types/geojson';
 import type { MapMode } from '../types/station-map';
+import { useRouteModeShortcut } from '../use-route-mode-shortcut';
 import { InfoWindow } from './InfoWindow';
 import { LoginButton } from './LoginButton';
 import { Markers } from './Markers';
@@ -114,6 +115,17 @@ export function RoadStationMap() {
         setMode('route');
         setSelectedStops(seed ? [seed] : []);
     };
+
+    // The other two ways into route mode are the RouteControl switch and the
+    // modifier + marker click, which is Markers' concern; this is the one
+    // that reads the map itself.
+    useRouteModeShortcut({
+        map,
+        mode,
+        selectedStops,
+        onSelectedStopsChange: setSelectedStops,
+        onEnterRouteMode: enterRouteMode,
+    });
 
     // Put a custom stop at the middle of the map, where the crosshair is. The
     // mode is checked here rather than left to the button that calls it, since

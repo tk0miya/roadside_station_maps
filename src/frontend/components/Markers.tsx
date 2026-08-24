@@ -6,8 +6,7 @@ import * as style from '../style';
 import { getStyle } from '../style';
 import type { StationsGeoJSON } from '../types/geojson';
 import type { MapMode } from '../types/station-map';
-import { useModifierHeld } from '../use-modifier-held';
-import { addCustomStopAt, createCustomStop } from './RouteStops';
+import { isModifierPressed } from '../use-modifier-held';
 
 // Take `feature` out of the route if it is already a stop, otherwise add it to
 // the end — unless the route is full, which refuses the click by returning
@@ -32,11 +31,6 @@ const baseStyleFor = (feature: google.maps.Data.Feature, storage: Storage): goog
         return { visible: false };
     }
     return styleOptionsFor(getStyle(storage, feature.getProperty('stationId') as string));
-};
-
-export const isModifierPressed = (event: google.maps.MapMouseEvent): boolean => {
-    const domEvent = event.domEvent as MouseEvent | undefined;
-    return Boolean(domEvent && (domEvent.metaKey || domEvent.ctrlKey));
 };
 
 // Cycle the stored style id for the feature's station and re-apply the
@@ -105,7 +99,9 @@ interface MarkersProps {
     storage: Storage;
     stations: StationsGeoJSON | null;
     onStyleChange: () => void;
-    // Called by the modifier gestures, which open the mode with `seed` in it.
+    // Called by the modifier + marker click, which opens the mode with `seed`
+    // as its first stop. The other way in via the modifier — on the map
+    // itself — is not this component's concern; see useRouteModeShortcut.
     onEnterRouteMode: (seed: google.maps.Data.Feature) => void;
 }
 
@@ -121,7 +117,6 @@ export function Markers(props: MarkersProps) {
     // a drag must not be taken for the click that removes what was just
     // positioned.
     const draggedRef = useRef(false);
-    const modifierHeld = useModifierHeld();
 
     useEffect(() => {
         modeRef.current = props.mode;
@@ -151,21 +146,6 @@ export function Markers(props: MarkersProps) {
         });
     }, [props.map, props.stations]);
 
-    // The gesture on the map itself, as opposed to on a marker. One landing on a
-    // marker never arrives here: the data layer takes that event.
-    useEffect(() => {
-        if (!props.map) return;
-        const listener = props.map.addListener('dblclick', onMapDoubleClick);
-        return () => listener.remove();
-    }, [props.map]);
-
-    // The modifier turns a double-click into "put a custom stop here", so the map
-    // must not read the same gesture as a zoom-in while it is held. The mode is
-    // deliberately not part of the answer — docs/station-map.md says why.
-    useEffect(() => {
-        props.map?.setOptions({ disableDoubleClickZoom: modifierHeld });
-    }, [props.map, modifierHeld]);
-
     // Cycle the style and let the app know, the outcome a re-click in normal
     // mode and a double-click on a marker both reach.
     const cycleStyle = (map: google.maps.Map, feature: google.maps.Data.Feature) => {
@@ -191,20 +171,6 @@ export function Markers(props: MarkersProps) {
                 }
                 return;
         }
-    };
-
-    // Modifier + double-click on the map puts a custom stop where it landed.
-    // Inside the mode the stop joins the route being built; outside, it is the
-    // other way in, with that stop first.
-    const onMapDoubleClick = (event: google.maps.MapMouseEvent) => {
-        if (!props.map) return;
-        if (!isModifierPressed(event) || !event.latLng) return;
-        if (modeRef.current === 'route') {
-            const routeStops = addCustomStopAt(props.map, selectedStopsRef.current, event.latLng);
-            if (routeStops) props.onSelectedStopsChange(routeStops);
-            return;
-        }
-        props.onEnterRouteMode(createCustomStop(props.map, event.latLng));
     };
 
     const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {
