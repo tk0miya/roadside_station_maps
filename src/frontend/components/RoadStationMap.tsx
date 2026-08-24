@@ -30,7 +30,7 @@ export function RoadStationMap() {
     const [storage, setStorage] = useState<Storage | null>(null);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [mode, setMode] = useState<MapMode>('normal');
-    const [selected, setSelected] = useState<google.maps.Data.Feature[]>([]);
+    const [selectedStops, setSelectedStops] = useState<google.maps.Data.Feature[]>([]);
     // The map click listener is installed once, so what it reads about the mode
     // has to come from a ref rather than the render it was created in.
     const modeRef = useRef(mode);
@@ -97,7 +97,7 @@ export function RoadStationMap() {
             if (modeRef.current === 'route') return;
             // Handing `prev` back when nothing is open keeps the tap from
             // re-rendering.
-            setSelected((prev) => (prev.length ? [] : prev));
+            setSelectedStops((prev) => (prev.length ? [] : prev));
         });
         getCurrentPosition().then(onLocationDetected);
     }, [map]);
@@ -111,7 +111,7 @@ export function RoadStationMap() {
 
     const enterRouteMode = (seed?: google.maps.Data.Feature) => {
         setMode('route');
-        setSelected(seed ? [seed] : []);
+        setSelectedStops(seed ? [seed] : []);
     };
 
     // Put a custom stop at the middle of the map, where the crosshair is. The
@@ -120,16 +120,16 @@ export function RoadStationMap() {
     const addCustomStopAtCrosshair = () => {
         const center = map?.getCenter();
         if (mode !== 'route' || !map || !center) return;
-        const stops = addCustomStopAt(map, selected, center);
-        if (stops) setSelected(stops);
+        const routeStops = addCustomStopAt(map, selectedStops, center);
+        if (routeStops) setSelectedStops(routeStops);
     };
 
     const closeRoute = () => {
         setMode('normal');
-        setSelected([]);
+        setSelectedStops([]);
     };
 
-    const openStation = mode === 'normal' ? (selected[0] ?? null) : null;
+    const openStation = mode === 'normal' ? (selectedStops[0] ?? null) : null;
 
     return (
         <>
@@ -145,8 +145,8 @@ export function RoadStationMap() {
                     <Markers
                         map={map}
                         mode={mode}
-                        selected={selected}
-                        onSelectedChange={setSelected}
+                        selectedStops={selectedStops}
+                        onSelectedStopsChange={setSelectedStops}
                         storage={storage}
                         stations={stations}
                         onStyleChange={() => setStyleVersion((v) => v + 1)}
@@ -156,7 +156,7 @@ export function RoadStationMap() {
                     <StationCounter storage={storage} stations={stations} styleVersion={styleVersion} map={map} />
                     {/* Aimed at by panning the map, and shown only while there is
                         room for another stop. */}
-                    {mode === 'route' && !isRouteFull(selected) && (
+                    {mode === 'route' && !isRouteFull(selectedStops) && (
                         <div className="route-crosshair" aria-hidden="true" />
                     )}
                     {/* Route mode rides on the markers: Markers puts them on the
@@ -165,7 +165,7 @@ export function RoadStationMap() {
                     <RouteControl
                         map={map}
                         active={mode === 'route'}
-                        stops={selected}
+                        routeStops={selectedStops}
                         onEnter={() => enterRouteMode()}
                         onAddCustomStop={addCustomStopAtCrosshair}
                         onClose={closeRoute}

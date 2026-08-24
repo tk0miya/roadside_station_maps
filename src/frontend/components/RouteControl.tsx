@@ -6,7 +6,7 @@ interface RouteControlProps {
     map: google.maps.Map | null;
     active: boolean;
     // Handed over as it stands: read as a route only while the switch is on.
-    stops: google.maps.Data.Feature[];
+    routeStops: google.maps.Data.Feature[];
     onEnter: () => void;
     onAddCustomStop: () => void;
     onClose: () => void;
@@ -33,7 +33,7 @@ interface RouteControlProps {
 // stop where no station stands, and the button that hands the route over.
 // Dropping the route is not among them — that is either way out again, since
 // leaving the mode is what clears the stops.
-export function RouteControl({ map, active, stops, onEnter, onAddCustomStop, onClose }: RouteControlProps) {
+export function RouteControl({ map, active, routeStops, onEnter, onAddCustomStop, onClose }: RouteControlProps) {
     const labelId = useId();
     // The listener is installed once per spell in the mode, so what it calls has
     // to come from a ref rather than the render it was created in.
@@ -97,7 +97,7 @@ export function RouteControl({ map, active, stops, onEnter, onAddCustomStop, onC
             {active && (
                 <div className="route-control-status">
                     <span className="route-control-count">
-                        {stops.length} / {MAX_ROUTE_STOPS}
+                        {routeStops.length} / {MAX_ROUTE_STOPS}
                     </span>
                     {/* A station joins the route by its marker being tapped; a
                         place with no station has no marker to tap, so this puts
@@ -110,7 +110,7 @@ export function RouteControl({ map, active, stops, onEnter, onAddCustomStop, onC
                         type="button"
                         className="route-control-add"
                         aria-label="地図の中心に地点を追加"
-                        disabled={isRouteFull(stops)}
+                        disabled={isRouteFull(routeStops)}
                         onClick={onAddCustomStop}
                     >
                         地点追加
@@ -119,8 +119,8 @@ export function RouteControl({ map, active, stops, onEnter, onAddCustomStop, onC
                         type="button"
                         className="route-control-create"
                         aria-label="ルートを作成"
-                        disabled={stops.length < 2}
-                        onClick={() => window.open(buildDirectionsURL(stops), '_blank', 'noopener')}
+                        disabled={routeStops.length < 2}
+                        onClick={() => window.open(buildDirectionsURL(routeStops), '_blank', 'noopener')}
                     >
                         作成
                     </button>

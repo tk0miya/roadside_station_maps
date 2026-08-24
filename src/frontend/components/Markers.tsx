@@ -9,8 +9,8 @@ import type { MapMode } from '../types/station-map';
 import { useModifierHeld } from '../use-modifier-held';
 
 // Create a custom stop at `position` and return its feature, without putting it
-// in a route. It is created hidden: drawStops reveals it once the route gives it
-// a number, which keeps it from flashing a station icon in between.
+// in a route. It is created hidden: drawRouteStops reveals it once the route
+// gives it a number, which keeps it from flashing a station icon in between.
 function createCustomStop(map: google.maps.Map, position: google.maps.LatLng): google.maps.Data.Feature {
     return map.data.add({
         geometry: new google.maps.Data.Point(position),
@@ -34,7 +34,7 @@ export function addCustomStopAt(
 
 // `undefined` fields mean "no change".
 export interface MarkerClickResult {
-    selected?: google.maps.Data.Feature[];
+    selectedStops?: google.maps.Data.Feature[];
     cycleStyleOn?: google.maps.Data.Feature;
 }
 
@@ -42,24 +42,24 @@ export interface MarkerClickResult {
 // in it.
 export function resolveMarkerClick(
     mode: MapMode,
-    selected: google.maps.Data.Feature[],
+    selectedStops: google.maps.Data.Feature[],
     clickedFeature: google.maps.Data.Feature
 ): MarkerClickResult {
     if (mode === 'route') {
-        if (selected.includes(clickedFeature)) {
-            return { selected: selected.filter((stop) => stop !== clickedFeature) };
+        if (selectedStops.includes(clickedFeature)) {
+            return { selectedStops: selectedStops.filter((stop) => stop !== clickedFeature) };
         }
         // A full route takes no more, and says so by leaving the click alone.
-        if (isRouteFull(selected)) {
+        if (isRouteFull(selectedStops)) {
             return {};
         }
-        return { selected: [...selected, clickedFeature] };
+        return { selectedStops: [...selectedStops, clickedFeature] };
     }
 
-    if (selected[0] === clickedFeature) {
+    if (selectedStops[0] === clickedFeature) {
         return { cycleStyleOn: clickedFeature };
     }
-    return { selected: [clickedFeature] };
+    return { selectedStops: [clickedFeature] };
 }
 
 // Move `feature` one number earlier in the route order, wrapping the first
@@ -156,13 +156,13 @@ export function loadRoadStations(
 }
 
 // Draw `next` as the route's stops by diffing it against `previous`: features
-// that are no longer stops fall back to their storage-driven icon, while the
-// stops in `next` receive a 1-based numbered icon matching their position.
+// that are no longer in the route fall back to their storage-driven icon, while
+// the stops in `next` receive a 1-based numbered icon matching their position.
 // A custom stop exists only as part of a route, so leaving the route takes its
 // marker off the map rather than restoring a station icon. It is draggable the
 // whole time it is on the map: unlike a station, it stands for nothing but the
 // position the user gave it.
-export function drawStops(
+export function drawRouteStops(
     map: google.maps.Map,
     previous: google.maps.Data.Feature[],
     next: google.maps.Data.Feature[],
@@ -189,8 +189,8 @@ export function drawStops(
 interface MarkersProps {
     map: google.maps.Map | null;
     mode: MapMode;
-    selected: google.maps.Data.Feature[];
-    onSelectedChange: (update: (prev: google.maps.Data.Feature[]) => google.maps.Data.Feature[]) => void;
+    selectedStops: google.maps.Data.Feature[];
+    onSelectedStopsChange: (update: (prev: google.maps.Data.Feature[]) => google.maps.Data.Feature[]) => void;
     storage: Storage;
     stations: StationsGeoJSON | null;
     onStyleChange: () => void;
@@ -202,10 +202,10 @@ export function Markers(props: MarkersProps) {
     // The listeners are installed once, so what they read has to come from a ref
     // rather than the render they were created in.
     const modeRef = useRef<MapMode>(props.mode);
-    const selectedRef = useRef<google.maps.Data.Feature[]>(props.selected);
-    // The stops as the map currently draws them, which the next change diffs
-    // against to know which markers to re-number and which to take off.
-    const drawnStopsRef = useRef<google.maps.Data.Feature[]>([]);
+    const selectedStopsRef = useRef<google.maps.Data.Feature[]>(props.selectedStops);
+    // The route's stops as the map currently draws them, which the next change
+    // diffs against to know which markers to re-number and which to take off.
+    const drawnRouteStopsRef = useRef<google.maps.Data.Feature[]>([]);
     const storageRef = useRef<Storage>(props.storage);
     // Set when a drag moved a custom stop, cleared by the next press on a
     // marker. Dragging a stop ends with a mouseup on it, and a click on a
@@ -217,8 +217,8 @@ export function Markers(props: MarkersProps) {
 
     useEffect(() => {
         modeRef.current = props.mode;
-        selectedRef.current = props.selected;
-    }, [props.mode, props.selected]);
+        selectedStopsRef.current = props.selectedStops;
+    }, [props.mode, props.selectedStops]);
 
     // Keep handlers and the data-layer style callback bound to the latest storage
     // so login/logout transitions immediately switch storage backends without remounting.
@@ -260,15 +260,15 @@ export function Markers(props: MarkersProps) {
 
     useEffect(() => {
         if (!props.map) return;
-        const stops = props.mode === 'route' ? props.selected : [];
-        drawStops(props.map, drawnStopsRef.current, stops, storageRef.current);
-        drawnStopsRef.current = stops;
-    }, [props.map, props.mode, props.selected]);
+        const routeStops = props.mode === 'route' ? props.selectedStops : [];
+        drawRouteStops(props.map, drawnRouteStopsRef.current, routeStops, storageRef.current);
+        drawnRouteStopsRef.current = routeStops;
+    }, [props.map, props.mode, props.selectedStops]);
 
     const applyClickResult = (result: MarkerClickResult) => {
-        if (result.selected !== undefined) {
-            const { selected } = result;
-            props.onSelectedChange(() => selected);
+        if (result.selectedStops !== undefined) {
+            const { selectedStops } = result;
+            props.onSelectedStopsChange(() => selectedStops);
         }
         if (result.cycleStyleOn && props.map) {
             changeStyle(props.map, result.cycleStyleOn, storageRef.current);
@@ -284,7 +284,7 @@ export function Markers(props: MarkersProps) {
             props.onEnterRouteMode(event.feature);
             return;
         }
-        applyClickResult(resolveMarkerClick(modeRef.current, selectedRef.current, event.feature));
+        applyClickResult(resolveMarkerClick(modeRef.current, selectedStopsRef.current, event.feature));
     };
 
     // Modifier + double-click on the map puts a custom stop where it landed.
@@ -294,8 +294,8 @@ export function Markers(props: MarkersProps) {
         if (!props.map) return;
         if (!isModifierPressed(event) || !event.latLng) return;
         if (modeRef.current === 'route') {
-            const stops = addCustomStopAt(props.map, selectedRef.current, event.latLng);
-            if (stops) props.onSelectedChange(() => stops);
+            const routeStops = addCustomStopAt(props.map, selectedStopsRef.current, event.latLng);
+            if (routeStops) props.onSelectedStopsChange(() => routeStops);
             return;
         }
         props.onEnterRouteMode(createCustomStop(props.map, event.latLng));
@@ -313,11 +313,11 @@ export function Markers(props: MarkersProps) {
     const onMarkerRightClick = (event: google.maps.Data.MouseEvent) => {
         if (!props.map) return;
         if (modeRef.current === 'route') {
-            props.onSelectedChange((prev) => cycleRouteNumber(prev, event.feature));
+            props.onSelectedStopsChange((prev) => cycleRouteNumber(prev, event.feature));
             return;
         }
         resetStyle(props.map, event.feature, storageRef.current);
-        props.onSelectedChange(() => []);
+        props.onSelectedStopsChange(() => []);
         props.onStyleChange();
     };
 

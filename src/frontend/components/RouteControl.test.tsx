@@ -52,7 +52,7 @@ describe('RouteControl', () => {
         <RouteControl
             map={map}
             active={false}
-            stops={[]}
+            routeStops={[]}
             onEnter={() => {}}
             onAddCustomStop={() => {}}
             onClose={() => {}}
@@ -113,7 +113,7 @@ describe('RouteControl', () => {
         const mockMap = createMockMap();
         const stops = [createMockFeature('1'), createMockFeature('2')];
 
-        renderControl(control(mockMap, { active: true, stops }), mockMap);
+        renderControl(control(mockMap, { active: true, routeStops: stops }), mockMap);
 
         expect(screen.getByText(`2 / ${MAX_ROUTE_STOPS}`)).toBeTruthy();
     });
@@ -123,7 +123,7 @@ describe('RouteControl', () => {
         const openSpy = mockWindowOpen();
         const stops = [createMockFeature('1', { name: '三笠' }), createMockFeature('2', { name: 'びふか' })];
 
-        renderControl(control(mockMap, { active: true, stops }), mockMap);
+        renderControl(control(mockMap, { active: true, routeStops: stops }), mockMap);
         fireEvent.click(screen.getByText('作成'));
 
         expect(openSpy).toHaveBeenCalledWith(buildDirectionsURL(stops), '_blank', 'noopener');
@@ -132,7 +132,7 @@ describe('RouteControl', () => {
     it('keeps the directions button out of reach until a route needs two stops', () => {
         const mockMap = createMockMap();
 
-        renderControl(control(mockMap, { active: true, stops: [createMockFeature('1')] }), mockMap);
+        renderControl(control(mockMap, { active: true, routeStops: [createMockFeature('1')] }), mockMap);
 
         // By its accessible name: the visible label is shortened to fit the
         // row, and the full wording only survives in aria-label.
@@ -143,7 +143,7 @@ describe('RouteControl', () => {
         const mockMap = createMockMap();
         const stops = [createMockFeature('1'), createMockFeature('2')];
 
-        renderControl(control(mockMap, { active: true, stops }), mockMap);
+        renderControl(control(mockMap, { active: true, routeStops: stops }), mockMap);
 
         expect((screen.getByText('作成') as HTMLButtonElement).disabled).toBe(false);
     });
@@ -152,7 +152,7 @@ describe('RouteControl', () => {
         const mockMap = createMockMap();
         const onClose = vi.fn();
 
-        renderControl(control(mockMap, { active: true, stops: [createMockFeature('1')], onClose }), mockMap);
+        renderControl(control(mockMap, { active: true, routeStops: [createMockFeature('1')], onClose }), mockMap);
         fireEvent.click(screen.getByRole('switch'));
 
         expect(onClose).toHaveBeenCalledTimes(1);
@@ -162,7 +162,7 @@ describe('RouteControl', () => {
         const mockMap = createMockMap();
         const onClose = vi.fn();
 
-        renderControl(control(mockMap, { active: true, stops: [createMockFeature('1')], onClose }), mockMap);
+        renderControl(control(mockMap, { active: true, routeStops: [createMockFeature('1')], onClose }), mockMap);
         fireEvent.keyDown(window, { key: 'Escape' });
 
         expect(onClose).toHaveBeenCalledTimes(1);
@@ -205,7 +205,7 @@ describe('RouteControl', () => {
         const mockMap = createMockMap();
         const full = Array.from({ length: MAX_ROUTE_STOPS }, (_, i) => createMockFeature(`${i}`));
 
-        renderControl(control(mockMap, { active: true, stops: full }), mockMap);
+        renderControl(control(mockMap, { active: true, routeStops: full }), mockMap);
 
         expect((screen.getByLabelText('地図の中心に地点を追加') as HTMLButtonElement).disabled).toBe(true);
     });
