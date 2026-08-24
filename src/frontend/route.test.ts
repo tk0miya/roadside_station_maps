@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createMockCustomStop, createMockFeature, createMockLatLng } from '#test-utils/test-utils';
-import { buildDirectionsURL, hasCustomStopAt } from './route';
+import { buildDirectionsURL, cycleRouteNumber, hasCustomStopAt } from './route';
 
 describe('buildDirectionsURL', () => {
     it('appends the prefecture, telling two stations sharing a name apart', () => {
@@ -88,5 +88,50 @@ describe('hasCustomStopAt', () => {
 
         expect(hasCustomStopAt(stops, createMockLatLng(36.5000001, 140.5))).toBe(true);
         expect(hasCustomStopAt(stops, createMockLatLng(36.500001, 140.5))).toBe(false);
+    });
+});
+
+describe('cycleRouteNumber', () => {
+    it('swaps a feature with the one numbered before it', () => {
+        const a = createMockFeature('A');
+        const b = createMockFeature('B');
+        const c = createMockFeature('C');
+
+        expect(cycleRouteNumber([a, b, c], c)).toEqual([a, c, b]);
+    });
+
+    it('wraps the first feature around to the end', () => {
+        const a = createMockFeature('A');
+        const b = createMockFeature('B');
+        const c = createMockFeature('C');
+
+        expect(cycleRouteNumber([a, b, c], a)).toEqual([b, c, a]);
+    });
+
+    it('returns the same array for a single-stop route', () => {
+        const a = createMockFeature('A');
+        const stops = [a];
+
+        expect(cycleRouteNumber(stops, a)).toBe(stops);
+    });
+
+    it('returns the same array for a feature outside the route', () => {
+        const a = createMockFeature('A');
+        const b = createMockFeature('B');
+        const outsider = createMockFeature('C');
+        const stops = [a, b];
+
+        expect(cycleRouteNumber(stops, outsider)).toBe(stops);
+    });
+
+    it('leaves the input untouched', () => {
+        const a = createMockFeature('A');
+        const b = createMockFeature('B');
+        const stops = [a, b];
+
+        cycleRouteNumber(stops, b);
+        cycleRouteNumber(stops, a);
+
+        expect(stops).toEqual([a, b]);
     });
 });
