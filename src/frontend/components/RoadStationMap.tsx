@@ -118,9 +118,11 @@ export function RoadStationMap() {
 
     // The other two ways into route mode are the RouteControl switch and the
     // modifier + marker click, which is Markers' concern; this is the one
-    // that reads the map itself.
+    // that reads the map itself. `map` is withheld until storage is ready, the
+    // same gate Markers/RouteStops/RouteControl render behind, so the gesture
+    // cannot open a route mode the UI isn't there yet to show.
     useRouteModeShortcut({
-        map,
+        map: storage ? map : null,
         mode,
         selectedStops,
         onSelectedStopsChange: setSelectedStops,

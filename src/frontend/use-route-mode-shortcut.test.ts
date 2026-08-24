@@ -105,6 +105,37 @@ describe('useRouteModeShortcut', () => {
         });
     });
 
+    // RoadStationMap withholds `map` (passing null) until storage is ready,
+    // the same gate the storage-dependent UI renders behind, so this gesture
+    // cannot open a route mode that UI isn't there yet to show.
+    describe('map withheld', () => {
+        it('attaches to the map once it arrives, and detaches when withheld again', () => {
+            const mockMap = createMockMap();
+            const onSelectedStopsChange = vi.fn();
+            const onEnterRouteMode = vi.fn();
+            const { rerender } = renderHook(
+                ({ map }: { map: google.maps.Map | null }) =>
+                    useRouteModeShortcut({
+                        map,
+                        mode: 'normal',
+                        selectedStops: [],
+                        onSelectedStopsChange,
+                        onEnterRouteMode,
+                    }),
+                { initialProps: { map: null as google.maps.Map | null } }
+            );
+
+            rerender({ map: mockMap });
+            mockMap._emit('dblclick', buildMapClickEvent('ctrl'));
+            expect(onEnterRouteMode).toHaveBeenCalledTimes(1);
+
+            onEnterRouteMode.mockClear();
+            rerender({ map: null });
+            mockMap._emit('dblclick', buildMapClickEvent('ctrl'));
+            expect(onEnterRouteMode).not.toHaveBeenCalled();
+        });
+    });
+
     describe('inside route mode', () => {
         it('adds a custom stop where a Cmd + double-click landed', () => {
             const featureA = createMockFeature('A');
