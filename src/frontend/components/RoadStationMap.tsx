@@ -8,8 +8,9 @@ import type { StationsGeoJSON } from '../types/geojson';
 import type { MapMode } from '../types/station-map';
 import { InfoWindow } from './InfoWindow';
 import { LoginButton } from './LoginButton';
-import { addCustomStopAt, Markers } from './Markers';
+import { Markers } from './Markers';
 import { RouteControl } from './RouteControl';
+import { addCustomStopAt, RouteStops } from './RouteStops';
 import { ShareButton } from './ShareButton';
 import { StationCounter } from './StationCounter';
 
@@ -152,6 +153,7 @@ export function RoadStationMap() {
                         onStyleChange={() => setStyleVersion((v) => v + 1)}
                         onEnterRouteMode={enterRouteMode}
                     />
+                    <RouteStops map={map} mode={mode} selectedStops={selectedStops} storage={storage} />
                     <ShareButton map={map} />
                     <StationCounter storage={storage} stations={stations} styleVersion={styleVersion} map={map} />
                     {/* Aimed at by panning the map, and shown only while there is
@@ -159,9 +161,10 @@ export function RoadStationMap() {
                     {mode === 'route' && !isRouteFull(selectedStops) && (
                         <div className="route-crosshair" aria-hidden="true" />
                     )}
-                    {/* Route mode rides on the markers: Markers puts them on the
-                        map, numbers the chosen ones and takes the custom stops
-                        off again, so there is no route to build without it. */}
+                    {/* Route mode rides on the markers: Markers puts stations on
+                        the map and RouteStops numbers the chosen ones and takes
+                        the custom stops off again, so there is no route to build
+                        without them. */}
                     <RouteControl
                         map={map}
                         active={mode === 'route'}

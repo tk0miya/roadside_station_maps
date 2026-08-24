@@ -49,6 +49,23 @@ export function hasCustomStopAt(stops: google.maps.Data.Feature[], position: goo
     });
 }
 
+// Move `feature` one number earlier in the route order, wrapping the first
+// stop around to the end so repeated calls walk a stop through every
+// position. Returns the input array itself when the order cannot change, so the
+// state update bails out instead of re-numbering stops for nothing.
+export function cycleRouteNumber(
+    stops: google.maps.Data.Feature[],
+    feature: google.maps.Data.Feature
+): google.maps.Data.Feature[] {
+    const index = stops.indexOf(feature);
+    if (index < 0 || stops.length === 1) return stops;
+    if (index === 0) return [...stops.slice(1), feature];
+    const next = [...stops];
+    next[index - 1] = feature;
+    next[index] = stops[index - 1];
+    return next;
+}
+
 export function buildDirectionsURL(features: google.maps.Data.Feature[]): string {
     const stops = features.map(toStopQuery);
     const origin = stops[0];

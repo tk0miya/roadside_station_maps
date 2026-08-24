@@ -1,36 +1,13 @@
 import { useEffect, useRef } from 'react';
-import { MARKER_ICONS, numberedMarkerIcon } from '../marker-icons';
-import { hasCustomStopAt, isCustomStop, isRouteFull } from '../route';
+import { MARKER_ICONS } from '../marker-icons';
+import { cycleRouteNumber, isCustomStop, isRouteFull } from '../route';
 import type { Storage } from '../storage';
 import * as style from '../style';
 import { getStyle } from '../style';
 import type { StationsGeoJSON } from '../types/geojson';
 import type { MapMode } from '../types/station-map';
 import { useModifierHeld } from '../use-modifier-held';
-
-// Create a custom stop at `position` and return its feature, without putting it
-// in a route. It is created hidden: drawRouteStops reveals it once the route
-// gives it a number, which keeps it from flashing a station icon in between.
-function createCustomStop(map: google.maps.Map, position: google.maps.LatLng): google.maps.Data.Feature {
-    return map.data.add({
-        geometry: new google.maps.Data.Point(position),
-        properties: { customStop: true },
-    });
-}
-
-// The duplicate-position refusal answers pressing the add button twice without
-// moving the map: two custom stops on one spot are a single marker to look at,
-// two stops to pay for, and one of them impossible to reach without taking the
-// other off first. The stop goes on the end, the same place a tapped marker
-// takes.
-export function addCustomStopAt(
-    map: google.maps.Map,
-    stops: google.maps.Data.Feature[],
-    position: google.maps.LatLng
-): google.maps.Data.Feature[] | null {
-    if (isRouteFull(stops) || hasCustomStopAt(stops, position)) return null;
-    return [...stops, createCustomStop(map, position)];
-}
+import { addCustomStopAt, createCustomStop } from './RouteStops';
 
 // `undefined` fields mean "no change".
 export interface MarkerClickResult {
@@ -60,23 +37,6 @@ export function resolveMarkerClick(
         return { cycleStyleOn: clickedFeature };
     }
     return { selectedStops: [clickedFeature] };
-}
-
-// Move `feature` one number earlier in the route order, wrapping the first
-// marker around to the end so repeated calls walk a marker through every
-// position. Returns the input array itself when the order cannot change, so the
-// state update bails out instead of re-numbering markers for nothing.
-export function cycleRouteNumber(
-    stops: google.maps.Data.Feature[],
-    feature: google.maps.Data.Feature
-): google.maps.Data.Feature[] {
-    const index = stops.indexOf(feature);
-    if (index < 0 || stops.length === 1) return stops;
-    if (index === 0) return [...stops.slice(1), feature];
-    const next = [...stops];
-    next[index - 1] = feature;
-    next[index] = stops[index - 1];
-    return next;
 }
 
 const styleOptionsFor = (styleId: number): google.maps.Data.StyleOptions => ({
@@ -155,37 +115,6 @@ export function loadRoadStations(
     };
 }
 
-// Draw `next` as the route's stops by diffing it against `previous`: features
-// that are no longer in the route fall back to their storage-driven icon, while
-// the stops in `next` receive a 1-based numbered icon matching their position.
-// A custom stop exists only as part of a route, so leaving the route takes its
-// marker off the map rather than restoring a station icon. It is draggable the
-// whole time it is on the map: unlike a station, it stands for nothing but the
-// position the user gave it.
-export function drawRouteStops(
-    map: google.maps.Map,
-    previous: google.maps.Data.Feature[],
-    next: google.maps.Data.Feature[],
-    storage: Storage
-): void {
-    for (const feature of previous) {
-        if (next.includes(feature)) continue;
-        if (isCustomStop(feature)) {
-            map.data.remove(feature);
-            continue;
-        }
-        const stationId = feature.getProperty('stationId') as string;
-        map.data.overrideStyle(feature, styleOptionsFor(getStyle(storage, stationId)));
-    }
-    next.forEach((feature, index) => {
-        const numbered: google.maps.Data.StyleOptions = { icon: numberedMarkerIcon(index + 1) };
-        map.data.overrideStyle(
-            feature,
-            isCustomStop(feature) ? { ...numbered, visible: true, draggable: true } : numbered
-        );
-    });
-}
-
 interface MarkersProps {
     map: google.maps.Map | null;
     mode: MapMode;
@@ -203,9 +132,6 @@ export function Markers(props: MarkersProps) {
     // rather than the render they were created in.
     const modeRef = useRef<MapMode>(props.mode);
     const selectedStopsRef = useRef<google.maps.Data.Feature[]>(props.selectedStops);
-    // The route's stops as the map currently draws them, which the next change
-    // diffs against to know which markers to re-number and which to take off.
-    const drawnRouteStopsRef = useRef<google.maps.Data.Feature[]>([]);
     const storageRef = useRef<Storage>(props.storage);
     // Set when a drag moved a custom stop, cleared by the next press on a
     // marker. Dragging a stop ends with a mouseup on it, and a click on a
@@ -257,13 +183,6 @@ export function Markers(props: MarkersProps) {
     useEffect(() => {
         props.map?.setOptions({ disableDoubleClickZoom: modifierHeld });
     }, [props.map, modifierHeld]);
-
-    useEffect(() => {
-        if (!props.map) return;
-        const routeStops = props.mode === 'route' ? props.selectedStops : [];
-        drawRouteStops(props.map, drawnRouteStopsRef.current, routeStops, storageRef.current);
-        drawnRouteStopsRef.current = routeStops;
-    }, [props.map, props.mode, props.selectedStops]);
 
     const applyClickResult = (result: MarkerClickResult) => {
         if (result.selectedStops !== undefined) {
