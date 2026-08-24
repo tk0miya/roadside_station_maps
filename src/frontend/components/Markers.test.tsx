@@ -67,17 +67,6 @@ describe('Markers', () => {
         return { mockMap, onSelectedStopsChange, onEnterRouteMode };
     };
 
-    // Read back the picks a handler asked for, by running the updater it handed
-    // to onSelectedStopsChange against the picks it started from.
-    const applyUpdater = (
-        mock: ReturnType<typeof vi.fn>,
-        prev: google.maps.Data.Feature[]
-    ): google.maps.Data.Feature[] => {
-        expect(mock).toHaveBeenCalledTimes(1);
-        const updater = mock.mock.calls[0][0] as (p: google.maps.Data.Feature[]) => google.maps.Data.Feature[];
-        return updater(prev);
-    };
-
     it('renders nothing to the DOM', () => {
         const mockMap = createMockMap();
         const { container } = render(
@@ -153,7 +142,7 @@ describe('Markers', () => {
             mockMap.data._emit('click', buildClickEvent(featureB));
 
             // Normal mode picks the one station whose details are open.
-            expect(applyUpdater(onSelectedStopsChange, [])).toEqual([featureB]);
+            expect(onSelectedStopsChange).toHaveBeenCalledWith([featureB]);
         });
 
         it('cycles the style on a double-click', () => {
@@ -175,7 +164,7 @@ describe('Markers', () => {
             mockMap.data._emit('rightclick', buildClickEvent(featureB));
 
             // The station whose style was reset is put away with it.
-            expect(applyUpdater(onSelectedStopsChange, [featureB])).toEqual([]);
+            expect(onSelectedStopsChange).toHaveBeenCalledWith([]);
         });
     });
 
@@ -226,7 +215,7 @@ describe('Markers', () => {
             mockMap.data._emit('click', buildClickEvent(featureA, 'meta'));
 
             expect(onEnterRouteMode).not.toHaveBeenCalled();
-            expect(applyUpdater(onSelectedStopsChange, [])).toEqual([featureA]);
+            expect(onSelectedStopsChange).toHaveBeenCalledWith([featureA]);
         });
     });
 
@@ -302,7 +291,7 @@ describe('Markers', () => {
             const stop = (mockMap.data.add as ReturnType<typeof vi.fn>).mock.results[0]?.value;
             expect(isCustomStop(stop)).toBe(true);
             expect((stop.getGeometry() as google.maps.Data.Point).get().lat()).toBe(36.5);
-            expect(applyUpdater(onSelectedStopsChange, [featureA])).toEqual([featureA, stop]);
+            expect(onSelectedStopsChange).toHaveBeenCalledWith([featureA, stop]);
             // Already inside; nothing reopens the mode.
             expect(onEnterRouteMode).not.toHaveBeenCalled();
         });
@@ -339,7 +328,7 @@ describe('Markers', () => {
 
             mockMap.data._emit('click', buildClickEvent(featureB));
 
-            expect(applyUpdater(onSelectedStopsChange, [featureA])).toEqual([featureA, featureB]);
+            expect(onSelectedStopsChange).toHaveBeenCalledWith([featureA, featureB]);
         });
 
         it('takes a marker back out of the route when it is tapped again', () => {
@@ -352,7 +341,7 @@ describe('Markers', () => {
 
             mockMap.data._emit('click', buildClickEvent(featureA));
 
-            expect(applyUpdater(onSelectedStopsChange, [featureA, featureB])).toEqual([featureB]);
+            expect(onSelectedStopsChange).toHaveBeenCalledWith([featureB]);
         });
 
         it('leaves the visit styles alone on a double tap', () => {
@@ -378,11 +367,7 @@ describe('Markers', () => {
 
             mockMap.data._emit('rightclick', buildClickEvent(featureC));
 
-            expect(applyUpdater(onSelectedStopsChange, [featureA, featureB, featureC])).toEqual([
-                featureA,
-                featureC,
-                featureB,
-            ]);
+            expect(onSelectedStopsChange).toHaveBeenCalledWith([featureA, featureC, featureB]);
             // Reordering is not a visit-style change.
             expect(mockMap.data.overrideStyle).not.toHaveBeenCalled();
         });

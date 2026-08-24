@@ -190,7 +190,7 @@ interface MarkersProps {
     map: google.maps.Map | null;
     mode: MapMode;
     selectedStops: google.maps.Data.Feature[];
-    onSelectedStopsChange: (update: (prev: google.maps.Data.Feature[]) => google.maps.Data.Feature[]) => void;
+    onSelectedStopsChange: (next: google.maps.Data.Feature[]) => void;
     storage: Storage;
     stations: StationsGeoJSON | null;
     onStyleChange: () => void;
@@ -267,8 +267,7 @@ export function Markers(props: MarkersProps) {
 
     const applyClickResult = (result: MarkerClickResult) => {
         if (result.selectedStops !== undefined) {
-            const { selectedStops } = result;
-            props.onSelectedStopsChange(() => selectedStops);
+            props.onSelectedStopsChange(result.selectedStops);
         }
         if (result.cycleStyleOn && props.map) {
             changeStyle(props.map, result.cycleStyleOn, storageRef.current);
@@ -295,7 +294,7 @@ export function Markers(props: MarkersProps) {
         if (!isModifierPressed(event) || !event.latLng) return;
         if (modeRef.current === 'route') {
             const routeStops = addCustomStopAt(props.map, selectedStopsRef.current, event.latLng);
-            if (routeStops) props.onSelectedStopsChange(() => routeStops);
+            if (routeStops) props.onSelectedStopsChange(routeStops);
             return;
         }
         props.onEnterRouteMode(createCustomStop(props.map, event.latLng));
@@ -313,11 +312,11 @@ export function Markers(props: MarkersProps) {
     const onMarkerRightClick = (event: google.maps.Data.MouseEvent) => {
         if (!props.map) return;
         if (modeRef.current === 'route') {
-            props.onSelectedStopsChange((prev) => cycleRouteNumber(prev, event.feature));
+            props.onSelectedStopsChange(cycleRouteNumber(selectedStopsRef.current, event.feature));
             return;
         }
         resetStyle(props.map, event.feature, storageRef.current);
-        props.onSelectedStopsChange(() => []);
+        props.onSelectedStopsChange([]);
         props.onStyleChange();
     };
 
