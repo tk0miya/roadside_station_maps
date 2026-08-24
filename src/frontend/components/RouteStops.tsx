@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type { Feature, GoogleMap, LatLng, StyleOptions } from '../google-maps-types';
 import { MARKER_ICONS, numberedMarkerIcon } from '../marker-icons';
 import { hasCustomStopAt, isCustomStop, isRouteFull } from '../route';
 import type { Storage } from '../storage';
@@ -8,7 +9,7 @@ import type { MapMode } from '../types/station-map';
 // Create a custom stop at `position` and return its feature, without putting it
 // in a route. It is created hidden: drawRouteStops reveals it once the route
 // gives it a number, which keeps it from flashing a station icon in between.
-export function createCustomStop(map: google.maps.Map, position: google.maps.LatLng): google.maps.Data.Feature {
+export function createCustomStop(map: GoogleMap, position: LatLng): Feature {
     return map.data.add({
         geometry: new google.maps.Data.Point(position),
         properties: { customStop: true },
@@ -20,16 +21,12 @@ export function createCustomStop(map: google.maps.Map, position: google.maps.Lat
 // two stops to pay for, and one of them impossible to reach without taking the
 // other off first. The stop goes on the end, the same place a tapped marker
 // takes.
-export function addCustomStopAt(
-    map: google.maps.Map,
-    stops: google.maps.Data.Feature[],
-    position: google.maps.LatLng
-): google.maps.Data.Feature[] | null {
+export function addCustomStopAt(map: GoogleMap, stops: Feature[], position: LatLng): Feature[] | null {
     if (isRouteFull(stops) || hasCustomStopAt(stops, position)) return null;
     return [...stops, createCustomStop(map, position)];
 }
 
-const styleOptionsFor = (styleId: number): google.maps.Data.StyleOptions => ({
+const styleOptionsFor = (styleId: number): StyleOptions => ({
     icon: MARKER_ICONS[styleId],
 });
 
@@ -40,12 +37,7 @@ const styleOptionsFor = (styleId: number): google.maps.Data.StyleOptions => ({
 // marker off the map rather than restoring a station icon. It is draggable the
 // whole time it is on the map: unlike a station, it stands for nothing but the
 // position the user gave it.
-export function drawRouteStops(
-    map: google.maps.Map,
-    previous: google.maps.Data.Feature[],
-    next: google.maps.Data.Feature[],
-    storage: Storage
-): void {
+export function drawRouteStops(map: GoogleMap, previous: Feature[], next: Feature[], storage: Storage): void {
     for (const feature of previous) {
         if (next.includes(feature)) continue;
         if (isCustomStop(feature)) {
@@ -56,7 +48,7 @@ export function drawRouteStops(
         map.data.overrideStyle(feature, styleOptionsFor(getStyle(storage, stationId)));
     }
     next.forEach((feature, index) => {
-        const numbered: google.maps.Data.StyleOptions = { icon: numberedMarkerIcon(index + 1) };
+        const numbered: StyleOptions = { icon: numberedMarkerIcon(index + 1) };
         map.data.overrideStyle(
             feature,
             isCustomStop(feature) ? { ...numbered, visible: true, draggable: true } : numbered
@@ -65,9 +57,9 @@ export function drawRouteStops(
 }
 
 interface RouteStopsProps {
-    map: google.maps.Map | null;
+    map: GoogleMap | null;
     mode: MapMode;
-    selectedStops: google.maps.Data.Feature[];
+    selectedStops: Feature[];
     storage: Storage;
 }
 
@@ -78,7 +70,7 @@ interface RouteStopsProps {
 export function RouteStops(props: RouteStopsProps) {
     // The route's stops as the map currently draws them, which the next change
     // diffs against to know which markers to re-number and which to take off.
-    const drawnRouteStopsRef = useRef<google.maps.Data.Feature[]>([]);
+    const drawnRouteStopsRef = useRef<Feature[]>([]);
     // A storage change alone should not redraw a route that has not changed, so
     // this is read from a ref rather than being a redraw trigger of its own.
     const storageRef = useRef<Storage>(props.storage);

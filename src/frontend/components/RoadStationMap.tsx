@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuthManager } from '../auth/auth-context';
 import { useSessionRefresh } from '../auth/use-session-refresh';
+import type { Feature, GoogleMap } from '../google-maps-types';
 import { isRouteFull } from '../route';
 import { fetchStations, reconcileVisits } from '../station';
 import { createStorage, type Storage } from '../storage';
@@ -26,13 +27,13 @@ export function RoadStationMap() {
     const auth = authManager.getState();
     useSessionRefresh(authManager);
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
-    const [map, setMap] = useState<google.maps.Map | null>(null);
+    const [map, setMap] = useState<GoogleMap | null>(null);
     const [stations, setStations] = useState<StationsGeoJSON | null>(null);
     const [styleVersion, setStyleVersion] = useState(0);
     const [storage, setStorage] = useState<Storage | null>(null);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [mode, setMode] = useState<MapMode>('normal');
-    const [selectedStops, setSelectedStops] = useState<google.maps.Data.Feature[]>([]);
+    const [selectedStops, setSelectedStops] = useState<Feature[]>([]);
     // The map click listener is installed once, so what it reads about the mode
     // has to come from a ref rather than the render it was created in.
     const modeRef = useRef(mode);
@@ -111,7 +112,7 @@ export function RoadStationMap() {
         }
     };
 
-    const enterRouteMode = (seed?: google.maps.Data.Feature) => {
+    const enterRouteMode = (seed?: Feature) => {
         setMode('route');
         setSelectedStops(seed ? [seed] : []);
     };

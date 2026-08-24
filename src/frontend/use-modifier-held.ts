@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { MapMouseEvent } from './google-maps-types';
 
 // Track whether the route-editing modifier (Ctrl or Cmd) is currently held, so
 // a caller can read the state before an event arrives carrying it.
@@ -34,7 +35,7 @@ export function useModifierHeld(): boolean {
 
 // Whether the modifier was held down for a single Maps event already in hand,
 // as opposed to `useModifierHeld`'s continuously tracked state.
-export const isModifierPressed = (event: google.maps.MapMouseEvent): boolean => {
+export const isModifierPressed = (event: MapMouseEvent): boolean => {
     const domEvent = event.domEvent as MouseEvent | undefined;
     return Boolean(domEvent && (domEvent.metaKey || domEvent.ctrlKey));
 };

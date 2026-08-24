@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { GoogleMap } from '../google-maps-types';
 import { loadPlannedStations } from '../planned-stations';
 import type { Category, PlannedStation } from '../types/plan';
 import { PlanCoordCopy } from './PlanCoordCopy';
@@ -27,7 +28,7 @@ const SELECT_ZOOM = 8;
 // stations, and holds the selection / category-visibility state.
 export function PlanMap() {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
-    const [map, setMap] = useState<google.maps.Map | null>(null);
+    const [map, setMap] = useState<GoogleMap | null>(null);
     const [stations, setStations] = useState<PlannedStation[]>([]);
     const [selected, setSelected] = useState<PlannedStation | null>(null);
     const [visibleCategories, setVisibleCategories] = useState<Record<Category, boolean>>(DEFAULT_VISIBLE);

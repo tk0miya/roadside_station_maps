@@ -11,6 +11,7 @@ import {
     createMockStations,
     setupGoogleMapsMock,
 } from '#test-utils/test-utils';
+import type { DataMouseEvent, Feature, StyleOptions } from '../google-maps-types';
 import { MARKER_ICONS } from '../marker-icons';
 import { MAX_ROUTE_STOPS } from '../route';
 import { MemoryStorage } from '../storage/memory-storage';
@@ -19,17 +20,17 @@ import { changeStyle, loadRoadStations, Markers, resetStyle, toggleRouteStop } f
 
 const stations = createMockStations(3);
 
-const buildClickEvent = (feature: google.maps.Data.Feature, modifier?: 'meta' | 'ctrl'): google.maps.Data.MouseEvent =>
+const buildClickEvent = (feature: Feature, modifier?: 'meta' | 'ctrl'): DataMouseEvent =>
     ({
         feature,
         domEvent: {
             metaKey: modifier === 'meta',
             ctrlKey: modifier === 'ctrl',
         } as unknown as MouseEvent,
-    }) as google.maps.Data.MouseEvent;
+    }) as DataMouseEvent;
 
 describe('Markers', () => {
-    const renderMarkers = (overrides: { mode?: MapMode; selectedStops?: google.maps.Data.Feature[] } = {}) => {
+    const renderMarkers = (overrides: { mode?: MapMode; selectedStops?: Feature[] } = {}) => {
         const mockMap = createMockMap();
         const onSelectedStopsChange = vi.fn();
         const onEnterRouteMode = vi.fn();
@@ -300,7 +301,7 @@ describe('Markers', () => {
         const props = {
             map: mockMap,
             mode: 'normal' as MapMode,
-            selectedStops: [] as google.maps.Data.Feature[],
+            selectedStops: [] as Feature[],
             onSelectedStopsChange: vi.fn(),
             storage: new MemoryStorage(),
             stations,
@@ -437,8 +438,8 @@ describe('loadRoadStations', () => {
         loadRoadStations(mockMap, stations, storage, noopHandlers());
 
         const styleFor = (mockMap.data.setStyle as ReturnType<typeof vi.fn>).mock.calls[0][0] as (
-            f: google.maps.Data.Feature
-        ) => google.maps.Data.StyleOptions;
+            f: Feature
+        ) => StyleOptions;
         expect(styleFor(createMockFeature('A'))).toEqual({ icon: MARKER_ICONS[2] });
         expect(styleFor(createMockFeature('B'))).toEqual({ icon: MARKER_ICONS[0] });
         // A custom stop has no stored style and waits for its number.

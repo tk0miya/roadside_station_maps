@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type { DataMouseEvent, Feature, GoogleMap, StyleOptions } from '../google-maps-types';
 import { MARKER_ICONS } from '../marker-icons';
 import { cycleRouteNumber, isCustomStop, isRouteFull } from '../route';
 import type { Storage } from '../storage';
@@ -11,22 +12,19 @@ import { isModifierPressed } from '../use-modifier-held';
 // Take `feature` out of the route if it is already a stop, otherwise add it to
 // the end — unless the route is full, which refuses the click by returning
 // `stops` unchanged, the same contract `cycleRouteNumber` uses below.
-export function toggleRouteStop(
-    stops: google.maps.Data.Feature[],
-    feature: google.maps.Data.Feature
-): google.maps.Data.Feature[] {
+export function toggleRouteStop(stops: Feature[], feature: Feature): Feature[] {
     if (stops.includes(feature)) return stops.filter((stop) => stop !== feature);
     if (isRouteFull(stops)) return stops;
     return [...stops, feature];
 }
 
-const styleOptionsFor = (styleId: number): google.maps.Data.StyleOptions => ({
+const styleOptionsFor = (styleId: number): StyleOptions => ({
     icon: MARKER_ICONS[styleId],
 });
 
 // Base style of the data layer: a station shows the icon its stored style id
 // maps to, and a custom stop has none to show.
-const baseStyleFor = (feature: google.maps.Data.Feature, storage: Storage): google.maps.Data.StyleOptions => {
+const baseStyleFor = (feature: Feature, storage: Storage): StyleOptions => {
     if (isCustomStop(feature)) {
         return { visible: false };
     }
@@ -35,7 +33,7 @@ const baseStyleFor = (feature: google.maps.Data.Feature, storage: Storage): goog
 
 // Cycle the stored style id for the feature's station and re-apply the
 // resulting icon to the map's data layer.
-export function changeStyle(map: google.maps.Map, feature: google.maps.Data.Feature, storage: Storage): void {
+export function changeStyle(map: GoogleMap, feature: Feature, storage: Storage): void {
     const stationId = feature.getProperty('stationId') as string;
     const newStyleId = style.changeStyle(storage, stationId);
     map.data.overrideStyle(feature, styleOptionsFor(newStyleId));
@@ -43,16 +41,16 @@ export function changeStyle(map: google.maps.Map, feature: google.maps.Data.Feat
 
 // Clear the stored style id for the feature's station and restore the
 // default icon on the map's data layer.
-export function resetStyle(map: google.maps.Map, feature: google.maps.Data.Feature, storage: Storage): void {
+export function resetStyle(map: GoogleMap, feature: Feature, storage: Storage): void {
     const stationId = feature.getProperty('stationId') as string;
     const newStyleId = style.resetStyle(storage, stationId);
     map.data.overrideStyle(feature, styleOptionsFor(newStyleId));
 }
 
 interface MarkerHandlers {
-    onMarkerClick: (event: google.maps.Data.MouseEvent) => void;
-    onMarkerDoubleClick: (event: google.maps.Data.MouseEvent) => void;
-    onMarkerRightClick: (event: google.maps.Data.MouseEvent) => void;
+    onMarkerClick: (event: DataMouseEvent) => void;
+    onMarkerDoubleClick: (event: DataMouseEvent) => void;
+    onMarkerRightClick: (event: DataMouseEvent) => void;
     onMarkerMouseDown: () => void;
     onFeatureDragged: () => void;
 }
@@ -61,7 +59,7 @@ interface MarkerHandlers {
 // listeners, and install the storage-driven style callback. Returns a cleanup
 // that detaches the listeners and removes every feature.
 export function loadRoadStations(
-    map: google.maps.Map,
+    map: GoogleMap,
     stations: StationsGeoJSON,
     storage: Storage,
     handlers: MarkerHandlers
@@ -75,13 +73,13 @@ export function loadRoadStations(
         // Dragging a custom stop is the only thing that moves a geometry.
         map.data.addListener('setgeometry', handlers.onFeatureDragged),
     ];
-    map.data.setStyle((feature: google.maps.Data.Feature) => baseStyleFor(feature, storage));
+    map.data.setStyle((feature: Feature) => baseStyleFor(feature, storage));
 
     return () => {
         for (const listener of listeners) {
             listener.remove();
         }
-        const features: google.maps.Data.Feature[] = [];
+        const features: Feature[] = [];
         map.data.forEach((f) => {
             features.push(f);
         });
@@ -92,24 +90,24 @@ export function loadRoadStations(
 }
 
 interface MarkersProps {
-    map: google.maps.Map | null;
+    map: GoogleMap | null;
     mode: MapMode;
-    selectedStops: google.maps.Data.Feature[];
-    onSelectedStopsChange: (next: google.maps.Data.Feature[]) => void;
+    selectedStops: Feature[];
+    onSelectedStopsChange: (next: Feature[]) => void;
     storage: Storage;
     stations: StationsGeoJSON | null;
     onStyleChange: () => void;
     // Called by the modifier + marker click, which opens the mode with `seed`
     // as its first stop. The other way in via the modifier — on the map
     // itself — is not this component's concern; see useRouteModeShortcut.
-    onEnterRouteMode: (seed: google.maps.Data.Feature) => void;
+    onEnterRouteMode: (seed: Feature) => void;
 }
 
 export function Markers(props: MarkersProps) {
     // The listeners are installed once, so what they read has to come from a ref
     // rather than the render they were created in.
     const modeRef = useRef<MapMode>(props.mode);
-    const selectedStopsRef = useRef<google.maps.Data.Feature[]>(props.selectedStops);
+    const selectedStopsRef = useRef<Feature[]>(props.selectedStops);
     const storageRef = useRef<Storage>(props.storage);
     // Set when a drag moved a custom stop, cleared by the next press on a
     // marker. Dragging a stop ends with a mouseup on it, and a click on a
@@ -128,7 +126,7 @@ export function Markers(props: MarkersProps) {
     useEffect(() => {
         storageRef.current = props.storage;
         if (!props.map) return;
-        props.map.data.setStyle((feature: google.maps.Data.Feature) => baseStyleFor(feature, storageRef.current));
+        props.map.data.setStyle((feature: Feature) => baseStyleFor(feature, storageRef.current));
     }, [props.map, props.storage]);
 
     useEffect(() => {
@@ -148,12 +146,12 @@ export function Markers(props: MarkersProps) {
 
     // Cycle the style and let the app know, the outcome a re-click in normal
     // mode and a double-click on a marker both reach.
-    const cycleStyle = (map: google.maps.Map, feature: google.maps.Data.Feature) => {
+    const cycleStyle = (map: GoogleMap, feature: Feature) => {
         changeStyle(map, feature, storageRef.current);
         props.onStyleChange();
     };
 
-    const onMarkerClick = (event: google.maps.Data.MouseEvent) => {
+    const onMarkerClick = (event: DataMouseEvent) => {
         if (!props.map) return;
         if (draggedRef.current) return;
 
@@ -173,7 +171,7 @@ export function Markers(props: MarkersProps) {
         }
     };
 
-    const onMarkerDoubleClick = (event: google.maps.Data.MouseEvent) => {
+    const onMarkerDoubleClick = (event: DataMouseEvent) => {
         if (!props.map) return;
         // A modifier + double-click is stopped here as well: its first click
         // already opened route mode.
@@ -181,7 +179,7 @@ export function Markers(props: MarkersProps) {
         cycleStyle(props.map, event.feature);
     };
 
-    const onMarkerRightClick = (event: google.maps.Data.MouseEvent) => {
+    const onMarkerRightClick = (event: DataMouseEvent) => {
         if (!props.map) return;
         if (modeRef.current === 'route') {
             props.onSelectedStopsChange(cycleRouteNumber(selectedStopsRef.current, event.feature));

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import type { GoogleInfoWindow, GoogleMap } from '../google-maps-types';
 import type { PlannedStation, PlanUrl } from '../types/plan';
 import { categoryOf } from '../types/plan';
 
@@ -16,14 +17,14 @@ function urlNodes(urls: PlanUrl[]) {
 }
 
 interface PlanInfoWindowProps {
-    map: google.maps.Map | null;
+    map: GoogleMap | null;
     selected: PlannedStation | null;
 }
 
 // Invisible component that drives a single google.maps.InfoWindow, rendering its
 // content with a dedicated React root (same pattern as the main InfoWindow.tsx).
 export function PlanInfoWindow({ map, selected }: PlanInfoWindowProps) {
-    const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
+    const infoWindowRef = useRef<GoogleInfoWindow | null>(null);
     const contentElementRef = useRef<HTMLElement | null>(null);
     const contentRootRef = useRef<Root | null>(null);
 
