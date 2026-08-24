@@ -4,6 +4,7 @@
 
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { GoogleMap } from '../google-maps-types';
 import type { PlannedStation, PlanUrl } from '../types/plan';
 import { PlanInfoWindow } from './PlanInfoWindow';
 
@@ -13,7 +14,7 @@ const mockInfoWindow = {
     close: vi.fn(),
 };
 
-const mockMap = {} as google.maps.Map;
+const mockMap = {} as GoogleMap;
 
 Object.defineProperty(global, 'google', {
     value: {

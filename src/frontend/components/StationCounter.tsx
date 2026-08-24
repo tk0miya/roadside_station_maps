@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
+import type { GoogleMap } from '../google-maps-types';
 import { MARKER_ICONS } from '../marker-icons';
 import type { Storage } from '../storage';
 import { entries, STYLE_COUNT } from '../style';
@@ -9,7 +10,7 @@ interface StationCounterProps {
     storage: Storage;
     stations: StationsGeoJSON | null;
     styleVersion: number;
-    map: google.maps.Map | null;
+    map: GoogleMap | null;
 }
 
 function countByStyle(storage: Storage, totalStations: number): Record<number, number> {

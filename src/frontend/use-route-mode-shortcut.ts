@@ -1,14 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { addCustomStopAt, createCustomStop } from './components/RouteStops';
+import type { Feature, GoogleMap, MapMouseEvent } from './google-maps-types';
 import type { MapMode } from './types/station-map';
 import { isModifierPressed, useModifierHeld } from './use-modifier-held';
 
 interface RouteModeShortcutProps {
-    map: google.maps.Map | null;
+    map: GoogleMap | null;
     mode: MapMode;
-    selectedStops: google.maps.Data.Feature[];
-    onSelectedStopsChange: (next: google.maps.Data.Feature[]) => void;
-    onEnterRouteMode: (seed: google.maps.Data.Feature) => void;
+    selectedStops: Feature[];
+    onSelectedStopsChange: (next: Feature[]) => void;
+    onEnterRouteMode: (seed: Feature) => void;
 }
 
 // Modifier (Cmd/Ctrl) + double-click on the map: one of the three ways into
@@ -19,7 +20,7 @@ export function useRouteModeShortcut(props: RouteModeShortcutProps): void {
     // The listener is installed once, so what it reads has to come from a ref
     // rather than the render it was created in.
     const modeRef = useRef<MapMode>(props.mode);
-    const selectedStopsRef = useRef<google.maps.Data.Feature[]>(props.selectedStops);
+    const selectedStopsRef = useRef<Feature[]>(props.selectedStops);
     const modifierHeld = useModifierHeld();
 
     useEffect(() => {
@@ -39,7 +40,7 @@ export function useRouteModeShortcut(props: RouteModeShortcutProps): void {
     useEffect(() => {
         if (!props.map) return;
 
-        const onMapDoubleClick = (event: google.maps.MapMouseEvent) => {
+        const onMapDoubleClick = (event: MapMouseEvent) => {
             if (!props.map) return;
             if (!isModifierPressed(event) || !event.latLng) return;
             if (modeRef.current === 'route') {

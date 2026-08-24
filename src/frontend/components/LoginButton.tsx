@@ -2,9 +2,10 @@ import { GoogleLogin } from '@react-oauth/google';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuthManager } from '../auth/auth-context';
+import type { GoogleMap } from '../google-maps-types';
 
 interface LoginButtonProps {
-    map: google.maps.Map | null;
+    map: GoogleMap | null;
 }
 
 export function LoginButton({ map }: LoginButtonProps) {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuthManager } from '../auth/auth-context';
+import type { GoogleMap } from '../google-maps-types';
 import { SharesApiClient } from '../storage';
 
 // Build the shareable URL for the given share id
@@ -28,7 +29,7 @@ async function fadeOut(element: HTMLElement, delay: number): Promise<void> {
 }
 
 interface ShareButtonProps {
-    map: google.maps.Map | null;
+    map: GoogleMap | null;
 }
 
 export function ShareButton(props: ShareButtonProps) {

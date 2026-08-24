@@ -1,12 +1,13 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import type { Feature, GoogleMap } from '../google-maps-types';
 import { buildDirectionsURL, isRouteFull, MAX_ROUTE_STOPS } from '../route';
 
 interface RouteControlProps {
-    map: google.maps.Map | null;
+    map: GoogleMap | null;
     active: boolean;
     // Handed over as it stands: read as a route only while the switch is on.
-    routeStops: google.maps.Data.Feature[];
+    routeStops: Feature[];
     onEnter: () => void;
     onAddCustomStop: () => void;
     onClose: () => void;

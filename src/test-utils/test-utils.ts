@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import type { Feature, FeatureOptions, GoogleMap, LatLng } from '../frontend/google-maps-types';
 
 // Event plumbing shared by the mock map and its mock Data layer: `addListener`
 // records the handler (and can unregister it), `_emit` fires what is registered.
@@ -65,27 +66,27 @@ export const createMockMap = () => {
         },
     };
 
-    let features: google.maps.Data.Feature[] = [];
+    let features: Feature[] = [];
     const dataEvents = createListenerRegistry();
     const data = {
         addGeoJson: vi.fn(),
         addListener: dataEvents.addListener,
         setStyle: vi.fn(),
         overrideStyle: vi.fn(),
-        add: vi.fn((options: google.maps.Data.FeatureOptions) => {
+        add: vi.fn((options: FeatureOptions) => {
             const properties = (options.properties ?? {}) as Record<string, unknown>;
             const feature = {
                 getProperty: (name: string) => properties[name],
                 getGeometry: () => options.geometry,
-            } as unknown as google.maps.Data.Feature;
+            } as unknown as Feature;
             features.push(feature);
             return feature;
         }),
-        forEach: vi.fn((cb: (f: google.maps.Data.Feature) => void) => features.forEach(cb)),
-        remove: vi.fn((f: google.maps.Data.Feature) => {
+        forEach: vi.fn((cb: (f: Feature) => void) => features.forEach(cb)),
+        remove: vi.fn((f: Feature) => {
             features = features.filter((x) => x !== f);
         }),
-        _setFeatures: (fs: google.maps.Data.Feature[]) => {
+        _setFeatures: (fs: Feature[]) => {
             features = fs;
         },
         _emit: dataEvents._emit,
@@ -101,7 +102,7 @@ export const createMockMap = () => {
         setOptions,
         addListener: mapEvents.addListener,
         _emit: mapEvents._emit,
-    } as unknown as google.maps.Map & {
+    } as unknown as GoogleMap & {
         data: typeof data;
         setOptions: typeof setOptions;
         _emit: typeof mapEvents._emit;
@@ -114,7 +115,7 @@ export const createMockLatLng = (lat: number, lng: number) =>
     ({
         lat: () => lat,
         lng: () => lng,
-    }) as google.maps.LatLng;
+    }) as LatLng;
 
 // Create mock Google Maps Data Feature
 export const createMockFeature = (
@@ -141,7 +142,7 @@ export const createMockFeature = (
         getGeometry: () => ({
             get: () => createMockLatLng(position.lat, position.lng),
         }),
-    } as unknown as google.maps.Data.Feature;
+    } as unknown as Feature;
 };
 
 // Create a mock feature standing for a custom stop: no station data, just the
@@ -152,7 +153,7 @@ export const createMockCustomStop = (lat = 36.0, lng = 140.0) =>
         getGeometry: () => ({
             get: () => createMockLatLng(lat, lng),
         }),
-    }) as unknown as google.maps.Data.Feature;
+    }) as unknown as Feature;
 
 // Create mock StationsGeoJSON
 export const createMockStations = (count: number, startId = 18786) => ({
@@ -201,7 +202,7 @@ export const setupGoogleMapsMock = () => {
             },
             Data: {
                 Point: class {
-                    constructor(private readonly position: google.maps.LatLng) {}
+                    constructor(private readonly position: LatLng) {}
                     get() {
                         return this.position;
                     }

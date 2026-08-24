@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type { GoogleMap, Marker } from '../google-maps-types';
 import { MARKER_ICONS } from '../marker-icons';
 import type { Category, PlannedStation } from '../types/plan';
 import { categoryOf } from '../types/plan';
@@ -16,7 +17,7 @@ export const CATEGORY_ICON: Record<Category, string> = {
 };
 
 interface PlanMarkersProps {
-    map: google.maps.Map | null;
+    map: GoogleMap | null;
     stations: PlannedStation[];
     visibleCategories: Record<Category, boolean>;
     onSelect: (station: PlannedStation) => void;
@@ -26,7 +27,7 @@ interface PlanMarkersProps {
 // the Data Layer). Markers are grouped by category so the filter can toggle
 // visibility per category without rebuilding them.
 export function PlanMarkers({ map, stations, visibleCategories, onSelect }: PlanMarkersProps) {
-    const markersRef = useRef<{ marker: google.maps.Marker; category: Category }[]>([]);
+    const markersRef = useRef<{ marker: Marker; category: Category }[]>([]);
     // Keep the click handler bound to the latest onSelect without recreating markers.
     const onSelectRef = useRef(onSelect);
     useEffect(() => {

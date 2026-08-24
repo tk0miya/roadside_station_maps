@@ -5,25 +5,26 @@
 import { fireEvent, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockFeature, createMockLatLng, createMockMap, setupGoogleMapsMock } from '#test-utils/test-utils';
+import type { DataPoint, Feature, GoogleMap, MapMouseEvent } from './google-maps-types';
 import { isCustomStop, MAX_ROUTE_STOPS } from './route';
 import type { MapMode } from './types/station-map';
 import { useRouteModeShortcut } from './use-route-mode-shortcut';
 
-const buildMapClickEvent = (modifier?: 'meta' | 'ctrl', lat = 36.5, lng = 140.5): google.maps.MapMouseEvent =>
+const buildMapClickEvent = (modifier?: 'meta' | 'ctrl', lat = 36.5, lng = 140.5): MapMouseEvent =>
     ({
         latLng: createMockLatLng(lat, lng),
         domEvent: {
             metaKey: modifier === 'meta',
             ctrlKey: modifier === 'ctrl',
         } as unknown as MouseEvent,
-    }) as google.maps.MapMouseEvent;
+    }) as MapMouseEvent;
 
 describe('useRouteModeShortcut', () => {
     beforeEach(() => {
         setupGoogleMapsMock();
     });
 
-    const renderShortcut = (overrides: { mode?: MapMode; selectedStops?: google.maps.Data.Feature[] } = {}) => {
+    const renderShortcut = (overrides: { mode?: MapMode; selectedStops?: Feature[] } = {}) => {
         const mockMap = createMockMap();
         const onSelectedStopsChange = vi.fn();
         const onEnterRouteMode = vi.fn();
@@ -51,7 +52,7 @@ describe('useRouteModeShortcut', () => {
 
             const stop = addedStop(mockMap);
             expect(isCustomStop(stop)).toBe(true);
-            expect((stop.getGeometry() as google.maps.Data.Point).get().lat()).toBe(36.5);
+            expect((stop.getGeometry() as DataPoint).get().lat()).toBe(36.5);
             expect(onEnterRouteMode).toHaveBeenCalledWith(stop);
         });
 
@@ -114,7 +115,7 @@ describe('useRouteModeShortcut', () => {
             const onSelectedStopsChange = vi.fn();
             const onEnterRouteMode = vi.fn();
             const { rerender } = renderHook(
-                ({ map }: { map: google.maps.Map | null }) =>
+                ({ map }: { map: GoogleMap | null }) =>
                     useRouteModeShortcut({
                         map,
                         mode: 'normal',
@@ -122,7 +123,7 @@ describe('useRouteModeShortcut', () => {
                         onSelectedStopsChange,
                         onEnterRouteMode,
                     }),
-                { initialProps: { map: null as google.maps.Map | null } }
+                { initialProps: { map: null as GoogleMap | null } }
             );
 
             rerender({ map: mockMap });
@@ -148,7 +149,7 @@ describe('useRouteModeShortcut', () => {
 
             const stop = addedStop(mockMap);
             expect(isCustomStop(stop)).toBe(true);
-            expect((stop.getGeometry() as google.maps.Data.Point).get().lat()).toBe(36.5);
+            expect((stop.getGeometry() as DataPoint).get().lat()).toBe(36.5);
             expect(onSelectedStopsChange).toHaveBeenCalledWith([featureA, stop]);
             // Already inside; nothing reopens the mode.
             expect(onEnterRouteMode).not.toHaveBeenCalled();

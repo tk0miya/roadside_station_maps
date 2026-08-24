@@ -5,6 +5,7 @@
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockFeature } from '#test-utils/test-utils';
+import type { GoogleMap, LatLng } from '../google-maps-types';
 import { InfoWindow } from './InfoWindow';
 
 // Mock Google Maps API
@@ -14,7 +15,7 @@ const mockInfoWindow = {
     close: vi.fn(),
 };
 
-const mockMap = {} as google.maps.Map;
+const mockMap = {} as GoogleMap;
 
 Object.defineProperty(global, 'google', {
     value: {
@@ -70,7 +71,7 @@ describe('InfoWindow', () => {
             pixelOffset: expect.any(Object),
         });
         // The geometry hands back a LatLng, which the InfoWindow takes as is.
-        const { position } = mockInfoWindow.setOptions.mock.calls[0][0] as { position: google.maps.LatLng };
+        const { position } = mockInfoWindow.setOptions.mock.calls[0][0] as { position: LatLng };
         expect([position.lat(), position.lng()]).toEqual([35.0, 139.0]);
         expect(mockInfoWindow.open).toHaveBeenCalledWith(mockMap);
     });

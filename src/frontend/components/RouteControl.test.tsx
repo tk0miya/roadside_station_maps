@@ -6,6 +6,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentProps, ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockFeature, createMockMap, setupGoogleMapsMock } from '#test-utils/test-utils';
+import type { GoogleMap } from '../google-maps-types';
 import { buildDirectionsURL, MAX_ROUTE_STOPS } from '../route';
 import { RouteControl } from './RouteControl';
 
@@ -46,7 +47,7 @@ describe('RouteControl', () => {
     // Only what a case turns on is worth writing down; the rest is the control
     // as RoadStationMap hands it over.
     const control = (
-        map: google.maps.Map | null,
+        map: GoogleMap | null,
         overrides: Partial<ComponentProps<typeof RouteControl>> = {}
     ): ReactElement => (
         <RouteControl

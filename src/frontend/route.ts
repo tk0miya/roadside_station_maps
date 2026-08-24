@@ -1,6 +1,8 @@
 // The route domain: which features a route is built from, how many of them fit,
 // and how the finished route is handed over to Google Maps.
 
+import type { DataPoint, Feature, LatLng } from './google-maps-types';
+
 // Google Maps directions support at most 10 stops (origin + destination
 // + 8 waypoints), so the number of stops a route takes is capped just under
 // that bound.
@@ -11,20 +13,19 @@ export const MAX_ROUTE_STOPS = 9;
 const PRECISION = 6;
 
 // Whether the route has taken all the stops it can.
-export function isRouteFull(stops: google.maps.Data.Feature[]): boolean {
+export function isRouteFull(stops: Feature[]): boolean {
     return stops.length >= MAX_ROUTE_STOPS;
 }
 
 // A custom stop is a stop the user placed on the map to route through somewhere
 // that is not a station, and carries no station data.
-export function isCustomStop(feature: google.maps.Data.Feature): boolean {
+export function isCustomStop(feature: Feature): boolean {
     return Boolean(feature.getProperty('customStop'));
 }
 
-const positionOf = (feature: google.maps.Data.Feature): google.maps.LatLng =>
-    (feature.getGeometry() as google.maps.Data.Point).get();
+const positionOf = (feature: Feature): LatLng => (feature.getGeometry() as DataPoint).get();
 
-function toStopQuery(feature: google.maps.Data.Feature): string {
+function toStopQuery(feature: Feature): string {
     if (isCustomStop(feature)) {
         const position = positionOf(feature);
         return `${position.lat().toFixed(PRECISION)},${position.lng().toFixed(PRECISION)}`;
@@ -38,7 +39,7 @@ function toStopQuery(feature: google.maps.Data.Feature): string {
     return `道の駅 ${name} ${prefName}`;
 }
 
-export function hasCustomStopAt(stops: google.maps.Data.Feature[], position: google.maps.LatLng): boolean {
+export function hasCustomStopAt(stops: Feature[], position: LatLng): boolean {
     return stops.some((stop) => {
         if (!isCustomStop(stop)) return false;
         const at = positionOf(stop);
@@ -53,10 +54,7 @@ export function hasCustomStopAt(stops: google.maps.Data.Feature[], position: goo
 // stop around to the end so repeated calls walk a stop through every
 // position. Returns the input array itself when the order cannot change, so the
 // state update bails out instead of re-numbering stops for nothing.
-export function cycleRouteNumber(
-    stops: google.maps.Data.Feature[],
-    feature: google.maps.Data.Feature
-): google.maps.Data.Feature[] {
+export function cycleRouteNumber(stops: Feature[], feature: Feature): Feature[] {
     const index = stops.indexOf(feature);
     if (index < 0 || stops.length === 1) return stops;
     if (index === 0) return [...stops.slice(1), feature];
@@ -66,7 +64,7 @@ export function cycleRouteNumber(
     return next;
 }
 
-export function buildDirectionsURL(features: google.maps.Data.Feature[]): string {
+export function buildDirectionsURL(features: Feature[]): string {
     const stops = features.map(toStopQuery);
     const origin = stops[0];
     const destination = stops[stops.length - 1];

@@ -1,3 +1,5 @@
+import type { Icon } from './google-maps-types';
+
 export const MARKER_ICONS: readonly string[] = [
     'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
     'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
@@ -8,7 +10,7 @@ export const MARKER_ICONS: readonly string[] = [
 
 // Build a pin-shaped marker icon embedding the given number, used to indicate
 // the order the route visits the stops chosen for it.
-export function numberedMarkerIcon(n: number): google.maps.Icon {
+export function numberedMarkerIcon(n: number): Icon {
     const svg =
         `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">` +
         `<path d="M16 0C7.16 0 0 7.16 0 16c0 12 16 24 16 24s16-12 16-24C32 7.16 24.84 0 16 0z" fill="#1a73e8" stroke="#ffffff" stroke-width="2"/>` +

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { GoogleMap, MapMouseEvent } from '../google-maps-types';
 
 // Decimal places kept when copying. 6 places is ~11cm on the ground, finer than
 // a point can be picked by eye at any zoom level, so the remaining digits of the
@@ -16,7 +17,7 @@ export function formatCoords(lat: number, lng: number): string {
 }
 
 interface PlanCoordCopyProps {
-    map: google.maps.Map | null;
+    map: GoogleMap | null;
 }
 
 // Copies the coordinate under the cursor to the clipboard on right-click, and
@@ -45,7 +46,7 @@ export function PlanCoordCopy({ map }: PlanCoordCopyProps) {
             return;
         }
 
-        const listener = map.addListener('contextmenu', async (event: google.maps.MapMouseEvent) => {
+        const listener = map.addListener('contextmenu', async (event: MapMouseEvent) => {
             if (!event.latLng) {
                 return;
             }
