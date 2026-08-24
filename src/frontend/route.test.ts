@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createMockCustomPoint, createMockFeature, createMockLatLng } from '#test-utils/test-utils';
-import { buildDirectionsURL, hasPointAt } from './route';
+import { createMockCustomStop, createMockFeature, createMockLatLng } from '#test-utils/test-utils';
+import { buildDirectionsURL, hasCustomStopAt } from './route';
 
 describe('buildDirectionsURL', () => {
     it('appends the prefecture, telling two stations sharing a name apart', () => {
@@ -17,8 +17,8 @@ describe('buildDirectionsURL', () => {
         expect(url.searchParams.get('destination')).toBe('道の駅 さかい 福井県');
     });
 
-    it('writes a custom route point as its coordinate', () => {
-        const features = [createMockCustomPoint(43.7708, 142.365), createMockFeature('2', { name: 'びふか' })];
+    it('writes a custom stop as its coordinate', () => {
+        const features = [createMockCustomStop(43.7708, 142.365), createMockFeature('2', { name: 'びふか' })];
 
         const url = new URL(buildDirectionsURL(features));
 
@@ -38,7 +38,7 @@ describe('buildDirectionsURL', () => {
         const features = [
             createMockFeature('1', { name: '三笠' }),
             createMockFeature('2', { name: 'スタープラザ 芦別' }),
-            createMockCustomPoint(43.0, 142.0),
+            createMockCustomStop(43.0, 142.0),
             createMockFeature('4', { name: 'びふか' }),
         ];
 
@@ -68,27 +68,25 @@ describe('buildDirectionsURL', () => {
     });
 });
 
-describe('hasPointAt', () => {
-    it('finds the custom point already standing there', () => {
-        const stops = [createMockCustomPoint(36.5, 140.5)];
+describe('hasCustomStopAt', () => {
+    it('finds the custom stop already standing there', () => {
+        const stops = [createMockCustomStop(36.5, 140.5)];
 
-        expect(hasPointAt(stops, createMockLatLng(36.5, 140.5))).toBe(true);
+        expect(hasCustomStopAt(stops, createMockLatLng(36.5, 140.5))).toBe(true);
     });
 
-    // A station at the same spot is a stop of its own, and a point beside it is
-    // the user's to place: only a point over a point is the pressed-twice case.
     it('leaves a station standing there out of it', () => {
         const stops = [createMockFeature('1', {}, { lat: 36.5, lng: 140.5 })];
 
-        expect(hasPointAt(stops, createMockLatLng(36.5, 140.5))).toBe(false);
+        expect(hasCustomStopAt(stops, createMockLatLng(36.5, 140.5))).toBe(false);
     });
 
     // Coordinates are compared to the same 6 places the route URL carries, so a
     // difference the URL would not keep is not a different place either.
     it('reads a difference past the sixth decimal place as the same place', () => {
-        const stops = [createMockCustomPoint(36.5, 140.5)];
+        const stops = [createMockCustomStop(36.5, 140.5)];
 
-        expect(hasPointAt(stops, createMockLatLng(36.5000001, 140.5))).toBe(true);
-        expect(hasPointAt(stops, createMockLatLng(36.500001, 140.5))).toBe(false);
+        expect(hasCustomStopAt(stops, createMockLatLng(36.5000001, 140.5))).toBe(true);
+        expect(hasCustomStopAt(stops, createMockLatLng(36.500001, 140.5))).toBe(false);
     });
 });

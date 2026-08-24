@@ -118,8 +118,8 @@ button.route-control-switch[aria-checked="true"] span.route-control-track::after
     transform: translateX(16px);
 }
 
-/* The same box as the 作成 button beside it, in white: adding a point is a step
-   in building the route, not the act of handing it over. */
+/* The same box as the 作成 button beside it, in white: adding a custom stop is
+   a step in building the route, not the act of handing it over. */
 button.route-control-add {
     flex: none;
     height: 44px;
@@ -177,10 +177,10 @@ button.route-control-create:disabled {
     cursor: default;
 }
 
-/* Where the control's button drops a point: the middle of the map. Fixed to the
-   centre of the viewport, which the map canvas fills, and inert — every gesture
-   that lands on it belongs to the map underneath. The white outline keeps the
-   mark readable over both a pale road and a dark forest. */
+/* Where the control's button puts a custom stop: the middle of the map. Fixed
+   to the centre of the viewport, which the map canvas fills, and inert — every
+   gesture that lands on it belongs to the map underneath. The white outline
+   keeps the mark readable over both a pale road and a dark forest. */
 div.route-crosshair {
     position: fixed;
     top: 50%;

@@ -6,7 +6,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentProps, ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMockFeature, createMockMap, setupGoogleMapsMock } from '#test-utils/test-utils';
-import { buildDirectionsURL, MAX_ROUTE_SELECTION } from '../route';
+import { buildDirectionsURL, MAX_ROUTE_STOPS } from '../route';
 import { RouteControl } from './RouteControl';
 
 describe('RouteControl', () => {
@@ -54,7 +54,7 @@ describe('RouteControl', () => {
             active={false}
             stops={[]}
             onEnter={() => {}}
-            onAddPoint={() => {}}
+            onAddCustomStop={() => {}}
             onClose={() => {}}
             {...overrides}
         />
@@ -115,7 +115,7 @@ describe('RouteControl', () => {
 
         renderControl(control(mockMap, { active: true, stops }), mockMap);
 
-        expect(screen.getByText(`2 / ${MAX_ROUTE_SELECTION}`)).toBeTruthy();
+        expect(screen.getByText(`2 / ${MAX_ROUTE_STOPS}`)).toBeTruthy();
     });
 
     it('opens the directions for the chosen stops', () => {
@@ -189,21 +189,21 @@ describe('RouteControl', () => {
         expect(onClose).not.toHaveBeenCalled();
     });
 
-    it('asks for a point at the middle of the map', () => {
+    it('asks for a custom stop at the middle of the map', () => {
         const mockMap = createMockMap();
-        const onAddPoint = vi.fn();
+        const onAddCustomStop = vi.fn();
 
-        renderControl(control(mockMap, { active: true, onAddPoint }), mockMap);
+        renderControl(control(mockMap, { active: true, onAddCustomStop }), mockMap);
         fireEvent.click(screen.getByLabelText('地図の中心に地点を追加'));
 
-        expect(onAddPoint).toHaveBeenCalledTimes(1);
+        expect(onAddCustomStop).toHaveBeenCalledTimes(1);
     });
 
     // The limit belongs to the route, not to the button: a full route has
-    // nowhere to put another point, and the button says so before it is pressed.
-    it('stops offering a point once the route is full', () => {
+    // nowhere to put another stop, and the button says so before it is pressed.
+    it('stops offering a new stop once the route is full', () => {
         const mockMap = createMockMap();
-        const full = Array.from({ length: MAX_ROUTE_SELECTION }, (_, i) => createMockFeature(`${i}`));
+        const full = Array.from({ length: MAX_ROUTE_STOPS }, (_, i) => createMockFeature(`${i}`));
 
         renderControl(control(mockMap, { active: true, stops: full }), mockMap);
 
