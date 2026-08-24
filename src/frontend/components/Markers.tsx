@@ -9,34 +9,16 @@ import type { MapMode } from '../types/station-map';
 import { useModifierHeld } from '../use-modifier-held';
 import { addCustomStopAt, createCustomStop } from './RouteStops';
 
-// `undefined` fields mean "no change".
-export interface MarkerClickResult {
-    selectedStops?: google.maps.Data.Feature[];
-    cycleStyleOn?: google.maps.Data.Feature;
-}
-
-// What a click on a marker does. It never changes the mode, only what is picked
-// in it.
-export function resolveMarkerClick(
-    mode: MapMode,
-    selectedStops: google.maps.Data.Feature[],
-    clickedFeature: google.maps.Data.Feature
-): MarkerClickResult {
-    if (mode === 'route') {
-        if (selectedStops.includes(clickedFeature)) {
-            return { selectedStops: selectedStops.filter((stop) => stop !== clickedFeature) };
-        }
-        // A full route takes no more, and says so by leaving the click alone.
-        if (isRouteFull(selectedStops)) {
-            return {};
-        }
-        return { selectedStops: [...selectedStops, clickedFeature] };
-    }
-
-    if (selectedStops[0] === clickedFeature) {
-        return { cycleStyleOn: clickedFeature };
-    }
-    return { selectedStops: [clickedFeature] };
+// Take `feature` out of the route if it is already a stop, otherwise add it to
+// the end — unless the route is full, which refuses the click by returning
+// `stops` unchanged, the same contract `cycleRouteNumber` uses below.
+export function toggleRouteStop(
+    stops: google.maps.Data.Feature[],
+    feature: google.maps.Data.Feature
+): google.maps.Data.Feature[] {
+    if (stops.includes(feature)) return stops.filter((stop) => stop !== feature);
+    if (isRouteFull(stops)) return stops;
+    return [...stops, feature];
 }
 
 const styleOptionsFor = (styleId: number): google.maps.Data.StyleOptions => ({
@@ -184,25 +166,31 @@ export function Markers(props: MarkersProps) {
         props.map?.setOptions({ disableDoubleClickZoom: modifierHeld });
     }, [props.map, modifierHeld]);
 
-    const applyClickResult = (result: MarkerClickResult) => {
-        if (result.selectedStops !== undefined) {
-            props.onSelectedStopsChange(result.selectedStops);
-        }
-        if (result.cycleStyleOn && props.map) {
-            changeStyle(props.map, result.cycleStyleOn, storageRef.current);
-            props.onStyleChange();
-        }
+    // Cycle the style and let the app know, the outcome a re-click in normal
+    // mode and a double-click on a marker both reach.
+    const cycleStyle = (map: google.maps.Map, feature: google.maps.Data.Feature) => {
+        changeStyle(map, feature, storageRef.current);
+        props.onStyleChange();
     };
 
     const onMarkerClick = (event: google.maps.Data.MouseEvent) => {
         if (!props.map) return;
         if (draggedRef.current) return;
 
-        if (modeRef.current === 'normal' && isModifierPressed(event)) {
-            props.onEnterRouteMode(event.feature);
-            return;
+        switch (modeRef.current) {
+            case 'route':
+                props.onSelectedStopsChange(toggleRouteStop(selectedStopsRef.current, event.feature));
+                return;
+            case 'normal':
+                if (isModifierPressed(event)) {
+                    props.onEnterRouteMode(event.feature);
+                } else if (selectedStopsRef.current[0] === event.feature) {
+                    cycleStyle(props.map, event.feature);
+                } else {
+                    props.onSelectedStopsChange([event.feature]);
+                }
+                return;
         }
-        applyClickResult(resolveMarkerClick(modeRef.current, selectedStopsRef.current, event.feature));
     };
 
     // Modifier + double-click on the map puts a custom stop where it landed.
@@ -224,8 +212,7 @@ export function Markers(props: MarkersProps) {
         // A modifier + double-click is stopped here as well: its first click
         // already opened route mode.
         if (modeRef.current === 'route') return;
-        changeStyle(props.map, event.feature, storageRef.current);
-        props.onStyleChange();
+        cycleStyle(props.map, event.feature);
     };
 
     const onMarkerRightClick = (event: google.maps.Data.MouseEvent) => {

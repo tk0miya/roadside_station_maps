@@ -16,7 +16,7 @@ import { MARKER_ICONS } from '../marker-icons';
 import { isCustomStop, MAX_ROUTE_STOPS } from '../route';
 import { MemoryStorage } from '../storage/memory-storage';
 import type { MapMode } from '../types/station-map';
-import { changeStyle, loadRoadStations, Markers, resetStyle, resolveMarkerClick } from './Markers';
+import { changeStyle, loadRoadStations, Markers, resetStyle, toggleRouteStop } from './Markers';
 
 const stations = createMockStations(3);
 
@@ -123,9 +123,9 @@ describe('Markers', () => {
             setupGoogleMapsMock();
         });
 
-        // The branching logic itself is covered by the resolveMarkerClick
-        // suite below. This single case exercises the glue layer:
-        // the resolved intent must flow through the props correctly.
+        // The route-mode branching is covered by the toggleRouteStop suite
+        // below. This single case exercises the glue layer: a normal-mode
+        // click must reach props with the clicked feature.
         it('dispatches the resolved click intent through props', () => {
             const featureB = createMockFeature('B');
             const { mockMap, onSelectedStopsChange } = renderMarkers();
@@ -134,6 +134,30 @@ describe('Markers', () => {
 
             // Normal mode picks the one station whose details are open.
             expect(onSelectedStopsChange).toHaveBeenCalledWith([featureB]);
+        });
+
+        it('cycles the style instead of reselecting when the open feature is clicked again', () => {
+            const featureB = createMockFeature('B');
+            const { mockMap, onSelectedStopsChange } = renderMarkers({ selectedStops: [featureB] });
+
+            mockMap.data._emit('click', buildClickEvent(featureB));
+
+            expect(mockMap.data.overrideStyle).toHaveBeenCalledWith(
+                featureB,
+                expect.objectContaining({ icon: expect.any(String) })
+            );
+            expect(onSelectedStopsChange).not.toHaveBeenCalled();
+        });
+
+        it('opens a different feature without touching style when another is already open', () => {
+            const featureA = createMockFeature('A');
+            const featureB = createMockFeature('B');
+            const { mockMap, onSelectedStopsChange } = renderMarkers({ selectedStops: [featureA] });
+
+            mockMap.data._emit('click', buildClickEvent(featureB));
+
+            expect(onSelectedStopsChange).toHaveBeenCalledWith([featureB]);
+            expect(mockMap.data.overrideStyle).not.toHaveBeenCalled();
         });
 
         it('cycles the style on a double-click', () => {
@@ -370,7 +394,9 @@ describe('Markers', () => {
 
             mockMap.data._emit('click', buildClickEvent(extra));
 
-            expect(onSelectedStopsChange).not.toHaveBeenCalled();
+            // The route comes back unchanged rather than dropped, the same
+            // refusal toggleRouteStop itself returns.
+            expect(onSelectedStopsChange).toHaveBeenCalledWith(full);
         });
     });
 
@@ -403,74 +429,33 @@ describe('Markers', () => {
     });
 });
 
-describe('resolveMarkerClick', () => {
-    describe('in route mode', () => {
-        it('appends a new feature to the route under the cap', () => {
-            const a = createMockFeature('A');
-            const b = createMockFeature('B');
+describe('toggleRouteStop', () => {
+    it('appends a new feature to the route under the cap', () => {
+        const a = createMockFeature('A');
+        const b = createMockFeature('B');
 
-            const result = resolveMarkerClick('route', [a], b);
-
-            expect(result.selectedStops).toEqual([a, b]);
-            expect(result.cycleStyleOn).toBeUndefined();
-        });
-
-        it('toggles a feature out of the route when already present', () => {
-            const a = createMockFeature('A');
-            const b = createMockFeature('B');
-
-            const result = resolveMarkerClick('route', [a, b], a);
-
-            expect(result.selectedStops).toEqual([b]);
-        });
-
-        it('takes a custom stop back out the same way a station goes', () => {
-            const a = createMockFeature('A');
-            const stop = createMockCustomStop();
-
-            const result = resolveMarkerClick('route', [a, stop], stop);
-
-            expect(result.selectedStops).toEqual([a]);
-        });
-
-        it('leaves a full route untouched', () => {
-            const existing = Array.from({ length: MAX_ROUTE_STOPS }, (_, i) => createMockFeature(`${i}`));
-            const extra = createMockFeature('extra');
-
-            const result = resolveMarkerClick('route', existing, extra);
-
-            expect(result).toEqual({});
-        });
+        expect(toggleRouteStop([a], b)).toEqual([a, b]);
     });
 
-    describe('in normal mode', () => {
-        it('opens the clicked feature', () => {
-            const b = createMockFeature('B');
+    it('takes a feature out of the route when already present', () => {
+        const a = createMockFeature('A');
+        const b = createMockFeature('B');
 
-            const result = resolveMarkerClick('normal', [], b);
+        expect(toggleRouteStop([a, b], a)).toEqual([b]);
+    });
 
-            expect(result.selectedStops).toEqual([b]);
-            expect(result.cycleStyleOn).toBeUndefined();
-        });
+    it('takes a custom stop back out the same way a station goes', () => {
+        const a = createMockFeature('A');
+        const stop = createMockCustomStop();
 
-        it('cycles the style when re-clicking the feature already open', () => {
-            const a = createMockFeature('A');
+        expect(toggleRouteStop([a, stop], stop)).toEqual([a]);
+    });
 
-            const result = resolveMarkerClick('normal', [a], a);
+    it('returns the same array once the route is full', () => {
+        const existing = Array.from({ length: MAX_ROUTE_STOPS }, (_, i) => createMockFeature(`${i}`));
+        const extra = createMockFeature('extra');
 
-            expect(result.cycleStyleOn).toBe(a);
-            expect(result.selectedStops).toBeUndefined();
-        });
-
-        it('opens a different feature without touching style', () => {
-            const a = createMockFeature('A');
-            const b = createMockFeature('B');
-
-            const result = resolveMarkerClick('normal', [a], b);
-
-            expect(result.selectedStops).toEqual([b]);
-            expect(result.cycleStyleOn).toBeUndefined();
-        });
+        expect(toggleRouteStop(existing, extra)).toBe(existing);
     });
 });
 
