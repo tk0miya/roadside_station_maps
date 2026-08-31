@@ -945,7 +945,7 @@
                 "url": "https://kahoku.news/articles/20230517khn000071.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-31"
     },
     {
         "name": "道の駅 もがみ",
@@ -1029,7 +1029,7 @@
                 "url": "https://www.yuza-eppeke.com/"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-31"
     },
     {
         "name": "道の駅 いわき・ら・ら・ミュウ",
@@ -1055,21 +1055,17 @@
         "name": "道の駅ウルトラアグリパークすかがわ",
         "pref": "福島県",
         "city": "須賀川市",
-        "status": "計画中",
+        "status": "凍結",
         "date": "",
         "lat": 37.2730148,
         "lng": 140.3860652,
         "urls": [
             {
-                "title": "https://abukumajiho.com/news/20240219_20407",
-                "url": "https://abukumajiho.com/news/20240219_20407"
-            },
-            {
                 "title": "道の駅ウルトラアグリパークすかがわ（仮称）について",
                 "url": "https://www.city.sukagawa.fukushima.jp/jigyosya/nogyo/1003354/1014510/1013332.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-31"
     },
     {
         "name": "道の駅 田村市",
@@ -1085,7 +1081,7 @@
                 "url": "https://www.city.tamura.lg.jp/soshiki/1/assets/%E3%80%90%E3%83%91%E3%83%96%E3%83%AA%E3%83%83%E3%82%AF%E3%82%B3%E3%83%A1%E3%83%B3%E3%83%88%E6%84%8F%E8%A6%8B%E5%8F%8D%E6%98%A0%E3%80%91%E7%AC%AC%EF%BC%92%E6%AC%A1%E7%94%B0%E6%9D%91%E5%B8%82%E7%B7%8F%E5%90%88%E8%A8%88%E7%94%BB%E6%A1%88.pdf"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-31"
     },
     {
         "name": "道の駅 大玉村",
@@ -1101,7 +1097,7 @@
                 "url": "https://ameblo.jp/ugg38037/entry-12790611091.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-31"
     },
     {
         "name": "道の駅 只見町",
@@ -1117,7 +1113,7 @@
                 "url": "https://www.town.tadami.lg.jp/referenceroom/station.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-31"
     },
     {
         "name": "道の駅 にしごう",
@@ -1133,7 +1129,7 @@
                 "url": "https://www.vill.nishigo.fukushima.jp/sonseijoho/kyotenseibi/michinoekinishigoseibinikansurukoto/2352.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-31"
     },
     {
         "name": "道の駅 矢吹町",
@@ -1167,9 +1163,13 @@
             {
                 "title": "第６次矢祭町総合計画 2021～2026",
                 "url": "https://www.town.yamatsuri.fukushima.jp/data/doc/1617263274_doc_10_0.pdf"
+            },
+            {
+                "title": "令和５年度矢祭町まちなか公共機能調査の検討概要について",
+                "url": "https://www.town.yamatsuri.fukushima.jp/data/doc/1714462718_doc_10_0.pdf"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-31"
     },
     {
         "name": "道の駅 鮫川村",
@@ -1185,7 +1185,7 @@
                 "url": "https://www.vill.samegawa.fukushima.jp/sp/page/page001953.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-31"
     },
     {
         "name": "道の駅石川",
@@ -1209,31 +1209,15 @@
                 "url": "https://www.town.ishikawa.fukushima.jp/admin/b011787c79a94fe9f06df3826a8d4b17.pdf"
             },
             {
-                "title": "https://www.minpo.jp/news/moredetail/20240824118736",
-                "url": "https://www.minpo.jp/news/moredetail/20240824118736"
-            },
-            {
-                "title": "https://www.minpo.jp/news/moredetail/20250502124062",
-                "url": "https://www.minpo.jp/news/moredetail/20250502124062"
-            },
-            {
-                "title": "道の駅令和８年７月オープン予定（石川町道の駅準備室）",
-                "url": "https://www.town.ishikawa.fukushima.jp/kairan/files/68b6e4b1fe469f1f58abefa2c6379a42_3.pdf"
-            },
-            {
-                "title": "https://news.yahoo.co.jp/articles/57013c298ab3c1fda432fcc7fe904363b514b7f0",
-                "url": "https://news.yahoo.co.jp/articles/57013c298ab3c1fda432fcc7fe904363b514b7f0"
+                "title": "「道の駅石川」のオープンについて",
+                "url": "https://www.town.ishikawa.fukushima.jp/admin/127dca90243bbf513e631770a4a47e17.pdf"
             },
             {
                 "title": "道の駅石川のオープンについて｜石川町",
                 "url": "https://www.town.ishikawa.fukushima.jp/admin/ishikawa/info/010535.html"
-            },
-            {
-                "title": "道の駅石川、9月18日に開業 福島県内37カ所目:地域ニュース:福島民友新聞社",
-                "url": "https://www.minyu-net.com/news/detail/2026072208035152618"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-08-31"
     },
     {
         "name": "道の駅 ひらた (移転)",
