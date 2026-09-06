@@ -2136,7 +2136,7 @@
         "pref": "神奈川県",
         "city": "足柄上郡松田町",
         "status": "登録済み",
-        "date": "2026年度",
+        "date": "2026-11-14",
         "lat": 35.4017068,
         "lng": 139.137512,
         "urls": [
@@ -2151,9 +2151,13 @@
             {
                 "title": "「道の駅」の第65回登録について～全国で1,234駅に～",
                 "url": "https://www.mlit.go.jp/report/press/road01_hh_002138.html"
+            },
+            {
+                "title": "松田の「やどりきテラス」が道の駅に　寄自然休養村を改修　平日の集客期待",
+                "url": "https://news.line.me/detail/oa-kanagawa/32yasd4z71gz?mediadetail=1"
             }
         ],
-        "checked_on": "2026-09-06"
+        "checked_on": "2026-09-07"
     },
     {
         "name": "道の駅 能美市",
