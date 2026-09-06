@@ -95,6 +95,7 @@ export const createMockMap = () => {
     const mapEvents = createListenerRegistry();
 
     const setOptions = vi.fn();
+    let zoom = 6;
 
     return {
         controls,
@@ -102,10 +103,15 @@ export const createMockMap = () => {
         setOptions,
         addListener: mapEvents.addListener,
         _emit: mapEvents._emit,
+        getZoom: vi.fn(() => zoom),
+        _setZoom: (z: number) => {
+            zoom = z;
+        },
     } as unknown as GoogleMap & {
         data: typeof data;
         setOptions: typeof setOptions;
         _emit: typeof mapEvents._emit;
+        _setZoom: (z: number) => void;
     };
 };
 
@@ -207,6 +213,9 @@ export const setupGoogleMapsMock = () => {
                         return this.position;
                     }
                 },
+            },
+            SymbolPath: {
+                CIRCLE: 0,
             },
         },
     };

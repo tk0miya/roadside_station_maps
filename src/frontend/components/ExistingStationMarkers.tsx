@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { GoogleMap, Marker, MarkerSymbol } from '../google-maps-types';
+import type { Feature, GoogleMap, MarkerSymbol, StyleOptions } from '../google-maps-types';
 import { fetchStations } from '../station';
 
 // A small filled circle, not the pin shape PlanMarkers uses for planned
@@ -18,16 +18,29 @@ function existingStationIcon(): MarkerSymbol {
     };
 }
 
+// Below this zoom the ~1200 dots are dense enough nationwide to bury the
+// sparser plan pins under a solid field of red, so the backdrop only earns
+// its keep once zoomed in past street/city scale.
+const MIN_VISIBLE_ZOOM = 10;
+
 interface ExistingStationMarkersProps {
     map: GoogleMap | null;
 }
 
 // Plots the already-open road stations (the same `stations.geojson` the main
 // map reads) as a backdrop for the development plans, so the two can be
-// compared by location. Read-only: no click handling, no visit status, always
-// shown -- there is no toggle for this layer.
+// compared by location. `clickable: false` keeps it out of the way of clicks
+// (including the right-click PlanCoordCopy listens for on the map itself)
+// instead of a dot absorbing them; visibility is zoom-gated only (see
+// MIN_VISIBLE_ZOOM above), not a sidebar toggle.
+//
+// Renders through the map's Data layer with a single `addGeoJson`, not one
+// google.maps.Marker per station: at ~1200 stations nationwide, a Marker per
+// station is ~1200 separate DOM overlays for the browser to reposition on
+// every zoom frame.
 export function ExistingStationMarkers({ map }: ExistingStationMarkersProps) {
-    const markersRef = useRef<Marker[]>([]);
+    const loadedRef = useRef(false);
+    const lastVisibleRef = useRef<boolean | null>(null);
 
     useEffect(() => {
         if (!map) {
@@ -35,20 +48,26 @@ export function ExistingStationMarkers({ map }: ExistingStationMarkersProps) {
         }
         let cancelled = false;
 
+        // Re-applying the style re-evaluates it for every one of the ~1200
+        // features, so skip it on zoom changes that don't cross the
+        // MIN_VISIBLE_ZOOM threshold.
+        const applyStyle = (): void => {
+            const visible = (map.getZoom() ?? 0) >= MIN_VISIBLE_ZOOM;
+            if (lastVisibleRef.current === visible) {
+                return;
+            }
+            lastVisibleRef.current = visible;
+            map.data.setStyle((): StyleOptions => ({ icon: existingStationIcon(), clickable: false, visible }));
+        };
+
         fetchStations()
             .then((stations) => {
                 if (cancelled) {
                     return;
                 }
-                markersRef.current = stations.features.map((feature) => {
-                    const [lng, lat] = feature.geometry.coordinates;
-                    return new google.maps.Marker({
-                        position: { lat, lng },
-                        map,
-                        title: feature.properties.name,
-                        icon: existingStationIcon(),
-                    });
-                });
+                map.data.addGeoJson(stations);
+                applyStyle();
+                loadedRef.current = true;
             })
             // This layer is a supplementary backdrop, not the map's core data;
             // failing to load it should not block or interrupt the rest of the
@@ -57,12 +76,23 @@ export function ExistingStationMarkers({ map }: ExistingStationMarkersProps) {
                 console.error('Failed to load existing stations:', error);
             });
 
+        const zoomListener = map.addListener('zoom_changed', applyStyle);
+
         return () => {
             cancelled = true;
-            for (const marker of markersRef.current) {
-                marker.setMap(null);
+            zoomListener.remove();
+            lastVisibleRef.current = null;
+            if (!loadedRef.current) {
+                return;
             }
-            markersRef.current = [];
+            const features: Feature[] = [];
+            map.data.forEach((feature) => {
+                features.push(feature);
+            });
+            for (const feature of features) {
+                map.data.remove(feature);
+            }
+            loadedRef.current = false;
         };
     }, [map]);
 
