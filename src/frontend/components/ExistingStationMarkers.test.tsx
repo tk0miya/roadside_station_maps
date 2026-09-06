@@ -44,11 +44,11 @@ describe('ExistingStationMarkers', () => {
         const styleAtZoom6 = mockMap.data.setStyle.mock.calls[0][0] as () => StyleOptions;
         expect(styleAtZoom6()).toMatchObject({ visible: false, clickable: false });
 
-        mockMap._setZoom(10);
+        mockMap._setZoom(9);
         mockMap._emit('zoom_changed', {});
         expect(mockMap.data.setStyle).toHaveBeenCalledTimes(2);
-        const styleAtZoom10 = mockMap.data.setStyle.mock.calls[1][0] as () => StyleOptions;
-        expect(styleAtZoom10()).toMatchObject({ visible: true, clickable: true });
+        const styleAtZoom9 = mockMap.data.setStyle.mock.calls[1][0] as () => StyleOptions;
+        expect(styleAtZoom9()).toMatchObject({ visible: true, clickable: true });
     });
 
     it('does not re-apply the style on a zoom change that does not cross MIN_VISIBLE_ZOOM', async () => {
