@@ -214,9 +214,6 @@ export const setupGoogleMapsMock = () => {
                     }
                 },
             },
-            SymbolPath: {
-                CIRCLE: 0,
-            },
         },
     };
 };
