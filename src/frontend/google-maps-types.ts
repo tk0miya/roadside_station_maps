@@ -7,6 +7,7 @@ export type Marker = google.maps.Marker;
 export type LatLng = google.maps.LatLng;
 export type MapMouseEvent = google.maps.MapMouseEvent;
 export type Icon = google.maps.Icon;
+export type MarkerSymbol = google.maps.Symbol;
 export type Feature = google.maps.Data.Feature;
 export type FeatureOptions = google.maps.Data.FeatureOptions;
 export type DataMouseEvent = google.maps.Data.MouseEvent;

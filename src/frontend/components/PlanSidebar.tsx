@@ -10,8 +10,10 @@ const PLANS_FILE_URL = 'https://github.com/tk0miya/roadside_station_maps/blob/ma
 interface PlanSidebarProps {
     stations: PlannedStation[];
     visibleCategories: Record<Category, boolean>;
+    existingStationsVisible: boolean;
     selected: PlannedStation | null;
     onToggle: (category: Category) => void;
+    onToggleExistingStations: () => void;
     onSelect: (station: PlannedStation) => void;
 }
 
@@ -22,7 +24,15 @@ interface PlanSidebarProps {
 // The panel collapses to a narrow strip to give the map the full width. The
 // collapsed/expanded state is component-local and not persisted: nothing else
 // depends on it, and reopening is a single click.
-export function PlanSidebar({ stations, visibleCategories, selected, onToggle, onSelect }: PlanSidebarProps) {
+export function PlanSidebar({
+    stations,
+    visibleCategories,
+    existingStationsVisible,
+    selected,
+    onToggle,
+    onToggleExistingStations,
+    onSelect,
+}: PlanSidebarProps) {
     const [open, setOpen] = useState(true);
 
     if (!open) {
@@ -62,6 +72,13 @@ export function PlanSidebar({ stations, visibleCategories, selected, onToggle, o
                 >
                     «
                 </button>
+            </div>
+            <div className="plan-cat">
+                <label className="plan-cat-header">
+                    <input type="checkbox" checked={existingStationsVisible} onChange={onToggleExistingStations} />
+                    <span className="plan-swatch plan-dot-swatch" aria-hidden="true" />
+                    <span>既存の道の駅</span>
+                </label>
             </div>
             {CATEGORIES.map((category) => {
                 const items = byCategory.get(category) ?? [];
