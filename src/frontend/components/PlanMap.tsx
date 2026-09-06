@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GoogleMap } from '../google-maps-types';
 import { loadPlannedStations } from '../planned-stations';
 import type { Category, PlannedStation } from '../types/plan';
+import { ExistingStationMarkers } from './ExistingStationMarkers';
 import { PlanCoordCopy } from './PlanCoordCopy';
 import { PlanInfoWindow } from './PlanInfoWindow';
 import { PlanMarkers } from './PlanMarkers';
@@ -87,6 +88,7 @@ export function PlanMap() {
                         データの読み込みに失敗しました: {loadError}
                     </div>
                 )}
+                <ExistingStationMarkers map={map} />
                 <PlanMarkers
                     map={map}
                     stations={stations}
