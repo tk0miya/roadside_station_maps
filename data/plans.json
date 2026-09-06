@@ -2132,11 +2132,11 @@
         "checked_on": "2026-08-12"
     },
     {
-        "name": "道の駅 松田町",
+        "name": "道の駅 やどりきテラス 清流の里",
         "pref": "神奈川県",
         "city": "足柄上郡松田町",
-        "status": "計画中",
-        "date": "",
+        "status": "登録済み",
+        "date": "2026年度",
         "lat": 35.4017068,
         "lng": 139.137512,
         "urls": [
@@ -2149,11 +2149,11 @@
                 "url": "https://www.kanaloco.jp/news/government/article-1272064.html"
             },
             {
-                "title": "2.2億円かけた施設 道の駅にするはずが…想定外、担当者困惑（毎日新聞）",
-                "url": "https://news.yahoo.co.jp/articles/61e4525d4d9f0989ec88be262978e18de905730f"
+                "title": "「道の駅」の第65回登録について～全国で1,234駅に～",
+                "url": "https://www.mlit.go.jp/report/press/road01_hh_002138.html"
             }
         ],
-        "checked_on": "2026-08-18"
+        "checked_on": "2026-09-06"
     },
     {
         "name": "道の駅 能美市",
@@ -2928,10 +2928,10 @@
         "checked_on": "2026-08-11"
     },
     {
-        "name": "道の駅こんだ薬師温泉ぬくもりの郷",
+        "name": "道の駅こんだ温泉ぬくもりの郷",
         "pref": "兵庫県",
         "city": "丹波篠山市",
-        "status": "計画中",
+        "status": "登録済み",
         "date": "2027-03",
         "lat": 34.9991695,
         "lng": 135.1050564,
@@ -2951,9 +2951,13 @@
             {
                 "title": "道の駅に関すること／丹波篠山市",
                 "url": "https://www.city.tambasasayama.lg.jp/soshikikarasagasu/chiikiseibika/28330.html"
+            },
+            {
+                "title": "「道の駅」の第65回登録について～全国で1,234駅に～",
+                "url": "https://www.mlit.go.jp/report/press/road01_hh_002138.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-06"
     },
     {
         "name": "道の駅 クロスウェイなかまち",
@@ -3482,6 +3486,26 @@
             }
         ],
         "checked_on": "2026-01-01"
+    },
+    {
+        "name": "道の駅 くらたけ天草戦国ミュージアム",
+        "pref": "熊本県",
+        "city": "天草市",
+        "status": "登録済み",
+        "date": "2026-11-22",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "「天草戦国ミュージアム」道の駅に登録　天草市倉岳町に11月22日オープン（熊本日日新聞）",
+                "url": "https://news.yahoo.co.jp/articles/ea6175945d518c172aa94b2d07e59fed9d2f9c8a"
+            },
+            {
+                "title": "「道の駅」の第65回登録について～全国で1,234駅に～",
+                "url": "https://www.mlit.go.jp/report/press/road01_hh_002138.html"
+            }
+        ],
+        "checked_on": "2026-09-06"
     },
     {
         "name": "道の駅 ふれあいセンターいずみ",
