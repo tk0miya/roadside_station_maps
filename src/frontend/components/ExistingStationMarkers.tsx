@@ -15,7 +15,7 @@ function existingStationIcon(): Icon {
 // Below this zoom the ~1200 dots are dense enough nationwide to bury the
 // sparser plan pins under a solid field of red, so the backdrop only earns
 // its keep once zoomed in past street/city scale.
-const MIN_VISIBLE_ZOOM = 10;
+const MIN_VISIBLE_ZOOM = 9;
 
 interface ExistingStationMarkersProps {
     map: GoogleMap | null;
