@@ -1,20 +1,14 @@
 import { useEffect, useRef } from 'react';
-import type { Feature, GoogleMap, MarkerSymbol, StyleOptions } from '../google-maps-types';
+import type { Feature, GoogleMap, Icon, StyleOptions } from '../google-maps-types';
 import { fetchStations } from '../station';
 
-// A small filled circle, not the pin shape PlanMarkers uses for planned
-// stations: the two layers need to read apart at a glance, and this layer
-// carries no status of its own for a color to encode. Built lazily (not at
-// module scope) since it reads google.maps.SymbolPath, which only exists once
-// the Maps script has loaded.
-function existingStationIcon(): MarkerSymbol {
+function existingStationIcon(): Icon {
+    const size = 10;
+    const center = size / 2;
     return {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 4,
-        fillColor: '#ea4335',
-        fillOpacity: 0.9,
-        strokeColor: '#000000',
-        strokeWeight: 1,
+        url: 'images/existing-station-dot.png',
+        scaledSize: new google.maps.Size(size, size),
+        anchor: new google.maps.Point(center, center),
     };
 }
 
