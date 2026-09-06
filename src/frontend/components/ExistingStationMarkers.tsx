@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { Feature, GoogleMap, Icon, StyleOptions } from '../google-maps-types';
+import type { DataMouseEvent, Feature, GoogleMap, Icon, StyleOptions } from '../google-maps-types';
 import { fetchStations } from '../station';
 
 function existingStationIcon(): Icon {
@@ -19,22 +19,32 @@ const MIN_VISIBLE_ZOOM = 10;
 
 interface ExistingStationMarkersProps {
     map: GoogleMap | null;
+    // Called with the clicked station's feature; the map decides what that
+    // means (currently: show its name in an info window).
+    onSelect: (feature: Feature) => void;
 }
 
 // Plots the already-open road stations (the same `stations.geojson` the main
 // map reads) as a backdrop for the development plans, so the two can be
-// compared by location. `clickable: false` keeps it out of the way of clicks
+// compared by location. `clickable` follows `visible`: a hidden dot has
+// nothing to click, so at low zoom it stays out of the way of a click
 // (including the right-click PlanCoordCopy listens for on the map itself)
-// instead of a dot absorbing them; visibility is zoom-gated only (see
+// instead of a dot absorbing it. Visibility is zoom-gated only (see
 // MIN_VISIBLE_ZOOM above), not a sidebar toggle.
 //
 // Renders through the map's Data layer with a single `addGeoJson`, not one
 // google.maps.Marker per station: at ~1200 stations nationwide, a Marker per
 // station is ~1200 separate DOM overlays for the browser to reposition on
 // every zoom frame.
-export function ExistingStationMarkers({ map }: ExistingStationMarkersProps) {
+export function ExistingStationMarkers({ map, onSelect }: ExistingStationMarkersProps) {
     const loadedRef = useRef(false);
     const lastVisibleRef = useRef<boolean | null>(null);
+    // Keep the click handler bound to the latest onSelect without reattaching
+    // the data-layer listener.
+    const onSelectRef = useRef(onSelect);
+    useEffect(() => {
+        onSelectRef.current = onSelect;
+    }, [onSelect]);
 
     useEffect(() => {
         if (!map) {
@@ -51,7 +61,7 @@ export function ExistingStationMarkers({ map }: ExistingStationMarkersProps) {
                 return;
             }
             lastVisibleRef.current = visible;
-            map.data.setStyle((): StyleOptions => ({ icon: existingStationIcon(), clickable: false, visible }));
+            map.data.setStyle((): StyleOptions => ({ icon: existingStationIcon(), clickable: visible, visible }));
         };
 
         fetchStations()
@@ -71,10 +81,14 @@ export function ExistingStationMarkers({ map }: ExistingStationMarkersProps) {
             });
 
         const zoomListener = map.addListener('zoom_changed', applyStyle);
+        const clickListener = map.data.addListener('click', (event: DataMouseEvent) => {
+            onSelectRef.current(event.feature);
+        });
 
         return () => {
             cancelled = true;
             zoomListener.remove();
+            clickListener.remove();
             lastVisibleRef.current = null;
             if (!loadedRef.current) {
                 return;

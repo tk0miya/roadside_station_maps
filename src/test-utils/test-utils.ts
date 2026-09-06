@@ -214,9 +214,23 @@ export const setupGoogleMapsMock = () => {
                     }
                 },
             },
+            // Returns a fresh spy object per construction, so callers read the
+            // instance a component built via `google.maps.InfoWindow.mock.results`.
+            // biome-ignore lint/complexity/useArrowFunction: stands in for a constructor, so it must be constructible
+            InfoWindow: vi.fn(function () {
+                return createMockInfoWindow();
+            }),
         },
     };
 };
+
+// Create a mock google.maps.InfoWindow: the same trio of spies every real
+// caller drives it through (setOptions / open / close).
+export const createMockInfoWindow = () => ({
+    setOptions: vi.fn(),
+    open: vi.fn(),
+    close: vi.fn(),
+});
 
 // Build a JSON Response for fetch mocks
 export const jsonResponse = (body: unknown, status = 200): Response =>

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { GoogleMap } from '../google-maps-types';
+import type { Feature, GoogleMap } from '../google-maps-types';
 import { loadPlannedStations } from '../planned-stations';
 import type { Category, PlannedStation } from '../types/plan';
+import { ExistingStationInfoWindow } from './ExistingStationInfoWindow';
 import { ExistingStationMarkers } from './ExistingStationMarkers';
 import { PlanCoordCopy } from './PlanCoordCopy';
 import { PlanInfoWindow } from './PlanInfoWindow';
@@ -32,8 +33,23 @@ export function PlanMap() {
     const [map, setMap] = useState<GoogleMap | null>(null);
     const [stations, setStations] = useState<PlannedStation[]>([]);
     const [selected, setSelected] = useState<PlannedStation | null>(null);
+    const [selectedExisting, setSelectedExisting] = useState<Feature | null>(null);
     const [visibleCategories, setVisibleCategories] = useState<Record<Category, boolean>>(DEFAULT_VISIBLE);
     const [loadError, setLoadError] = useState<string | null>(null);
+
+    // The two info windows (a plan pin's and an existing station's) are
+    // mutually exclusive: selecting one clears the other, so a click on
+    // either dismisses whichever was already open elsewhere.
+    useEffect(() => {
+        if (selected) {
+            setSelectedExisting(null);
+        }
+    }, [selected]);
+    useEffect(() => {
+        if (selectedExisting) {
+            setSelected(null);
+        }
+    }, [selectedExisting]);
 
     useEffect(() => {
         if (mapContainerRef.current) {
@@ -43,7 +59,10 @@ export function PlanMap() {
                 fullscreenControl: false,
                 cameraControl: false,
             });
-            mapInstance.addListener('click', () => setSelected(null));
+            mapInstance.addListener('click', () => {
+                setSelected(null);
+                setSelectedExisting(null);
+            });
             setMap(mapInstance);
         }
     }, []);
@@ -88,7 +107,7 @@ export function PlanMap() {
                         データの読み込みに失敗しました: {loadError}
                     </div>
                 )}
-                <ExistingStationMarkers map={map} />
+                <ExistingStationMarkers map={map} onSelect={setSelectedExisting} />
                 <PlanMarkers
                     map={map}
                     stations={stations}
@@ -96,6 +115,7 @@ export function PlanMap() {
                     onSelect={setSelected}
                 />
                 <PlanInfoWindow map={map} selected={selected} />
+                <ExistingStationInfoWindow map={map} selected={selectedExisting} />
                 <PlanCoordCopy map={map} />
             </div>
         </div>
