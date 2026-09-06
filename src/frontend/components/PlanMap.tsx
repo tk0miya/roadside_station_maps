@@ -33,7 +33,6 @@ export function PlanMap() {
     const [stations, setStations] = useState<PlannedStation[]>([]);
     const [selected, setSelected] = useState<PlannedStation | null>(null);
     const [visibleCategories, setVisibleCategories] = useState<Record<Category, boolean>>(DEFAULT_VISIBLE);
-    const [existingStationsVisible, setExistingStationsVisible] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -59,10 +58,6 @@ export function PlanMap() {
         setVisibleCategories((prev) => ({ ...prev, [category]: !prev[category] }));
     }, []);
 
-    const toggleExistingStations = useCallback(() => {
-        setExistingStationsVisible((prev) => !prev);
-    }, []);
-
     // Select from the sidebar: also pan (and gently zoom in) to the station.
     const focusStation = useCallback(
         (station: PlannedStation) => {
@@ -82,10 +77,8 @@ export function PlanMap() {
             <PlanSidebar
                 stations={stations}
                 visibleCategories={visibleCategories}
-                existingStationsVisible={existingStationsVisible}
                 selected={selected}
                 onToggle={toggle}
-                onToggleExistingStations={toggleExistingStations}
                 onSelect={focusStation}
             />
             <div className="plan-map-area">
@@ -95,7 +88,7 @@ export function PlanMap() {
                         データの読み込みに失敗しました: {loadError}
                     </div>
                 )}
-                <ExistingStationMarkers map={map} visible={existingStationsVisible} />
+                <ExistingStationMarkers map={map} />
                 <PlanMarkers
                     map={map}
                     stations={stations}

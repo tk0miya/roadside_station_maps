@@ -11,30 +11,23 @@ function existingStationIcon(): MarkerSymbol {
     return {
         path: google.maps.SymbolPath.CIRCLE,
         scale: 4,
-        fillColor: '#555555',
+        fillColor: '#ea4335',
         fillOpacity: 0.9,
-        strokeColor: '#ffffff',
+        strokeColor: '#000000',
         strokeWeight: 1,
     };
 }
 
 interface ExistingStationMarkersProps {
     map: GoogleMap | null;
-    visible: boolean;
 }
 
 // Plots the already-open road stations (the same `stations.geojson` the main
 // map reads) as a backdrop for the development plans, so the two can be
-// compared by location. Read-only: no click handling, no visit status.
-export function ExistingStationMarkers({ map, visible }: ExistingStationMarkersProps) {
+// compared by location. Read-only: no click handling, no visit status, always
+// shown -- there is no toggle for this layer.
+export function ExistingStationMarkers({ map }: ExistingStationMarkersProps) {
     const markersRef = useRef<Marker[]>([]);
-    // The fetch below is async, so a toggle made while it is in flight would
-    // otherwise be missed: the closure over `visible` at effect-start time
-    // would apply a stale value once the markers are actually created.
-    const visibleRef = useRef(visible);
-    useEffect(() => {
-        visibleRef.current = visible;
-    }, [visible]);
 
     useEffect(() => {
         if (!map) {
@@ -54,7 +47,6 @@ export function ExistingStationMarkers({ map, visible }: ExistingStationMarkersP
                         map,
                         title: feature.properties.name,
                         icon: existingStationIcon(),
-                        visible: visibleRef.current,
                     });
                 });
             })
@@ -73,12 +65,6 @@ export function ExistingStationMarkers({ map, visible }: ExistingStationMarkersP
             markersRef.current = [];
         };
     }, [map]);
-
-    useEffect(() => {
-        for (const marker of markersRef.current) {
-            marker.setVisible(visible);
-        }
-    }, [visible]);
 
     return null;
 }

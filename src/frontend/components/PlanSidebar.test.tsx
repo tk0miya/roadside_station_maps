@@ -29,10 +29,8 @@ const renderSidebar = () =>
         <PlanSidebar
             stations={stations}
             visibleCategories={allVisible}
-            existingStationsVisible={true}
             selected={null}
             onToggle={() => {}}
-            onToggleExistingStations={() => {}}
             onSelect={() => {}}
         />
     );

@@ -148,17 +148,6 @@ body,
     vertical-align: middle;
 }
 
-/* Existing-station toggle: a plain dot, matching the marker shape on the map
-   (distinct from the pin-shaped swatches above, which are images). */
-.plan-dot-swatch {
-    display: inline-block;
-    height: 10px;
-    width: 10px;
-    border-radius: 50%;
-    background: #555555;
-    box-shadow: 0 0 0 1px #ffffff;
-}
-
 /* Info window */
 .plan-info {
     max-width: 260px;
