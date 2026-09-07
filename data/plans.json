@@ -1233,7 +1233,7 @@
                 "url": "https://www.vill.hirata.fukushima.jp/soshiki/15/3806.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-07"
     },
     {
         "name": "道の駅 ひろの",
@@ -1273,23 +1273,11 @@
                 "url": "https://www.town.okuma.fukushima.jp/soshiki/fukkoujigyo/24531.html"
             },
             {
-                "title": "https://news.yahoo.co.jp/articles/5f5983b15d9283c9da9d4287f7ef5b54468acf58",
-                "url": "https://news.yahoo.co.jp/articles/5f5983b15d9283c9da9d4287f7ef5b54468acf58"
-            },
-            {
-                "title": "https://www.minyu-net.com/news/detail/2025040309080534893",
-                "url": "https://www.minyu-net.com/news/detail/2025040309080534893"
-            },
-            {
-                "title": "https://news.yahoo.co.jp/articles/6123ad27c869239bde007e635b25803c08563484",
-                "url": "https://news.yahoo.co.jp/articles/6123ad27c869239bde007e635b25803c08563484"
-            },
-            {
-                "title": "大熊町に福島県内最大級の道の駅　２０３０年度開業目標　復興、魅力発信拠点に",
-                "url": "https://www.minpo.jp/news/moredetail/20250402123436"
+                "title": "常磐道、「休憩空白地帯」を解消へ。大熊PA新設、道の駅に直結",
+                "url": "https://tabiris.com/archives/okumapa/"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-07"
     },
     {
         "name": "道の駅 葛尾村",
@@ -1305,7 +1293,7 @@
                 "url": "https://www.katsurao.org/uploaded/attachment/1019.pdf"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-07"
     },
     {
         "name": "道の駅 龍ケ崎市",
@@ -1349,7 +1337,7 @@
                 "url": "https://www.city.tsukuba.lg.jp/soshikikarasagasu/keizaiburicchisuishinshitsu/24935.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-07"
     },
     {
         "name": "道の駅 ひたちなか市",
@@ -1365,7 +1353,7 @@
                 "url": "https://www.city.hitachinaka.lg.jp/_res/projects/default_project/_page_/001/002/725/78520896.pdf"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-07"
     },
     {
         "name": "道の駅 那珂市",
@@ -1377,21 +1365,21 @@
         "lng": 140.4620915,
         "urls": [
             {
-                "title": "https://www.city.naka.lg.jp/page/page008663.html",
-                "url": "https://www.city.naka.lg.jp/page/page008663.html"
+                "title": "複合型交流拠点施設「道の駅」推進事業",
+                "url": "https://www.city.naka.lg.jp/gyousei/machidukuri/page008663.html"
             },
             {
                 "title": "那珂市が進める新しい道の駅づくり",
                 "url": "https://www.city.naka.lg.jp/gyousei/machidukuri/michinoeki.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-07"
     },
     {
         "name": "道の駅 坂東",
         "pref": "茨城県",
         "city": "坂東市",
-        "status": "計画中",
+        "status": "中止",
         "date": "",
         "lat": 36.0824711,
         "lng": 139.9038923,
@@ -1411,16 +1399,20 @@
             {
                 "title": "道の駅坂東 - Wikipedia",
                 "url": "https://ja.wikipedia.org/wiki/%E9%81%93%E3%81%AE%E9%A7%85%E5%9D%82%E6%9D%B1"
+            },
+            {
+                "title": "平成29年-第2回臨時会審議結果（道の駅整備中止を求める決議 原案可決）",
+                "url": "https://www.city.bando.lg.jp/page/page003800.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-07"
     },
     {
         "name": "道の駅 行方市",
         "pref": "茨城県",
         "city": "行方市",
         "status": "計画中",
-        "date": "2030",
+        "date": "2030年度以降",
         "lat": 36.023081,
         "lng": 140.5042214,
         "urls": [
@@ -1431,9 +1423,13 @@
             {
                 "title": "行方市地域振興施設（道の駅）基本計画",
                 "url": "https://www.city.namegata.ibaraki.jp/data/doc/1745800788_doc_403_0.pdf"
+            },
+            {
+                "title": "行方市／2300㎡、駐車場149台／道の駅 基本計画案",
+                "url": "https://www.nikoukei.co.jp/news/detail/524407"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-07"
     },
     {
         "name": "道の駅 おおあらい",
@@ -1489,7 +1485,7 @@
                 "url": "https://www.city.ashikaga.tochigi.jp/urban/000065/000351/index.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-07"
     },
     {
         "name": "道の駅 鹿沼市花木センター",
@@ -1505,7 +1501,7 @@
                 "url": "https://www.city.kanuma.tochigi.jp/0283/info-0000011211-0.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-07"
     },
     {
         "name": "道の駅 かみのかわ",
