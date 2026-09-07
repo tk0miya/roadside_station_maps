@@ -57,7 +57,7 @@
         "@types/react": "^19.2.18",
         "@types/react-dom": "^19.2.5",
         "esbuild": "^0.28.2",
-        "jsdom": "^29.1.1",
+        "jsdom": "^30.0.1",
         "tsx": "^4.23.13",
         "typescript": "^7.0.2",
         "vitest": "^4.1.11",
