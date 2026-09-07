@@ -52,7 +52,7 @@
         "@cloudflare/workers-types": "^5.20260809.1",
         "@testing-library/react": "^16.3.2",
         "@types/cheerio": "^1.0.0",
-        "@types/google.maps": "^3.65.5",
+        "@types/google.maps": "^3.66.0",
         "@types/node": "^24.13.3",
         "@types/react": "^19.2.18",
         "@types/react-dom": "^19.2.5",
