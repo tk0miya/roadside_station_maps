@@ -15,6 +15,10 @@ interface PlanSidebarProps {
     onSelect: (station: PlannedStation) => void;
 }
 
+// Below this width the sidebar's fixed 320px would cover most of the map, so
+// phones start with it collapsed instead of open like everything wider.
+const MOBILE_WIDTH_THRESHOLD = 768;
+
 // Left panel listing stations grouped by category, mirroring the Google My Maps
 // sidebar: each category has a show/hide checkbox and, when visible, the list of
 // its stations. Clicking an item focuses it on the map.
@@ -23,7 +27,7 @@ interface PlanSidebarProps {
 // collapsed/expanded state is component-local and not persisted: nothing else
 // depends on it, and reopening is a single click.
 export function PlanSidebar({ stations, visibleCategories, selected, onToggle, onSelect }: PlanSidebarProps) {
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(() => window.innerWidth >= MOBILE_WIDTH_THRESHOLD);
 
     if (!open) {
         return (

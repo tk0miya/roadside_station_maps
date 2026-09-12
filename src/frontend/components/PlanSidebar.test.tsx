@@ -36,9 +36,14 @@ const renderSidebar = () =>
     );
 
 describe('PlanSidebar', () => {
+    const originalInnerWidth = window.innerWidth;
+
     // Vitest runs without globals, so React Testing Library's auto-cleanup is
     // not registered; unmount explicitly to keep queries scoped to one render.
-    afterEach(cleanup);
+    afterEach(() => {
+        cleanup();
+        window.innerWidth = originalInnerWidth;
+    });
 
     it('renders the station list expanded by default', () => {
         renderSidebar();
@@ -55,5 +60,23 @@ describe('PlanSidebar', () => {
 
         fireEvent.click(screen.getByLabelText('サイドバーを開く'));
         expect(screen.getByText('2026-04-01: 道の駅 X')).toBeTruthy();
+    });
+
+    it('starts collapsed on a phone-width screen', () => {
+        window.innerWidth = 480;
+
+        renderSidebar();
+
+        expect(screen.queryByText('2026-04-01: 道の駅 X')).toBeNull();
+        expect(screen.getByLabelText('サイドバーを開く')).toBeTruthy();
+    });
+
+    it('starts expanded exactly at the mobile-width threshold', () => {
+        window.innerWidth = 768;
+
+        renderSidebar();
+
+        expect(screen.getByText('2026-04-01: 道の駅 X')).toBeTruthy();
+        expect(screen.getByLabelText('サイドバーを閉じる')).toBeTruthy();
     });
 });
