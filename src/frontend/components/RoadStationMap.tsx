@@ -11,6 +11,7 @@ import { useRouteModeShortcut } from '../use-route-mode-shortcut';
 import { InfoWindow } from './InfoWindow';
 import { LoginButton } from './LoginButton';
 import { Markers } from './Markers';
+import { PlanMapLink } from './PlanMapLink';
 import { RouteControl } from './RouteControl';
 import { addCustomStopAt, RouteStops } from './RouteStops';
 import { ShareButton } from './ShareButton';
@@ -171,6 +172,7 @@ export function RoadStationMap() {
                     <RouteStops map={map} mode={mode} selectedStops={selectedStops} storage={storage} />
                     <ShareButton map={map} />
                     <StationCounter storage={storage} stations={stations} styleVersion={styleVersion} map={map} />
+                    <PlanMapLink map={map} />
                     {/* Aimed at by panning the map, and shown only while there is
                         room for another stop. */}
                     {mode === 'route' && !isRouteFull(selectedStops) && (
