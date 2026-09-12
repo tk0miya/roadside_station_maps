@@ -26,6 +26,8 @@ describe('PlanMapLink', () => {
         const [linkElement] = mockMap.controls[7].getArray() as HTMLAnchorElement[];
         expect(linkElement.className).toBe('plan-map-link');
         expect(linkElement.href).toContain('plan.html');
+        expect(linkElement.target).toBe('_blank');
+        expect(linkElement.rel).toBe('noopener');
         expect(linkElement.innerText).toBe('計画マップ');
     });
 
