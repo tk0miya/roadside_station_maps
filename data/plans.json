@@ -3604,16 +3604,20 @@
         "pref": "大分県",
         "city": "宇佐市",
         "status": "計画中",
-        "date": "2025",
+        "date": "",
         "lat": 33.5348969,
         "lng": 131.4075346,
         "urls": [
             {
-                "title": "https://www.city.usa.oita.jp/sougo/soshiki/14/doboku/douro/2540.html",
-                "url": "https://www.city.usa.oita.jp/sougo/soshiki/14/doboku/douro/2540.html"
+                "title": "「宇佐市都市計画マスタープラン」の進行管理について",
+                "url": "https://www.city.usa.oita.jp/sougo/soshiki/14/toshikeikaku/toshikeikaku/2582.html"
+            },
+            {
+                "title": "都市計画マスタープラン",
+                "url": "https://www.city.usa.oita.jp/sougo/soshiki/14/toshikeikaku/toshikeikaku/2558.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-14"
     },
     {
         "name": "道の駅 きたごう",
