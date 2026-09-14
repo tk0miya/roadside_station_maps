@@ -50,7 +50,7 @@
     "devDependencies": {
         "@biomejs/biome": "^2.5.11",
         "@cloudflare/workers-types": "^5.20260809.1",
-        "@testing-library/react": "^16.3.2",
+        "@testing-library/react": "^16.3.3",
         "@types/cheerio": "^1.0.0",
         "@types/google.maps": "^3.66.0",
         "@types/node": "^24.13.3",
