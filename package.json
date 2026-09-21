@@ -53,7 +53,7 @@
         "@testing-library/react": "^16.3.3",
         "@types/cheerio": "^1.0.0",
         "@types/google.maps": "^3.66.2",
-        "@types/node": "^24.13.3",
+        "@types/node": "^24.13.4",
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
         "esbuild": "^0.28.2",
