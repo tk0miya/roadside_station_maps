@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 import type { Feature, FeatureOptions, GoogleMap, LatLng } from '../frontend/google-maps-types';
 
 // Event plumbing shared by the mock map and its mock Data layer: `addListener`
@@ -25,8 +25,25 @@ const createListenerRegistry = () => {
     };
 };
 
+type MockDataLayer = {
+    addGeoJson: Mock;
+    addListener: Mock;
+    setStyle: Mock;
+    overrideStyle: Mock;
+    add: Mock;
+    forEach: Mock;
+    remove: Mock;
+    _setFeatures: (fs: Feature[]) => void;
+    _emit: (eventName: string, event: unknown) => void;
+};
+
 // Create mock Google Maps instance with controls, events and Data layer
-export const createMockMap = () => {
+export const createMockMap = (): GoogleMap & {
+    data: MockDataLayer;
+    setOptions: Mock;
+    _emit: (eventName: string, event: unknown) => void;
+    _setZoom: (z: number) => void;
+} => {
     const topLeftControls: HTMLElement[] = [];
     const topCenterControls: HTMLElement[] = [];
     const topRightControls: HTMLElement[] = [];
@@ -226,7 +243,7 @@ export const setupGoogleMapsMock = () => {
 
 // Create a mock google.maps.InfoWindow: the same trio of spies every real
 // caller drives it through (setOptions / open / close).
-export const createMockInfoWindow = () => ({
+export const createMockInfoWindow = (): { setOptions: Mock; open: Mock; close: Mock } => ({
     setOptions: vi.fn(),
     open: vi.fn(),
     close: vi.fn(),
