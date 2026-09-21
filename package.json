@@ -44,8 +44,8 @@
         "jaconv": "^1.1.2",
         "jose": "^6.2.10",
         "query-string": "^9.5.1",
-        "react": "^19.2.8",
-        "react-dom": "^19.2.8"
+        "react": "^19.3.0",
+        "react-dom": "^19.3.0"
     },
     "devDependencies": {
         "@biomejs/biome": "^2.5.12",
@@ -54,8 +54,8 @@
         "@types/cheerio": "^1.0.0",
         "@types/google.maps": "^3.66.0",
         "@types/node": "^24.13.3",
-        "@types/react": "^19.2.18",
-        "@types/react-dom": "^19.2.7",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
         "esbuild": "^0.28.2",
         "jsdom": "^30.0.1",
         "tsx": "^4.23.13",
