@@ -19,8 +19,8 @@
     "scripts": {
         "start": "node --import tsx esbuild.config.ts --watch",
         "build": "node --import tsx esbuild.config.ts",
-        "lint": "biome check .",
-        "lint:fix": "biome check --write .",
+        "lint": "biome check --error-on-warnings .",
+        "lint:fix": "biome check --write --error-on-warnings .",
         "format": "biome format --write .",
         "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.backend.json",
         "serve": "node --import tsx esbuild.config.ts --serve",
