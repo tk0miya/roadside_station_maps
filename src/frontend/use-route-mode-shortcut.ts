@@ -37,6 +37,10 @@ export function useRouteModeShortcut(props: RouteModeShortcutProps): void {
 
     // The gesture on the map itself, as opposed to on a marker. One landing on
     // a marker never arrives here: the data layer takes that event.
+    // The listener is installed once and reads mutable state from refs (see the comment on this
+    // hook), so onSelectedStopsChange and onEnterRouteMode are deliberately excluded to avoid
+    // re-registering it on every render.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: handlers are read via refs, not deps
     useEffect(() => {
         if (!props.map) return;
 

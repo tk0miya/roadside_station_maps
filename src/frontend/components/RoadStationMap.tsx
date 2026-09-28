@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuthManager } from '../auth/auth-context';
 import { useSessionRefresh } from '../auth/use-session-refresh';
 import type { Feature, GoogleMap } from '../google-maps-types';
@@ -64,6 +64,9 @@ export function RoadStationMap() {
 
     // Build the Storage whenever the auth state changes. RemoteStorage hydrates
     // asynchronously when signed in; MemoryStorage resolves immediately.
+    // auth.sessionToken is a change signal, not read in the body -- it's what triggers rebuilding
+    // Storage on login/logout.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: auth.sessionToken is a change signal
     useEffect(() => {
         let cancelled = false;
         setStorage((previous) => {
@@ -94,6 +97,16 @@ export function RoadStationMap() {
         setStyleVersion((v) => v + 1);
     }, [storage, stations]);
 
+    const onLocationDetected = useCallback(
+        (pos: GeolocationPosition) => {
+            if (map) {
+                const latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+                map.setCenter(latlng);
+            }
+        },
+        [map]
+    );
+
     useEffect(() => {
         if (!map) return;
 
@@ -104,14 +117,7 @@ export function RoadStationMap() {
             setSelectedStops((prev) => (prev.length ? [] : prev));
         });
         getCurrentPosition().then(onLocationDetected);
-    }, [map]);
-
-    const onLocationDetected = (pos: GeolocationPosition) => {
-        if (map) {
-            const latlng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-            map.setCenter(latlng);
-        }
-    };
+    }, [map, onLocationDetected]);
 
     const enterRouteMode = (seed?: Feature) => {
         setMode('route');

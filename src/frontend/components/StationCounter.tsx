@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, type Root } from 'react-dom/client';
 import type { GoogleMap } from '../google-maps-types';
 import { MARKER_ICONS } from '../marker-icons';
 import type { Storage } from '../storage';
@@ -32,7 +32,7 @@ function countByStyle(storage: Storage, totalStations: number): Record<number, n
 
 export function StationCounter({ storage, stations, styleVersion: _styleVersion, map }: StationCounterProps) {
     const contentElementRef = useRef<HTMLElement | null>(null);
-    const contentRootRef = useRef<any>(null);
+    const contentRootRef = useRef<Root | null>(null);
 
     useEffect(() => {
         if (!map) return;
@@ -61,6 +61,9 @@ export function StationCounter({ storage, stations, styleVersion: _styleVersion,
         };
     }, [map]);
 
+    // _styleVersion is a change signal for mutations to the mutable storage object, which doesn't
+    // get a new reference on style changes.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: _styleVersion is a change signal
     useEffect(() => {
         if (!contentRootRef.current || !stations) return;
 

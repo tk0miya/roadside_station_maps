@@ -62,7 +62,7 @@ describe('InfoWindow', () => {
             mapcode: '123 456*78',
         });
 
-        render(<InfoWindow selectedFeature={mockFeature as any} map={mockMap} />);
+        render(<InfoWindow selectedFeature={mockFeature} map={mockMap} />);
 
         expect(mockInfoWindow.setOptions).toHaveBeenCalledWith({
             position: expect.anything(),
@@ -84,7 +84,7 @@ describe('InfoWindow', () => {
             mapcode: '123 456*78',
         });
 
-        render(<InfoWindow selectedFeature={mockFeature as any} map={mockMap} />);
+        render(<InfoWindow selectedFeature={mockFeature} map={mockMap} />);
 
         expect(mockInfoWindow.setOptions).toHaveBeenCalledWith({
             position: expect.anything(),
@@ -125,7 +125,7 @@ describe('InfoWindow', () => {
             address: 'Address B',
         });
 
-        const { rerender } = render(<InfoWindow selectedFeature={mockFeatureA as any} map={mockMap} />);
+        const { rerender } = render(<InfoWindow selectedFeature={mockFeatureA} map={mockMap} />);
 
         // Get the content element from the first feature
         const firstSetOptionsCall = mockInfoWindow.setOptions.mock.calls[0][0];
@@ -139,7 +139,7 @@ describe('InfoWindow', () => {
         expect(firstContentElement.textContent).toContain(`住所：${mockFeatureA.getProperty('address')}`);
 
         // Change to feature B
-        rerender(<InfoWindow selectedFeature={mockFeatureB as any} map={mockMap} />);
+        rerender(<InfoWindow selectedFeature={mockFeatureB} map={mockMap} />);
 
         // Get the content element from the second feature
         const secondSetOptionsCall = mockInfoWindow.setOptions.mock.calls[1][0];

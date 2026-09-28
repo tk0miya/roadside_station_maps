@@ -34,6 +34,7 @@ export function PlanMarkers({ map, stations, visibleCategories, onSelect }: Plan
         onSelectRef.current = onSelect;
     }, [onSelect]);
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: see the comment at the end of this effect
     useEffect(() => {
         if (!map) {
             return;
