@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { act, cleanup, render, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import type { AuthState } from '#shared/auth-types';
 import { createMockMap, jsonResponse } from '#test-utils/test-utils';
 import { ShareButton } from './ShareButton';
@@ -91,7 +91,7 @@ describe('ShareButton', () => {
 
             expect(mockMap.controls[1].push).toHaveBeenCalledTimes(1);
 
-            const pushCall = (mockMap.controls[1].push as any).mock.calls[0];
+            const pushCall = (mockMap.controls[1].push as Mock).mock.calls[0];
             const buttonElement = pushCall[0] as HTMLElement;
             expect(buttonElement.className).toBe('share');
             expect(buttonElement.innerText).toBe('シェア');

@@ -129,6 +129,10 @@ export function Markers(props: MarkersProps) {
         props.map.data.setStyle((feature: Feature) => baseStyleFor(feature, storageRef.current));
     }, [props.map, props.storage]);
 
+    // The handlers are installed once and read mutable state from refs (see the comment on this
+    // component), so they're deliberately excluded here to avoid tearing down and re-registering
+    // the listeners on every render.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: handlers are read via refs, not deps
     useEffect(() => {
         if (!props.map || !props.stations) return;
         return loadRoadStations(props.map, props.stations, storageRef.current, {

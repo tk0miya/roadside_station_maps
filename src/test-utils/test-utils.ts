@@ -202,43 +202,46 @@ export const createMockStations = (count: number, startId = 18786) => ({
 
 // Setup Google Maps API mock
 export const setupGoogleMapsMock = () => {
-    (global as any).google = {
-        maps: {
-            ControlPosition: {
-                TOP_LEFT: 1,
-                TOP_CENTER: 2,
-                TOP_RIGHT: 3,
-                LEFT_TOP: 5,
-                RIGHT_TOP: 7,
-            },
-            Size: class {
-                constructor(
-                    public width: number,
-                    public height: number
-                ) {}
-            },
-            Point: class {
-                constructor(
-                    public x: number,
-                    public y: number
-                ) {}
-            },
-            Data: {
-                Point: class {
-                    constructor(private readonly position: LatLng) {}
-                    get() {
-                        return this.position;
-                    }
+    Object.defineProperty(global, 'google', {
+        value: {
+            maps: {
+                ControlPosition: {
+                    TOP_LEFT: 1,
+                    TOP_CENTER: 2,
+                    TOP_RIGHT: 3,
+                    LEFT_TOP: 5,
+                    RIGHT_TOP: 7,
                 },
+                Size: class {
+                    constructor(
+                        public width: number,
+                        public height: number
+                    ) {}
+                },
+                Point: class {
+                    constructor(
+                        public x: number,
+                        public y: number
+                    ) {}
+                },
+                Data: {
+                    Point: class {
+                        constructor(private readonly position: LatLng) {}
+                        get() {
+                            return this.position;
+                        }
+                    },
+                },
+                // Returns a fresh spy object per construction, so callers read the
+                // instance a component built via `google.maps.InfoWindow.mock.results`.
+                // biome-ignore lint/complexity/useArrowFunction: stands in for a constructor, so it must be constructible
+                InfoWindow: vi.fn(function () {
+                    return createMockInfoWindow();
+                }),
             },
-            // Returns a fresh spy object per construction, so callers read the
-            // instance a component built via `google.maps.InfoWindow.mock.results`.
-            // biome-ignore lint/complexity/useArrowFunction: stands in for a constructor, so it must be constructible
-            InfoWindow: vi.fn(function () {
-                return createMockInfoWindow();
-            }),
         },
-    };
+        writable: true,
+    });
 };
 
 // Create a mock google.maps.InfoWindow: the same trio of spies every real

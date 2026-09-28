@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, type Root } from 'react-dom/client';
 import type { DataPoint, Feature, GoogleInfoWindow, GoogleMap } from '../google-maps-types';
 
 export interface InfoWindowProps {
@@ -10,7 +10,7 @@ export interface InfoWindowProps {
 export function InfoWindow(props: InfoWindowProps) {
     const infoWindowRef = useRef<GoogleInfoWindow | null>(null);
     const contentElementRef = useRef<HTMLElement | null>(null);
-    const contentRootRef = useRef<any>(null);
+    const contentRootRef = useRef<Root | null>(null);
 
     useEffect(() => {
         infoWindowRef.current = new google.maps.InfoWindow();
@@ -41,7 +41,7 @@ export function InfoWindow(props: InfoWindowProps) {
                     </div>
                 );
 
-                const geometry = props.selectedFeature.getGeometry()! as DataPoint;
+                const geometry = props.selectedFeature.getGeometry() as DataPoint;
                 infoWindowRef.current.setOptions({
                     position: geometry.get(),
                     content: contentElementRef.current,

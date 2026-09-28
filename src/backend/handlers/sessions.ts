@@ -45,7 +45,11 @@ sessionsRouter.post('/', async (c) => {
 // required. If the remaining lifetime is still above the refresh threshold the
 // endpoint replies with 204 No Content so the client can keep the current token.
 sessionsRouter.post('/refresh', requireAuth(), async (c) => {
-    const token = c.req.header('Authorization')!.slice('Bearer '.length).trim();
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader) {
+        return c.json({ error: 'Missing bearer token' }, 401);
+    }
+    const token = authHeader.slice('Bearer '.length).trim();
     const { sub, exp } = await verifySessionToken(token, c.env.SESSION_SECRET);
 
     const remaining = exp - Math.floor(Date.now() / 1000);
