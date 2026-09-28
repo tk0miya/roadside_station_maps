@@ -11,11 +11,13 @@ import { fetchCities, fetchPositions } from './abr';
 
 // ABR's CDN blocks requests from outside Japan (see src/lib/abr.ts), which rules
 // out a GitHub-hosted runner; Claude Code's web sandbox has no route to the
-// hosts either. Both leave the same gap: the source is only checked where it is
-// reachable.
-const offshore = process.env.CI === 'true' || process.env.CLAUDE_CODE_REMOTE === 'true';
+// hosts either. Claude Code's local CLI sandbox (SANDBOX_RUNTIME) denies the
+// same host unless a command pre-approves it. All three leave the same gap:
+// the source is only checked where it is reachable.
+const unreachable =
+    process.env.CI === 'true' || process.env.CLAUDE_CODE_REMOTE === 'true' || process.env.SANDBOX_RUNTIME === '1';
 
-describe.skipIf(offshore)('abr', () => {
+describe.skipIf(unreachable)('abr', () => {
     it('serves the municipality master with the columns the build reads', async () => {
         const rows = await fetchCities();
 
