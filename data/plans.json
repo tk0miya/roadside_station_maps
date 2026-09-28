@@ -1149,7 +1149,7 @@
                 "url": "https://www.town.yabuki.fukushima.jp/sp/page/page007128.html"
             }
         ],
-        "checked_on": "2026-08-12"
+        "checked_on": "2026-09-28"
     },
     {
         "name": "道の駅 矢祭町",
@@ -1449,7 +1449,7 @@
                 "url": "https://www.nikoukei.co.jp/news/detail/473865"
             }
         ],
-        "checked_on": "2026-08-12"
+        "checked_on": "2026-09-28"
     },
     {
         "name": "道の駅 阿見町",
@@ -2833,7 +2833,7 @@
                 "url": "https://www.kobe-np.co.jp/news/himeji/202603/0020125299.shtml"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-28"
     },
     {
         "name": "道の駅 高田屋嘉兵衛公園",
@@ -2921,7 +2921,7 @@
                 "url": "https://project.nikkeibp.co.jp/atclppp/PPP/news/122702723/"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-28"
     },
     {
         "name": "道の駅こんだ温泉ぬくもりの郷",
@@ -3229,10 +3229,6 @@
         "lng": 134.0831059,
         "urls": [
             {
-                "title": "https://www3.nhk.or.jp/lnews/takamatsu/20240927/8030019433.html",
-                "url": "https://www3.nhk.or.jp/lnews/takamatsu/20240927/8030019433.html"
-            },
-            {
                 "title": "塩江道の駅エリア整備事業",
                 "url": "https://www.city.takamatsu.kagawa.jp/kurashi/shinotorikumi/keikaku/sonota/20230829/index.html"
             },
@@ -3241,7 +3237,7 @@
                 "url": "https://project.nikkeibp.co.jp/atclppp/PPP/news/012004054/"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-28"
     },
     {
         "name": "道の駅 観音寺市",
@@ -3391,13 +3387,9 @@
             {
                 "title": "一般競争入札の公告について 令和8・9・１０年度（継続費）川崎町道の駅整備工事 ｜ ReBorn！KAWASAKIMACHI：福岡県田川郡川崎町",
                 "url": "https://www.town-kawasaki.com/important/352288"
-            },
-            {
-                "title": "川崎町「道の駅」の名称を募集します！ ｜ ReBorn！KAWASAKIMACHI：福岡県田川郡川崎町",
-                "url": "https://www.town-kawasaki.com/important/336874"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-28"
     },
     {
         "name": "道の駅 かみみね",
@@ -3449,15 +3441,15 @@
         "lng": 130.6406661,
         "urls": [
             {
-                "title": "https://www.city.yatsushiro.lg.jp/kiji00319890/3_19890_103930_up_r0vngwjk.pdf",
-                "url": "https://www.city.yatsushiro.lg.jp/kiji00319890/3_19890_103930_up_r0vngwjk.pdf"
+                "title": "道の駅坂本の再整備に係る進捗について（令和7年3月）",
+                "url": "https://www.city.yatsushiro.lg.jp/kiji00323699/3_23699_134518_up_gkql0pe2.pdf"
             },
             {
                 "title": "道の駅坂本の再整備に係る進捗について / 熊本県八代市",
                 "url": "https://www.city.yatsushiro.lg.jp/kiji00323699/index.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-28"
     },
     {
         "name": "道の駅 あらお",
@@ -3593,7 +3585,7 @@
                 "url": "https://www.city.tsukumi.oita.jp/uploaded/life/21382_45492_misc.pdf"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-28"
     },
     {
         "name": "道の駅 うさ",
@@ -3681,7 +3673,7 @@
                 "url": "https://www.city.kagoshima-izumi.lg.jp/page/page_010626.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-28"
     },
     {
         "name": "道の駅 南種子町",
@@ -3765,6 +3757,6 @@
                 "url": "https://ryukyushimpo.jp/national/entry-5366680.html"
             }
         ],
-        "checked_on": "2026-08-11"
+        "checked_on": "2026-09-28"
     }
 ]
