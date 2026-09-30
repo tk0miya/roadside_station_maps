@@ -1191,7 +1191,7 @@
         "name": "道の駅石川",
         "pref": "福島県",
         "city": "石川郡石川町",
-        "status": "登録済み",
+        "status": "開業",
         "date": "2026-09-18",
         "lat": 37.1685556,
         "lng": 140.4292731,
@@ -1217,7 +1217,7 @@
                 "url": "https://www.town.ishikawa.fukushima.jp/admin/ishikawa/info/010535.html"
             }
         ],
-        "checked_on": "2026-08-31"
+        "checked_on": "2026-09-30"
     },
     {
         "name": "道の駅 ひらた (移転)",
