@@ -46,10 +46,10 @@
         "urls": [
             {
                 "title": "中期事業計画（2020～2024年度）",
-                "url": "https://www.hokkaido-airports.co.jp/pdf/business_plan2020-2024.pdf"
+                "url": "https://www.hokkaido-airports.com/rd_corporate/pdf/business_plan2020-2024.pdf"
             }
         ],
-        "checked_on": "2026-08-18"
+        "checked_on": "2026-10-05"
     },
     {
         "name": "道の駅 275つきがた",
@@ -87,9 +87,13 @@
             {
                 "title": "第4次長万部町まちづくり総合計画 2021-2030",
                 "url": "https://www.town.oshamambe.lg.jp/uploaded/attachment/5029.pdf"
+            },
+            {
+                "title": "新幹線駅周辺整備計画",
+                "url": "https://www.town.oshamambe.lg.jp/uploaded/attachment/4081.pdf"
             }
         ],
-        "checked_on": "2026-08-18"
+        "checked_on": "2026-10-05"
     },
     {
         "name": "道の駅かもめ島",
@@ -105,14 +109,6 @@
                 "url": "https://www.hokkaido-esashi.jp/modules/chousei/content0428.html"
             },
             {
-                "title": "https://mykoho.jp/article/%E5%8C%97%E6%B5%B7%E9%81%93%E6%B1%9F%E5%B7%AE%E7%94%BA/%E5%BA%83%E5%A0%B1%E3%81%88%E3%81%95%E3%81%97-%E4%BB%A4%E5%92%8C5%E5%B9%B412%E6%9C%88%E5%8F%B7/%E6%96%B0%E3%81%9F%E3%81%AA%E3%80%8C%E9%81%93%E3%81%AE%E9%A7%85%E3%80%8D%E3%82%92%E7%9B%AE%E6%8C%87%E3%81%97%E3%81%A6%EF%BD%9E%E5%8C%97%E3%81%AE%E6%B1%9F%E3%81%AE%E5%B3%B6%E6%8B%A0%E7%82%B9%E6%96%BD/",
-                "url": "https://mykoho.jp/article/%E5%8C%97%E6%B5%B7%E9%81%93%E6%B1%9F%E5%B7%AE%E7%94%BA/%E5%BA%83%E5%A0%B1%E3%81%88%E3%81%95%E3%81%97-%E4%BB%A4%E5%92%8C5%E5%B9%B412%E6%9C%88%E5%8F%B7/%E6%96%B0%E3%81%9F%E3%81%AA%E3%80%8C%E9%81%93%E3%81%AE%E9%A7%85%E3%80%8D%E3%82%92%E7%9B%AE%E6%8C%87%E3%81%97%E3%81%A6%EF%BD%9E%E5%8C%97%E3%81%AE%E6%B1%9F%E3%81%AE%E5%B3%B6%E6%8B%A0%E7%82%B9%E6%96%BD/"
-            },
-            {
-                "title": "https://mykoho.jp/article/%E5%8C%97%E6%B5%B7%E9%81%93%E6%B1%9F%E5%B7%AE%E7%94%BA/%E5%BA%83%E5%A0%B1%E3%81%88%E3%81%95%E3%81%97-%E4%BB%A4%E5%92%8C6%E5%B9%B412%E6%9C%88%E5%8F%B7/%E6%96%B0%E3%81%9F%E3%81%AA%E3%80%8C%E9%81%93%E3%81%AE%E9%A7%85%E3%80%8D%E3%82%92%E7%9B%AE%E6%8C%87%E3%81%97%E3%81%A6%E6%B5%B7%E3%81%A8%E3%81%BE%E3%81%A1%E3%82%92%E3%81%A4%E3%81%AA%E3%81%90%E3%81%BE/",
-                "url": "https://mykoho.jp/article/%E5%8C%97%E6%B5%B7%E9%81%93%E6%B1%9F%E5%B7%AE%E7%94%BA/%E5%BA%83%E5%A0%B1%E3%81%88%E3%81%95%E3%81%97-%E4%BB%A4%E5%92%8C6%E5%B9%B412%E6%9C%88%E5%8F%B7/%E6%96%B0%E3%81%9F%E3%81%AA%E3%80%8C%E9%81%93%E3%81%AE%E9%A7%85%E3%80%8D%E3%82%92%E7%9B%AE%E6%8C%87%E3%81%97%E3%81%A6%E6%B5%B7%E3%81%A8%E3%81%BE%E3%81%A1%E3%82%92%E3%81%A4%E3%81%AA%E3%81%90%E3%81%BE/"
-            },
-            {
                 "title": "（仮称）道の駅かもめ島基本計画概要について",
                 "url": "https://www.hokkaido-esashi.jp/modules/chousei/content0535.html"
             },
@@ -123,9 +119,13 @@
             {
                 "title": "江差・道の駅、開業着実に　建設工事の安全祈願祭",
                 "url": "https://www.hokkaido-np.co.jp/article/1313196/"
+            },
+            {
+                "title": "道の駅「江差かもめ島」　地元海産物と体験観光で差異化目指す　27年6月開業",
+                "url": "https://www.hokkaido-np.co.jp/article/1378135/"
             }
         ],
-        "checked_on": "2026-08-18"
+        "checked_on": "2026-10-05"
     },
     {
         "name": "道の駅ニセコビュープラザ (再整備)",
@@ -149,7 +149,7 @@
                 "url": "https://www.hokkaido-np.co.jp/article/1326289/"
             }
         ],
-        "checked_on": "2026-08-18"
+        "checked_on": "2026-10-05"
     },
     {
         "name": "道の駅 かかしの郷 きょうわ",
@@ -161,12 +161,12 @@
         "lng": 140.6252293,
         "urls": [
             {
-                "title": "https://www.town.kyowa.hokkaido.jp/soshiki/sangyouka/news/michinoeki_public-comment.html",
-                "url": "https://www.town.kyowa.hokkaido.jp/soshiki/sangyouka/news/michinoeki_public-comment.html"
+                "title": "道の駅オープンに向けて",
+                "url": "https://www.town.kyowa.hokkaido.jp/tourism/?content=1285"
             },
             {
-                "title": "https://www.town.kyowa.hokkaido.jp/soshiki/sangyouka/news/files/michinoekiseibikeikaku.pdf",
-                "url": "https://www.town.kyowa.hokkaido.jp/soshiki/sangyouka/news/files/michinoekiseibikeikaku.pdf"
+                "title": "共和町道の駅の名称決定について",
+                "url": "https://www.town.kyowa.hokkaido.jp/tourism/?content=1427"
             },
             {
                 "title": "【共和町】町民と共に創る共和町の道の駅。官民連携の運営会社「とものば」 | 北海道の人、暮らし、仕事。 くらしごと",
@@ -187,9 +187,13 @@
             {
                 "title": "かかしの郷 きょうわ",
                 "url": "https://www.tomonoba.co.jp/kyowa_michinoeki/"
+            },
+            {
+                "title": "共和・道の駅　1年後開業へ着々",
+                "url": "https://www.hokkaido-np.co.jp/article/1339256/"
             }
         ],
-        "checked_on": "2026-08-18"
+        "checked_on": "2026-10-05"
     },
     {
         "name": "道の駅 ふるびら",
@@ -233,19 +237,19 @@
                 "url": "https://www.town.yoichi.hokkaido.jp/kankou/spot/atarashii_michinoeki.html"
             },
             {
-                "title": "https://mykoho.jp/article/%E5%8C%97%E6%B5%B7%E9%81%93%E4%BD%99%E5%B8%82%E7%94%BA/%E5%BA%83%E5%A0%B1%E3%82%88%E3%81%84%E3%81%A1-%E4%BB%A4%E5%92%8C5%E5%B9%B410%E6%9C%88%E5%8F%B7/%E7%AC%AC1%E5%9B%9E-%E6%96%B0%E3%81%97%E3%81%84%E9%81%93%E3%81%AE%E9%A7%85%E3%81%A0%E3%82%88%E3%82%8A/",
-                "url": "https://mykoho.jp/article/%E5%8C%97%E6%B5%B7%E9%81%93%E4%BD%99%E5%B8%82%E7%94%BA/%E5%BA%83%E5%A0%B1%E3%82%88%E3%81%84%E3%81%A1-%E4%BB%A4%E5%92%8C5%E5%B9%B410%E6%9C%88%E5%8F%B7/%E7%AC%AC1%E5%9B%9E-%E6%96%B0%E3%81%97%E3%81%84%E9%81%93%E3%81%AE%E9%A7%85%E3%81%A0%E3%82%88%E3%82%8A/"
-            },
-            {
                 "title": "【余市】民間提案の道の駅再編整備が白紙に／建設の方針は変わらず｜e-kensinニュース 北海道建設新聞",
                 "url": "https://e-kensin.net/n/n7c3f4686e956"
             },
             {
                 "title": "余市「新道の駅」検討に民間視点　後志道IC付近、整備や運営手法巡り14日から市場調査",
                 "url": "https://www.hokkaido-np.co.jp/article/1260984/"
+            },
+            {
+                "title": "道の駅再編整備について",
+                "url": "https://www.town.yoichi.hokkaido.jp/kankou/spot/2025-1126-0937-19.html"
             }
         ],
-        "checked_on": "2026-08-18"
+        "checked_on": "2026-10-05"
     },
     {
         "name": "道の駅 上富良野町",
@@ -265,7 +269,7 @@
                 "url": "https://www.town.kamifurano.hokkaido.jp/contents/02kikaku/0210sinko/fukugokyotenplan-proposal/kyoten_kiso.pdf"
             }
         ],
-        "checked_on": "2026-08-18"
+        "checked_on": "2026-10-05"
     },
     {
         "name": "道の駅 中富良野町",
@@ -2173,7 +2177,7 @@
                 "url": "https://www.city.nomi.ishikawa.jp/fs/2/0/7/9/3/_/1boshuyoko.pdf"
             }
         ],
-        "checked_on": "2026-08-18"
+        "checked_on": "2026-10-05"
     },
     {
         "name": "道の駅 蓮如の里あわら",
@@ -2289,7 +2293,7 @@
                 "url": "https://www.mlit.go.jp/common/001252218.pdf"
             }
         ],
-        "checked_on": "2026-08-18"
+        "checked_on": "2026-10-05"
     },
     {
         "name": "道の駅 まるこ",
@@ -2331,9 +2335,13 @@
             {
                 "title": "千曲市の「道の駅」計画案、市議会から見直し求める声相次ぐ 策定は2026年度にずれ込み見通し",
                 "url": "https://www.shinmai.co.jp/news/article/gf01d6g1eon071vbt7g9h66g"
+            },
+            {
+                "title": "【回答公開】千曲市地域防災拠点・道の駅整備事業の基本計画(案）への意見募集について",
+                "url": "https://www.city.chikuma.lg.jp/soshiki/kominkyoso/kaihatsu_toshikeikaku/michinoeki/kihonkeikau/11962.html"
             }
         ],
-        "checked_on": "2026-08-18"
+        "checked_on": "2026-10-05"
     },
     {
         "name": "道の駅 八千穂高原",
