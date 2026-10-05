@@ -2321,8 +2321,8 @@
         "city": "千曲市",
         "status": "計画中",
         "date": "",
-        "lat": 36.5338864,
-        "lng": 138.119971,
+        "lat": 36.519041,
+        "lng": 138.094576,
         "urls": [
             {
                 "title": "令和3年度 千曲市道の駅（地域防災拠点）設置可能性 概要調査報告書",
@@ -2339,6 +2339,10 @@
             {
                 "title": "【回答公開】千曲市地域防災拠点・道の駅整備事業の基本計画(案）への意見募集について",
                 "url": "https://www.city.chikuma.lg.jp/soshiki/kominkyoso/kaihatsu_toshikeikaku/michinoeki/kihonkeikau/11962.html"
+            },
+            {
+                "title": "（結果公開）千曲市地域防災拠点・道の駅基本計画の官民連携事業手法に係る サウンディング型市場調査について",
+                "url": "https://www.city.chikuma.lg.jp/soshiki/kominkyoso/kaihatsu_toshikeikaku/michinoeki/kihonkeikau/11889.html"
             }
         ],
         "checked_on": "2026-10-05"
