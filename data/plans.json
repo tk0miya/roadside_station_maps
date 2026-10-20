@@ -1764,6 +1764,22 @@
         "checked_on": "2026-09-14"
     },
     {
+        "name": "道の駅 本庄市",
+        "pref": "埼玉県",
+        "city": "本庄市",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "本庄市道の駅基本構想を策定しました",
+                "url": "https://www.city.honjo.lg.jp/soshiki/keizaikankyo/sangyo/tantoujouhou/20045.html"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 こうのす",
         "pref": "埼玉県",
         "city": "鴻巣市",
@@ -1952,6 +1968,22 @@
         "checked_on": "2026-01-01"
     },
     {
+        "name": "道の駅 上里町",
+        "pref": "埼玉県",
+        "city": "児玉郡上里町",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "本庄市が「道の駅基本構想」発表 上里町は計画用地を特定して案取りまとめ",
+                "url": "https://honjo.keizai.biz/headline/864/"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 松伏町",
         "pref": "埼玉県",
         "city": "北葛飾郡松伏町",
@@ -2052,6 +2084,26 @@
         "checked_on": "2026-08-12"
     },
     {
+        "name": "道の駅 富津市",
+        "pref": "千葉県",
+        "city": "富津市",
+        "status": "計画中",
+        "date": "2032年度",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "敷地２～３ha規模を検討／道の駅「段階的展開」想定／富津市",
+                "url": "https://www.nikoukei.co.jp/news/detail/545266"
+            },
+            {
+                "title": "富津市「道の駅」基本方針",
+                "url": "https://www.city.futtsu.lg.jp/0000007828.html"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 大網白里市",
         "pref": "千葉県",
         "city": "大網白里市",
@@ -2144,6 +2196,22 @@
         "checked_on": "2026-09-28"
     },
     {
+        "name": "道の駅 相模原市",
+        "pref": "神奈川県",
+        "city": "相模原市",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "中山間地域における「道の駅」設置検討事業について",
+                "url": "https://www.city.sagamihara.kanagawa.jp/_res/projects/default_project/_page_/001/012/963/2026/0428_siryou2.pdf"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 横須賀市",
         "pref": "神奈川県",
         "city": "横須賀市",
@@ -2198,6 +2266,22 @@
             }
         ],
         "checked_on": "2026-01-01"
+    },
+    {
+        "name": "道の駅 伊勢原市",
+        "pref": "神奈川県",
+        "city": "伊勢原市",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "伊勢原市が構想する「道の駅」、アンケートでは「利用」意向が９３・８％",
+                "url": "https://www.kanaloco.jp/news/government/article-1254560.html"
+            }
+        ],
+        "checked_on": "2026-10-21"
     },
     {
         "name": "道の駅 あやせ",
@@ -2284,6 +2368,70 @@
         "checked_on": "2026-10-21"
     },
     {
+        "name": "道の駅 風の丘米山 (再整備)",
+        "pref": "新潟県",
+        "city": "柏崎市",
+        "status": "計画中",
+        "date": "",
+        "lat": 37.3465151,
+        "lng": 138.4899212,
+        "urls": [
+            {
+                "title": "道の駅「風の丘米山」進まぬ再整備、柏崎市が単独で丘側から開発へ 国道側は依然不透明",
+                "url": "https://www.niigata-nippo.co.jp/articles/-/799748"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
+        "name": "道の駅 朝日 (再整備)",
+        "pref": "新潟県",
+        "city": "村上市",
+        "status": "計画中",
+        "date": "",
+        "lat": 38.2821299,
+        "lng": 139.5224236,
+        "urls": [
+            {
+                "title": "村上市「道の駅朝日」新施設のオープン遅れる見通し…設計ミスで追加工事、事業費7億円増",
+                "url": "https://www.niigata-nippo.co.jp/articles/-/886478"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
+        "name": "道の駅 あらい (再整備)",
+        "pref": "新潟県",
+        "city": "妙高市",
+        "status": "計画中",
+        "date": "",
+        "lat": 37.0261176,
+        "lng": 138.2258864,
+        "urls": [
+            {
+                "title": "バイオマス発電整備、健診施設移転先候補…「道の駅あらい」リニューアルへ妙高市が基本構想",
+                "url": "https://www.niigata-nippo.co.jp/articles/-/645952"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
+        "name": "道の駅 南魚沼 (再整備)",
+        "pref": "新潟県",
+        "city": "南魚沼市",
+        "status": "計画中",
+        "date": "2030",
+        "lat": 37.0030693,
+        "lng": 138.819214,
+        "urls": [
+            {
+                "title": "「道の駅南魚沼」基本設計概要公開 全天候型の子どもの遊び場施設、防災機能も充実…30年リニューアルオープン予定",
+                "url": "https://www.niigata-nippo.co.jp/articles/-/827056"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 能美市",
         "pref": "石川県",
         "city": "能美市",
@@ -2358,6 +2506,26 @@
             }
         ],
         "checked_on": "2026-01-01"
+    },
+    {
+        "name": "道の駅 シーサイド高浜 (再整備)",
+        "pref": "福井県",
+        "city": "大飯郡高浜町",
+        "status": "計画中",
+        "date": "2027年度",
+        "lat": 35.48905157,
+        "lng": 135.5954964,
+        "urls": [
+            {
+                "title": "道の駅「シーサイド高浜」営業休止のお知らせ",
+                "url": "https://www.town.takahama.fukui.jp/page/sanngyousinnkou/p007799.html"
+            },
+            {
+                "title": "道の駅「シーサイド高浜」 共同事業体と基本協定 町民本位の仕掛け充実",
+                "url": "https://wakasabay.jp/articles/-/2982"
+            }
+        ],
+        "checked_on": "2026-10-21"
     },
     {
         "name": "道の駅 fumotto 南アルプス",
@@ -2566,6 +2734,42 @@
             }
         ],
         "checked_on": "2026-10-12"
+    },
+    {
+        "name": "道の駅 オアシスおぶせ (再整備)",
+        "pref": "長野県",
+        "city": "上高井郡小布施町",
+        "status": "計画中",
+        "date": "2028秋ごろ",
+        "lat": 36.689123,
+        "lng": 138.2948649,
+        "urls": [
+            {
+                "title": "上信越道･小布施PA近くの｢道の駅オアシスおぶせ｣ 南西の駐車場への移転決定",
+                "url": "https://www.shinmai.co.jp/news/article/gf01d87cl27hgt5j2m09jjeg"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
+        "name": "道の駅 FARMUS 木島平 (再整備)",
+        "pref": "長野県",
+        "city": "下高井郡木島平村",
+        "status": "計画中",
+        "date": "",
+        "lat": 36.8521479,
+        "lng": 138.388223,
+        "urls": [
+            {
+                "title": "道の駅FARMUS木島平再整備計画説明会の開催について",
+                "url": "https://www.vill.kijimadaira.lg.jp/articles/2025030700018/"
+            },
+            {
+                "title": "木島平村の道の駅「FARMUS」 来場者低迷でリニューアル考えたが…計画練り直しへ",
+                "url": "https://www.shinmai.co.jp/news/article/CNTS2025060600247"
+            }
+        ],
+        "checked_on": "2026-10-21"
     },
     {
         "name": "道の駅 リニアの見える丘公園",
