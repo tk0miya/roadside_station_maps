@@ -2156,6 +2156,30 @@
         "checked_on": "2026-09-07"
     },
     {
+        "name": "道の駅 漢学の里しただ (移転)",
+        "pref": "新潟県",
+        "city": "三条市",
+        "status": "凍結",
+        "date": "",
+        "lat": 37.539001,
+        "lng": 139.125459,
+        "urls": [
+            {
+                "title": "「三条市道の駅移転及び八十里越交流拠点エリア整備」に係るサウンディング型市場調査（2回目）",
+                "url": "https://www.city.sanjo.niigata.jp/soshiki/keizaibu/eigyosenryakushitsu/kanko/19714.html"
+            },
+            {
+                "title": "八十里越交流拠点エリア整備事業 事業概要",
+                "url": "https://www.city.sanjo.niigata.jp/material/files/group/6/zigyougaiyou.pdf"
+            },
+            {
+                "title": "三条市の八十里越交流拠点エリア整備、一部事業を先行実施へ　建築費高騰で、2027年夏着手",
+                "url": "https://www.niigata-nippo.co.jp/articles/-/855903"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 能美市",
         "pref": "石川県",
         "city": "能美市",
