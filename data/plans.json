@@ -196,6 +196,22 @@
         "checked_on": "2026-10-05"
     },
     {
+        "name": "道の駅 いわない (再整備)",
+        "pref": "北海道",
+        "city": "岩内郡岩内町",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "道の駅再整備 基本構想検討基礎資料",
+                "url": "https://www.town.iwanai.hokkaido.jp/wp-content/uploads/2025/12/kihonnsisou.pdf"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 ふるびら",
         "pref": "北海道",
         "city": "余市郡余市町",
@@ -250,6 +266,26 @@
             }
         ],
         "checked_on": "2026-10-05"
+    },
+    {
+        "name": "道の駅 つるぬま (再整備)",
+        "pref": "北海道",
+        "city": "樺戸郡浦臼町",
+        "status": "計画中",
+        "date": "2028春",
+        "lat": 43.4501752,
+        "lng": 141.8356403,
+        "urls": [
+            {
+                "title": "道の駅に浦臼の魅力を 住民有志が町に意見書 28年度新装計画",
+                "url": "https://www.hokkaido-np.co.jp/article/1209343/"
+            },
+            {
+                "title": "浦臼 道の駅つるぬま新装開業延期 2028年春から遅れる見通し",
+                "url": "https://www.hokkaido-np.co.jp/article/1365128/"
+            }
+        ],
+        "checked_on": "2026-10-21"
     },
     {
         "name": "道の駅 上富良野町",
@@ -624,6 +660,22 @@
         "checked_on": "2026-08-19"
     },
     {
+        "name": "道の駅 仙台市",
+        "pref": "宮城県",
+        "city": "仙台市",
+        "status": "計画中",
+        "date": "2032年度ごろ",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "仙台市で初 「道の駅」整備構想が浮上 昨年閉校の小学校を活用 2032年度の開業視野",
+                "url": "https://kahoku.news/articles/20260626khn000062.html"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 石巻市",
         "pref": "宮城県",
         "city": "石巻市",
@@ -818,6 +870,22 @@
             }
         ],
         "checked_on": "2026-08-24"
+    },
+    {
+        "name": "道の駅 たかのす (再整備)",
+        "pref": "秋田県",
+        "city": "北秋田市",
+        "status": "計画中",
+        "date": "2028年度",
+        "lat": 40.251513,
+        "lng": 140.375856,
+        "urls": [
+            {
+                "title": "道の駅たかのす、改装基本設計公表 概算事業費39億円に、28年度オープン見込む",
+                "url": "https://www.sakigake.jp/news/article/20260527AK0012/"
+            }
+        ],
+        "checked_on": "2026-10-21"
     },
     {
         "name": "道の駅 はちもり (移転)",
@@ -1436,6 +1504,22 @@
         "checked_on": "2026-09-07"
     },
     {
+        "name": "道の駅 鉾田市",
+        "pref": "茨城県",
+        "city": "鉾田市",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "鹿島灘海浜公園における道の駅整備事業（サウンディング案件登録様式）",
+                "url": "https://www.mlit.go.jp/sogoseisaku/kanminrenkei/content/001899536.pdf"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 おおあらい",
         "pref": "茨城県",
         "city": "東茨城郡大洗町",
@@ -1574,6 +1658,26 @@
             }
         ],
         "checked_on": "2026-09-14"
+    },
+    {
+        "name": "道の駅 東吾妻町",
+        "pref": "群馬県",
+        "city": "吾妻郡東吾妻町",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "高速バス等交通結節点及び道路休憩施設整備基本構想の策定について",
+                "url": "https://www.town.higashiagatsuma.gunma.jp/www/contents/1711073524074/index.html"
+            },
+            {
+                "title": "群馬県内の道の駅 神流、吉岡、昭和3町村がリニューアルで施設充実へ 安中市と東吾妻町は新設を計画",
+                "url": "https://www.jomo-news.co.jp/articles/-/974262"
+            }
+        ],
+        "checked_on": "2026-10-21"
     },
     {
         "name": "道の駅 さいたま",
