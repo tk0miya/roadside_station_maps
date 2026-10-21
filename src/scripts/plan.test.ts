@@ -176,6 +176,8 @@ describe('checkArgs', () => {
                 '--title=あ',
             ])
         ).not.toThrow();
+        expect(() => check(['discovery', 'list'])).not.toThrow();
+        expect(() => check(['discovery', 'done', '北海道'])).not.toThrow();
     });
 
     it('rejects an unknown command', () => {
@@ -220,6 +222,25 @@ describe('checkArgs', () => {
 
     it('rejects url with no action', () => {
         expect(() => check(['url'])).toThrow('Missing action');
+    });
+
+    it('rejects discovery with no action, or an unknown one', () => {
+        expect(() => check(['discovery'])).toThrow('Missing action');
+        expect(() => check(['discovery', 'reset'])).toThrow('Unknown discovery action: reset');
+    });
+
+    // done without a prefecture would have nothing to stamp, and list with one
+    // would look like a filter that is not there.
+    it('holds each discovery action to its argument count', () => {
+        expect(() => check(['discovery', 'done'])).toThrow('Expected 1 argument(s) after done, got 0');
+        expect(() => check(['discovery', 'done', '北海道', '青森県'])).toThrow(
+            'Expected 1 argument(s) after done, got 2'
+        );
+        expect(() => check(['discovery', 'list', '北海道'])).toThrow('Expected 0 argument(s) after list, got 1');
+    });
+
+    it('rejects flags on a discovery action', () => {
+        expect(() => check(['discovery', 'list', '--limit=5'])).toThrow('Unknown option: --limit');
     });
 });
 
