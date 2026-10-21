@@ -3576,6 +3576,22 @@
         "checked_on": "2026-10-19"
     },
     {
+        "name": "道の駅 井原市",
+        "pref": "岡山県",
+        "city": "井原市",
+        "status": "計画中",
+        "date": "2029年度",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "井原市賑わい創出拠点施設（道の駅）計画概要",
+                "url": "https://www.mlit.go.jp/sogoseisaku/kanminrenkei/content/001899517.pdf"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 備前市",
         "pref": "岡山県",
         "city": "備前市",
@@ -3610,6 +3626,38 @@
             }
         ],
         "checked_on": "2026-08-18"
+    },
+    {
+        "name": "道の駅 アリストぬまくま (再整備)",
+        "pref": "広島県",
+        "city": "福山市",
+        "status": "計画中",
+        "date": "2029-10",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "道の駅 アリストぬまくま 再整備 基本計画",
+                "url": "https://www.city.fukuyama.hiroshima.jp/uploaded/attachment/334950.pdf"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
+        "name": "道の駅 あいお (移転)",
+        "pref": "山口県",
+        "city": "山口市",
+        "status": "計画中",
+        "date": "2028秋頃",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "道の駅「あいお」移転整備事業基本設計【概要版】",
+                "url": "https://www.city.yamaguchi.lg.jp/uploaded/attachment/103314.pdf"
+            }
+        ],
+        "checked_on": "2026-10-21"
     },
     {
         "name": "道の駅 徳島市",
