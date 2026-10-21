@@ -2829,8 +2829,8 @@
         "city": "大垣市",
         "status": "計画中",
         "date": "",
-        "lat": null,
-        "lng": null,
+        "lat": 35.368145,
+        "lng": 136.584339,
         "urls": [
             {
                 "title": "大垣西インターチェンジ周辺道の駅等整備基本方針",
@@ -4084,6 +4084,26 @@
         "checked_on": "2026-01-01"
     },
     {
+        "name": "道の駅 球磨村",
+        "pref": "熊本県",
+        "city": "球磨郡球磨村",
+        "status": "計画中",
+        "date": "2030年度",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "球磨村渡地区賑わい拠点施設（道の駅・復興祈念公園）整備基本計画策定業務委託公募型プロポーザルの公募について（R7.6.30更新）",
+                "url": "https://www.kumamura.com/kiji0031785/index.html"
+            },
+            {
+                "title": "復興祈念公園と道の駅整備　球磨村、渡小跡地などに計画　第1回検討委で提示",
+                "url": "https://kumanichi.com/articles/1907365"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 たのうらら",
         "pref": "大分県",
         "city": "大分市",
@@ -4106,6 +4126,22 @@
             }
         ],
         "checked_on": "2026-01-01"
+    },
+    {
+        "name": "道の駅 臼杵市",
+        "pref": "大分県",
+        "city": "臼杵市",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "臼杵市が「道の駅」整備の基本構想策定へ",
+                "url": "https://www.oita-press.co.jp/1010000000/2026/06/25/JDC2026062502602"
+            }
+        ],
+        "checked_on": "2026-10-21"
     },
     {
         "name": "道の駅 津久見市",
@@ -4144,6 +4180,26 @@
         "checked_on": "2026-09-14"
     },
     {
+        "name": "道の駅 田野 (移転)",
+        "pref": "宮崎県",
+        "city": "宮崎市",
+        "status": "計画中",
+        "date": "2030年度中",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "道の駅田野 移転整備基本計画",
+                "url": "https://www.city.miyazaki.miyazaki.jp/fs/8/7/4/7/0/7/_/___________________.pdf"
+            },
+            {
+                "title": "道の駅 田野",
+                "url": "https://www.city.miyazaki.miyazaki.jp/culture/facilities/409256.html"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 きたごう",
         "pref": "宮崎県",
         "city": "日南市",
@@ -4166,6 +4222,22 @@
             }
         ],
         "checked_on": "2026-01-01"
+    },
+    {
+        "name": "道の駅 高千穂 (移転)",
+        "pref": "宮崎県",
+        "city": "西臼杵郡高千穂町",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "「道の駅」移転整備と複合施設づくり推進へ　高千穂町が基本構想策定",
+                "url": "https://www.the-miyanichi.co.jp/today/chiiki/890180.html"
+            }
+        ],
+        "checked_on": "2026-10-21"
     },
     {
         "name": "道の駅 サンセット牛之浜景勝地",
