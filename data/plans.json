@@ -2824,6 +2824,22 @@
         "checked_on": "2026-10-21"
     },
     {
+        "name": "道の駅 大垣市",
+        "pref": "岐阜県",
+        "city": "大垣市",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "大垣西インターチェンジ周辺道の駅等整備基本方針",
+                "url": "https://www.city.ogaki.lg.jp/cmsfiles/contents/0000068/68822/01_seibikihonhoshin.pdf"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 リニアの見える丘公園",
         "pref": "岐阜県",
         "city": "中津川市",
@@ -3112,6 +3128,26 @@
         "checked_on": "2026-10-12"
     },
     {
+        "name": "道の駅 草津 (再整備)",
+        "pref": "滋賀県",
+        "city": "草津市",
+        "status": "計画中",
+        "date": "",
+        "lat": 35.0700321,
+        "lng": 135.9392505,
+        "urls": [
+            {
+                "title": "道の駅草津リノベーションの進捗状況について",
+                "url": "https://www.city.kusatsu.shiga.jp/shisei/kaigishingikai/hokoku/naibu/buchoukaigi/kikaku20231017.files/20240327shinn2-1.pdf"
+            },
+            {
+                "title": "道の駅草津リノベーション基本設計をプロポ",
+                "url": "https://digital.kentsu.co.jp/articles/artcl_rglr/01JWZKF1B0W5W7XZ20GTWX0EQS"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 守山市",
         "pref": "滋賀県",
         "city": "守山市",
@@ -3130,6 +3166,22 @@
             }
         ],
         "checked_on": "2026-10-12"
+    },
+    {
+        "name": "道の駅 木津川市",
+        "pref": "京都府",
+        "city": "木津川市",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "木津川市にぎわい拠点施設（道の駅）基本構想を策定しました",
+                "url": "https://www.city.kizugawa.lg.jp/0000002098.html"
+            }
+        ],
+        "checked_on": "2026-10-21"
     },
     {
         "name": "道の駅 テオテラスいで",
@@ -3352,6 +3404,26 @@
         "checked_on": "2026-09-06"
     },
     {
+        "name": "道の駅 針T・R・S (再整備)",
+        "pref": "奈良県",
+        "city": "奈良市",
+        "status": "計画中",
+        "date": "2030年度",
+        "lat": 34.610429,
+        "lng": 135.963208,
+        "urls": [
+            {
+                "title": "奈良市の名阪国道「道の駅針T・R・S(テラス)」再整備、「イオンモール」が優先交渉権者に　30年度の供用開始目指す",
+                "url": "https://www.nara-np.co.jp/news/20241019212302.html"
+            },
+            {
+                "title": "針テラス「南館」を新施設に建て替えへ　奈良市が来年度以降に解体　産直や飲食機能整備",
+                "url": "https://www.nara-np.co.jp/news/20260602210420.html"
+            }
+        ],
+        "checked_on": "2026-10-21"
+    },
+    {
         "name": "道の駅 クロスウェイなかまち",
         "pref": "奈良県",
         "city": "大和郡山市",
@@ -3434,6 +3506,26 @@
             }
         ],
         "checked_on": "2026-01-01"
+    },
+    {
+        "name": "道の駅 紀美野町",
+        "pref": "和歌山県",
+        "city": "海草郡紀美野町",
+        "status": "計画中",
+        "date": "2029年度",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "官民連携事業の推進のための地方ブロックプラットフォーム「サウンディング」案件登録様式",
+                "url": "https://www.mlit.go.jp/sogoseisaku/kanminrenkei/content/001965957.pdf"
+            },
+            {
+                "title": "紀美野町道の駅整備事業 事業概要（令和７年10月時点）",
+                "url": "https://www.mlit.go.jp/sogoseisaku/kanminrenkei/content/001965958.pdf"
+            }
+        ],
+        "checked_on": "2026-10-21"
     },
     {
         "name": "道の駅 串本町",
