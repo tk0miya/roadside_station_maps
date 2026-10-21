@@ -49,7 +49,7 @@
 - **バックエンド**: `npm run dev:backend`（wrangler dev） / `npm run deploy:backend` / `npm run db:migrate:local` / `npm run db:migrate`
 - **データ生成**: `npm run generate:stations`（`data/stations.geojson` を生成）
 - **市区町村マスタ**: `npm run generate:cities`（`data/cities.json` を再生成し、`data/plans.json` を追随させる。**直接書き換えない。** `docs/cities.md`）
-- **整備計画マスタ**: `npm run plan`（`data/plans.json` の読み取りと更新。**直接書き換えない。** サブコマンドは `list` / `show` / `update` / `url` / `add`。`npm run plan -- --help`）
+- **整備計画マスタ**: `npm run plan`（`data/plans.json` の読み取りと更新。**直接書き換えない。** サブコマンドは `list` / `show` / `update` / `url` / `add` / `discovery`。`npm run plan -- --help`）
 - **品質**: `npm test` / `npm run lint` / `npm run format` / `npm run typecheck` / `npm run lint:fix`
 
 ### generate:stations のデバッグモード
@@ -78,6 +78,6 @@ src/
 docs/         人が読むドキュメント（Pages には配信されない）
 migrations/   Cloudflare D1 マイグレーション（SQL）
 html/         静的アセット（index.html / plan.html の 2 ページ、CSS、ビルド成果物）
-data/         生成データ（GeoJSON）と 2 つのマスタ（市区町村 cities.json / 整備計画 plans.json）
+data/         生成データ（GeoJSON）と 2 つのマスタ（市区町村 cities.json / 整備計画 plans.json）、発見のキュー（discovery.json）
 .claude/      Claude Code の設定（skills / hooks）
 ```

@@ -8,6 +8,7 @@
 dist/
 /data/*
 !/data/plans.json
+!/data/discovery.json
 node_modules
 html/js/bundle.js
 html/js/plan.js
