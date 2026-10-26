@@ -5,21 +5,25 @@
 //   npm run plan -- update "道の駅 石川町" 福島県 --date=2026-09-18 --status=登録済み
 //   npm run plan -- url replace "道の駅 川崎町" 福岡県 --dead=<url> --url=<url> --title=<title>
 //   npm run plan -- add --name=... --pref=... --city=... --status=計画中 --url=<url> --title=<title>
+//   npm run --silent plan -- discovery list
+//   npm run plan -- discovery done 北海道
 //
 // This file only reads arguments and dispatches; every rule about the master
-// lives in src/lib/plan-master.ts. Reading commands print JSON on stdout and
-// nothing else, so their output pipes into jq; everything else -- progress,
-// success, errors -- goes to stderr.
+// lives in src/lib/plan-master.ts, and every rule about the discovery queue
+// (`data/discovery.json`) in src/lib/discovery-master.ts. Reading commands print
+// JSON on stdout and nothing else, so their output pipes into jq; everything
+// else -- progress, success, errors -- goes to stderr.
 //
 // The subcommands do not take the same shape of arguments (`list` and `add` take
-// none, `show` and `update` take a name and a prefecture, `url` takes an action
-// first), so each one declares its shape in COMMANDS and one checker enforces all
-// of them. A violation is reported against the usage line of the command that
-// raised it.
+// none, `show` and `update` take a name and a prefecture, `url` and `discovery`
+// take an action first), so each one declares its shape in COMMANDS and one
+// checker enforces all of them. A violation is reported against the usage line
+// of the command that raised it.
 
 import { fileURLToPath } from 'node:url';
 import type { PlanRecord, PlanUrl } from '../frontend/types/plan.js';
 import { STATUSES } from '../frontend/types/plan.js';
+import * as DiscoveryMaster from '../lib/discovery-master.js';
 import type { FieldUpdates, ListOptions, PlanKey } from '../lib/plan-master.js';
 import * as PlanMaster from '../lib/plan-master.js';
 
@@ -27,7 +31,8 @@ import * as PlanMaster from '../lib/plan-master.js';
 //   none       - takes none (list, add)
 //   key        - a name and a prefecture (show, update)
 //   action+key - an action, then a name and a prefecture (url)
-type Shape = 'none' | 'key' | 'action+key';
+//   action     - an action, then what that action takes (discovery)
+type Shape = 'none' | 'key' | 'action+key' | 'action';
 
 interface CommandSpec {
     usage: string;
@@ -38,15 +43,26 @@ interface CommandSpec {
     required: readonly string[];
     optional: readonly string[];
     // Set by a command whose first positional picks among several operations,
-    // each taking its own flags (`url`). When present, the flags are checked
-    // against the chosen action instead of the two lists above.
-    actions?: Record<string, UrlAction>;
+    // each taking its own flags (`url`, `discovery`). When present, the flags are
+    // checked against the chosen action instead of the two lists above, and a
+    // violation is reported against `actionUsage` of that action. `args` names
+    // the positionals an `action`-shaped command's action takes after itself.
+    actions?: Record<string, { required: readonly string[]; args?: readonly string[] }>;
+    actionUsage?: (action: string) => string;
     run: (parsed: ParsedArgs) => void;
 }
 
 interface UrlAction {
     required: readonly string[];
     run: (plan: PlanRecord, flags: Record<string, string>) => void;
+}
+
+interface DiscoveryAction {
+    required: readonly string[];
+    // The positionals after the action: none for list, a prefecture for done.
+    args: readonly string[];
+    usage: string;
+    run: (args: string[]) => void;
 }
 
 // Field flags shared by update and add. `pref` and `city` are writable because a
@@ -67,6 +83,8 @@ Usage:
   npm run plan -- url title   "<name>" <prefecture> --url=<url> --title=<title>
   npm run plan -- add --name=<name> --pref=<pref> --city=<city> --status=<status>
                       [--date=] [--lat=] [--lng=] --url=<url> --title=<title>
+  npm run --silent plan -- discovery list
+  npm run plan -- discovery done <prefecture>
 
 Commands:
   list     Print plans as JSON. Filter by status, order by checked_on, cut to a
@@ -82,6 +100,10 @@ Commands:
            one, or rewrite one's title.
   add      Append a new plan. Its position in the file is decided by the record
            order, not by where it is appended.
+  discovery
+           The queue of prefectures to search for plans the master does not
+           hold yet (data/discovery.json). list prints it as JSON, searched
+           longest ago first; done stamps a prefecture with today in Japan.
 
 Every write stamps checked_on with today in Japan -- the day the plan was
 researched. There is no flag to skip it.
@@ -280,6 +302,33 @@ function urlUsage(action: string): string {
     return URL_USAGE.replace('<add|replace|remove|title>', action);
 }
 
+// What each discovery action takes after itself, and what it does.
+const DISCOVERY_ACTIONS: Record<string, DiscoveryAction> = {
+    list: {
+        required: [],
+        args: [],
+        // A reading command: --silent keeps npm's banner out of the JSON.
+        usage: 'npm run --silent plan -- discovery list',
+        run: () => printJson(DiscoveryMaster.listDiscovery(DiscoveryMaster.load())),
+    },
+    done: {
+        required: [],
+        args: ['<prefecture>'],
+        usage: 'npm run plan -- discovery done <prefecture>',
+        run: ([arg]) => {
+            const pref = arg.trim();
+            const discovery = DiscoveryMaster.load();
+            DiscoveryMaster.markDiscovered(discovery, pref);
+            DiscoveryMaster.save(discovery);
+            console.error(`Searched ${pref}. discovered_on = ${discovery[pref]}`);
+        },
+    },
+};
+
+function discoveryUsage(action: string): string {
+    return DISCOVERY_ACTIONS[action].usage;
+}
+
 const COMMANDS: Record<string, CommandSpec> = {
     list: {
         usage: 'npm run --silent plan -- list [--status=<a,b>] [--sort=checked_on] [--limit=<n>]',
@@ -322,6 +371,7 @@ const COMMANDS: Record<string, CommandSpec> = {
         required: [],
         optional: [],
         actions: URL_ACTIONS,
+        actionUsage: urlUsage,
         run: (parsed) => {
             const [action, ...rest] = parsed.positionals;
             const actionSpec = URL_ACTIONS[action];
@@ -339,6 +389,18 @@ const COMMANDS: Record<string, CommandSpec> = {
             // Nothing to check out: a new plan goes straight to the same check-in
             // an edited one does, which is what decides its place in the file.
             checkIn(master, PlanMaster.createPlan(buildUpdates(parsed.flags), buildLink(parsed.flags)), 'Added');
+        },
+    },
+    discovery: {
+        usage: 'npm run [--silent] plan -- discovery <list|done> [<prefecture>]',
+        shape: 'action',
+        required: [],
+        optional: [],
+        actions: DISCOVERY_ACTIONS,
+        actionUsage: discoveryUsage,
+        run: (parsed) => {
+            const [action, ...args] = parsed.positionals;
+            DISCOVERY_ACTIONS[action].run(args);
         },
     },
 };
@@ -373,7 +435,7 @@ function checkPositionals(command: string, positionals: string[], spec: CommandS
     if (spec.shape === 'none' && positionals.length > 0) {
         throw new Error(`${command} takes no arguments, got: ${positionals.join(' ')}. Usage: ${spec.usage}`);
     }
-    if (spec.shape === 'action+key' && positionals.length === 0) {
+    if ((spec.shape === 'action+key' || spec.shape === 'action') && positionals.length === 0) {
         throw new Error(`Missing action. Usage: ${spec.usage}`);
     }
 }
@@ -398,15 +460,25 @@ export function checkArgs(parsed: ParsedArgs): CommandSpec {
 
     // A command with actions declares its flags per action, so allow exactly what
     // the chosen one requires: --title on a remove is a mistake, not a no-op.
-    const [action] = parsed.positionals;
+    const [action, ...rest] = parsed.positionals;
     const actionSpec = actions[action];
     if (actionSpec === undefined) {
         throw new Error(
-            `Unknown url action: ${action}. Expected one of ${Object.keys(actions).join(' | ')}. ` +
+            `Unknown ${parsed.command} action: ${action}. Expected one of ${Object.keys(actions).join(' | ')}. ` +
                 `Usage: ${spec.usage}`
         );
     }
-    checkFlags(parsed.flags, actionSpec.required, [], urlUsage(action));
+    const usage = spec.actionUsage?.(action) ?? spec.usage;
+    checkFlags(parsed.flags, actionSpec.required, [], usage);
+
+    // An `action` command's positionals after the action are counted exactly;
+    // `action+key` leaves them to buildKey (see checkPositionals).
+    if (spec.shape === 'action') {
+        const expected = actionSpec.args?.length ?? 0;
+        if (rest.length !== expected) {
+            throw new Error(`Expected ${expected} argument(s) after ${action}, got ${rest.length}. Usage: ${usage}`);
+        }
+    }
 
     return spec;
 }
