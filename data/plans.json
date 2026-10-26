@@ -76,6 +76,22 @@
         "checked_on": "2026-01-01"
     },
     {
+        "name": "道の駅 YOU・遊・もり (再整備)",
+        "pref": "北海道",
+        "city": "茅部郡森町",
+        "status": "計画中",
+        "date": "",
+        "lat": 42.098901,
+        "lng": 140.568716,
+        "urls": [
+            {
+                "title": "道の駅「もり」建て替えへ　森町が方針　テナント面積7.5倍、駐車場も拡大",
+                "url": "https://www.hokkaido-np.co.jp/article/1222690/"
+            }
+        ],
+        "checked_on": "2026-10-26"
+    },
+    {
         "name": "道の駅 長万部町",
         "pref": "北海道",
         "city": "山越郡長万部町",
@@ -210,6 +226,26 @@
             }
         ],
         "checked_on": "2026-10-21"
+    },
+    {
+        "name": "道の駅 仁木町",
+        "pref": "北海道",
+        "city": "余市郡仁木町",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "農村公園フルーツパークにき再構築事業基本構想",
+                "url": "https://www.town.niki.hokkaido.jp/mobile/section/sangyouka/btsphm00000036j2-att/btsphm00000036s3.pdf"
+            },
+            {
+                "title": "どうなるの？後志の道の駅整備／新設プロジェクトまとめ",
+                "url": "https://e-kensin.net/n/n5b59e170aca4"
+            }
+        ],
+        "checked_on": "2026-10-26"
     },
     {
         "name": "道の駅 ふるびら",
@@ -378,6 +414,22 @@
             }
         ],
         "checked_on": "2026-08-19"
+    },
+    {
+        "name": "道の駅 おとふけ (再整備)",
+        "pref": "北海道",
+        "city": "河東郡音更町",
+        "status": "計画中",
+        "date": "",
+        "lat": 42.974917,
+        "lng": 143.181694,
+        "urls": [
+            {
+                "title": "道の駅おとふけ　売り場やフードコート拡大へ　町が増築内容示す",
+                "url": "https://www.hokkaido-np.co.jp/article/1256084/"
+            }
+        ],
+        "checked_on": "2026-10-26"
     },
     {
         "name": "道の駅 新得町",
@@ -874,6 +926,54 @@
             }
         ],
         "checked_on": "2026-08-24"
+    },
+    {
+        "name": "道の駅 おがち (再整備)",
+        "pref": "秋田県",
+        "city": "湯沢市",
+        "status": "計画中",
+        "date": "",
+        "lat": 39.0651389,
+        "lng": 140.460393,
+        "urls": [
+            {
+                "title": "道の駅おがちリニューアル基本計画（案）のパブリックコメントを実施しました",
+                "url": "https://www.city-yuzawa.jp/soshiki/70/6389.html"
+            },
+            {
+                "title": "道の駅おがち周辺リニューアル基本計画（素案）",
+                "url": "https://www.city-yuzawa.jp/uploaded/attachment/35854.pdf"
+            },
+            {
+                "title": "湯沢市・道の駅おがち、リニューアルへ　フードコートやドッグランの新設検討",
+                "url": "https://www.sakigake.jp/news/article/20260506AK0006/"
+            }
+        ],
+        "checked_on": "2026-10-26"
+    },
+    {
+        "name": "道の駅 かみおか (再整備)",
+        "pref": "秋田県",
+        "city": "大仙市",
+        "status": "計画中",
+        "date": "2028",
+        "lat": 39.5221473,
+        "lng": 140.3767219,
+        "urls": [
+            {
+                "title": "令和８年 第１回 大仙市議会定例会 会議録",
+                "url": "https://www.city.daisen.lg.jp/uploads/public/archive_0000006659_00/%E4%BB%A4%E5%92%8C8%E5%B9%B4%E7%AC%AC1%E5%9B%9E%E5%AE%9A%E4%BE%8B%E4%BC%9A%E4%BC%9A%E8%AD%B0%E9%8C%B2%EF%BC%882%E6%9C%8819%E6%97%A5%EF%BD%9E3%E6%9C%8813%E6%97%A5%EF%BC%89.pdf"
+            },
+            {
+                "title": "道の駅かみおか再整備事業基本計画",
+                "url": "https://www.city.daisen.lg.jp/uploads/public/archive_0000005583_00/%E9%81%93%E3%81%AE%E9%A7%85%E3%81%8B%E3%81%BF%E3%81%8A%E3%81%8B%E5%86%8D%E6%95%B4%E5%82%99%E4%BA%8B%E6%A5%AD%E5%9F%BA%E6%9C%AC%E8%A8%88%E7%94%BB.pdf"
+            },
+            {
+                "title": "道の駅かみおか再整備事業基本設計業務委託に関する公募型プロポーザルの実施について",
+                "url": "https://www.city.daisen.lg.jp/archive/p20251021154808"
+            }
+        ],
+        "checked_on": "2026-10-26"
     },
     {
         "name": "道の駅 たかのす (再整備)",
