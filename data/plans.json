@@ -1644,6 +1644,30 @@
         "checked_on": "2026-09-28"
     },
     {
+        "name": "道の駅 かつら (移転)",
+        "pref": "茨城県",
+        "city": "東茨城郡城里町",
+        "status": "開業",
+        "date": "2026-09-15",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "道の駅かつら – 道の駅かつらリニューアルオープン",
+                "url": "https://www.m-katsura.com/"
+            },
+            {
+                "title": "「道の駅かつら」リニューアルオープン 令和８年９月中旬（予定）",
+                "url": "https://www.town.shirosato.lg.jp/data/doc/1779849436_doc_791_0.pdf"
+            },
+            {
+                "title": "城里町「道の駅かつら」移転基本計画",
+                "url": "https://www.town.shirosato.lg.jp/data/doc/1646888771_doc_762_0.pdf"
+            }
+        ],
+        "checked_on": "2026-10-29"
+    },
+    {
         "name": "道の駅 阿見町",
         "pref": "茨城県",
         "city": "稲敷郡阿見町",
