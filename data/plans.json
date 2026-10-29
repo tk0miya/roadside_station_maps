@@ -1720,6 +1720,26 @@
         "checked_on": "2026-09-14"
     },
     {
+        "name": "道の駅 もてぎ (再整備)",
+        "pref": "栃木県",
+        "city": "芳賀郡茂木町",
+        "status": "計画中",
+        "date": "2028春",
+        "lat": 36.5278259,
+        "lng": 140.1728576,
+        "urls": [
+            {
+                "title": "「道の駅もてぎ」リニューアルへ　建物の大半を新設、情報発信や防災拠点機能も",
+                "url": "https://smart.shimotsuke.co.jp/articles/-/991407"
+            },
+            {
+                "title": "「道の駅」第３ステージ応援パッケージの取組",
+                "url": "https://www.mlit.go.jp/road/ir/ir-council/michi-no-eki_third-stage/pdf14/03.pdf"
+            }
+        ],
+        "checked_on": "2026-10-28"
+    },
+    {
         "name": "道の駅 渋川市",
         "pref": "群馬県",
         "city": "渋川市",
@@ -1762,6 +1782,22 @@
             }
         ],
         "checked_on": "2026-09-14"
+    },
+    {
+        "name": "道の駅 みどり市",
+        "pref": "群馬県",
+        "city": "みどり市",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "令和8年度当初予算書（みどり市）",
+                "url": "https://www.city.midori.gunma.jp/_res/projects/default_project/_page_/001/003/151/yosansyor8.pdf"
+            }
+        ],
+        "checked_on": "2026-10-28"
     },
     {
         "name": "道の駅 よしおか温泉 (リニューアル)",
@@ -1972,6 +2008,26 @@
         "checked_on": "2026-09-14"
     },
     {
+        "name": "道の駅 べに花の郷おけがわ",
+        "pref": "埼玉県",
+        "city": "桶川市",
+        "status": "開業",
+        "date": "2025-03-27",
+        "lat": 35.9929816035555,
+        "lng": 139.526957254061,
+        "urls": [
+            {
+                "title": "道の駅「べに花の郷おけがわ」整備事業について／桶川市",
+                "url": "https://www.city.okegawa.lg.jp/soshiki/shiminseikatsu/michinoeki/machidukuri/michinoeki/2264.html"
+            },
+            {
+                "title": "埼玉県内21カ所目 桶川の道の駅 「べに花の郷おけがわ」を登録 来年3月27日オープン予定：東京新聞デジタル",
+                "url": "https://www.tokyo-np.co.jp/article/360580"
+            }
+        ],
+        "checked_on": "2026-10-29"
+    },
+    {
         "name": "道の駅 久喜市",
         "pref": "埼玉県",
         "city": "久喜市",
@@ -2095,26 +2151,6 @@
             {
                 "title": "https://www.town.ogawa.saitama.jp/0000000384.html",
                 "url": "https://www.town.ogawa.saitama.jp/0000000384.html"
-            }
-        ],
-        "checked_on": "2026-01-01"
-    },
-    {
-        "name": "道の駅 べに花の郷おけがわ",
-        "pref": "埼玉県",
-        "city": "比企郡川島町",
-        "status": "開業",
-        "date": "2025-03-27",
-        "lat": 35.986191,
-        "lng": 139.5229088,
-        "urls": [
-            {
-                "title": "道の駅「べに花の郷おけがわ」整備事業について／桶川市",
-                "url": "https://www.city.okegawa.lg.jp/soshiki/shiminseikatsu/michinoeki/machidukuri/michinoeki/2264.html"
-            },
-            {
-                "title": "埼玉県内21カ所目 桶川の道の駅 「べに花の郷おけがわ」を登録 来年3月27日オープン予定：東京新聞デジタル",
-                "url": "https://www.tokyo-np.co.jp/article/360580"
             }
         ],
         "checked_on": "2026-01-01"
