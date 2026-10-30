@@ -67,3 +67,12 @@ export function categoryOf(station: PlannedStation): Category {
     }
     return station.status;
 }
+
+// The master has no column for the kind of plan: a relocation or a rebuild of
+// an existing station is told apart from a new one by the name's suffix alone.
+// `(リニューアル)` is a rebuild by another name.
+const REBUILD_SUFFIX = /\((移転|再整備|リニューアル)\)$/;
+
+export function isRebuild(station: PlannedStation): boolean {
+    return REBUILD_SUFFIX.test(station.name);
+}

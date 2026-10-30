@@ -6,6 +6,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { Category, PlannedStation } from '../types/plan';
 import { CATEGORIES } from '../types/plan';
+import { REBUILD_ICON } from './PlanMarkers';
 import { PlanSidebar } from './PlanSidebar';
 
 const stations: PlannedStation[] = [
@@ -34,6 +35,34 @@ const renderSidebar = () =>
             onSelect={() => {}}
         />
     );
+
+describe('PlanSidebar icons', () => {
+    afterEach(cleanup);
+
+    it('shows the rebuild swatch only beside the two planning headers', () => {
+        const { container } = renderSidebar();
+
+        const swatchCounts = [...container.querySelectorAll('.plan-cat-header')].map(
+            (header) => header.querySelectorAll('img.plan-swatch').length
+        );
+        expect(swatchCounts).toEqual([1, 1, 2, 2, 1, 1]);
+    });
+
+    it('draws a planned relocation row with the rebuild icon', () => {
+        render(
+            <PlanSidebar
+                stations={[{ ...stations[0], name: '道の駅 X (移転)' }]}
+                visibleCategories={allVisible}
+                selected={null}
+                onToggle={() => {}}
+                onSelect={() => {}}
+            />
+        );
+
+        const row = screen.getByText('2026-04-01: 道の駅 X (移転)').closest('button');
+        expect(row?.querySelector('img')?.getAttribute('src')).toBe(REBUILD_ICON['計画中(予定あり)']);
+    });
+});
 
 describe('PlanSidebar', () => {
     const originalInnerWidth = window.innerWidth;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Category, PlannedStation } from '../types/plan';
 import { CATEGORIES, categoryOf } from '../types/plan';
-import { CATEGORY_ICON } from './PlanMarkers';
+import { CATEGORY_ICON, iconOf, REBUILD_ICON } from './PlanMarkers';
 
 // The master file on GitHub, linked from the heading. Doubles as the editing
 // entry point: GitHub's file view offers an editor that opens a pull request.
@@ -78,6 +78,9 @@ export function PlanSidebar({ stations, visibleCategories, selected, onToggle, o
                                 onChange={() => onToggle(category)}
                             />
                             <img className="plan-swatch" src={CATEGORY_ICON[category]} alt="" />
+                            {REBUILD_ICON[category] && (
+                                <img className="plan-swatch" src={REBUILD_ICON[category]} alt="" title="移転・再整備" />
+                            )}
                             <span>
                                 {category} ({items.length})
                             </span>
@@ -92,7 +95,7 @@ export function PlanSidebar({ stations, visibleCategories, selected, onToggle, o
                                             className={selected === s ? 'plan-item is-selected' : 'plan-item'}
                                             onClick={() => onSelect(s)}
                                         >
-                                            <img className="plan-item-icon" src={CATEGORY_ICON[category]} alt="" />
+                                            <img className="plan-item-icon" src={iconOf(s)} alt="" />
                                             <span className="plan-item-label">
                                                 {s.date ? `${s.date}: ${s.name}` : s.name}
                                             </span>

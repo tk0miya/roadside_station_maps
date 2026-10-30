@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { GoogleMap, Marker } from '../google-maps-types';
 import { MARKER_ICONS } from '../marker-icons';
 import type { Category, PlannedStation } from '../types/plan';
-import { categoryOf } from '../types/plan';
+import { categoryOf, isRebuild } from '../types/plan';
 
 // Reuse the main map's marker icon images (no separate marker style).
 // MARKER_ICONS order: [red, blue, purple, yellow, green]. Six categories share
@@ -15,6 +15,21 @@ export const CATEGORY_ICON: Record<Category, string> = {
     凍結: MARKER_ICONS[2], // purple
     中止: MARKER_ICONS[2], // purple
 };
+
+// A relocation or rebuild still in planning takes its own color, so it can be
+// told apart from a new station of the same category. The other categories
+// keep one color: once open, registered or stopped, the kind no longer matters.
+// These two images are not in MARKER_ICONS, whose order is the main map's style
+// cycle.
+export const REBUILD_ICON: Partial<Record<Category, string>> = {
+    '計画中(予定あり)': 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+    '計画中(未定)': 'https://maps.google.com/mapfiles/ms/icons/ltblue-dot.png',
+};
+
+export function iconOf(station: PlannedStation): string {
+    const category = categoryOf(station);
+    return (isRebuild(station) && REBUILD_ICON[category]) || CATEGORY_ICON[category];
+}
 
 interface PlanMarkersProps {
     map: GoogleMap | null;
@@ -47,7 +62,7 @@ export function PlanMarkers({ map, stations, visibleCategories, onSelect }: Plan
                     position: { lat: s.lat as number, lng: s.lng as number },
                     map,
                     title: s.name,
-                    icon: CATEGORY_ICON[category],
+                    icon: iconOf(s),
                     visible: visibleCategories[category],
                 });
                 marker.addListener('click', () => onSelectRef.current(s));
