@@ -3,8 +3,8 @@
 // transform is exported separately so it can be unit-tested without the network.
 
 import { sortPlannedStations } from './plan-order';
-import type { City, PlannedStation, PlanRecord, Status } from './types/plan';
-import { STATUSES } from './types/plan';
+import type { City, Kind, PlannedStation, PlanRecord, Status } from './types/plan';
+import { KINDS, STATUSES } from './types/plan';
 
 // Both paths are relative to html/plan.html.
 const PLANS_URL = '../data/plans.json';
@@ -20,6 +20,12 @@ function cityKey(pref: string, city: string): string {
 // out of every category, dropping it from the sidebar and the map at once.
 function toStatus(value: string): Status {
     return (STATUSES as string[]).includes(value) ? (value as Status) : '計画中';
+}
+
+// Same reasoning as toStatus. A new station is the fallback because it is the
+// kind drawn with no color of its own.
+function toKind(value: string): Kind {
+    return (KINDS as string[]).includes(value) ? (value as Kind) : '新設';
 }
 
 function toStation(record: PlanRecord, cityIndex: Map<string, City>): PlannedStation {
@@ -41,6 +47,7 @@ function toStation(record: PlanRecord, cityIndex: Map<string, City>): PlannedSta
         name: record.name,
         pref: record.pref,
         city: record.city,
+        kind: toKind(record.kind),
         status: toStatus(record.status),
         date: record.date,
         lat,

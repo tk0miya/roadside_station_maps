@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { GoogleMap, Marker } from '../google-maps-types';
 import { MARKER_ICONS } from '../marker-icons';
 import type { Category, PlannedStation } from '../types/plan';
-import { categoryOf, isRebuild } from '../types/plan';
+import { categoryOf, displayName } from '../types/plan';
 
 // Reuse the main map's marker icon images (no separate marker style).
 // MARKER_ICONS order: [red, blue, purple, yellow, green]. Six categories share
@@ -28,7 +28,7 @@ export const REBUILD_ICON: Partial<Record<Category, string>> = {
 
 export function iconOf(station: PlannedStation): string {
     const category = categoryOf(station);
-    return (isRebuild(station) && REBUILD_ICON[category]) || CATEGORY_ICON[category];
+    return (station.kind !== '新設' && REBUILD_ICON[category]) || CATEGORY_ICON[category];
 }
 
 interface PlanMarkersProps {
@@ -61,7 +61,7 @@ export function PlanMarkers({ map, stations, visibleCategories, onSelect }: Plan
                 const marker = new google.maps.Marker({
                     position: { lat: s.lat as number, lng: s.lng as number },
                     map,
-                    title: s.name,
+                    title: displayName(s),
                     icon: iconOf(s),
                     visible: visibleCategories[category],
                 });

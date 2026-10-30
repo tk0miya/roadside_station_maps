@@ -24,7 +24,7 @@
 
 import * as fs from 'node:fs';
 import type { City, PlanRecord, PlanUrl } from '../frontend/types/plan.js';
-import { STATUSES } from '../frontend/types/plan.js';
+import { KINDS, STATUSES } from '../frontend/types/plan.js';
 
 // Module-relative so a command works from any directory, like the validator does.
 const PLANS_PATH = new URL('../../data/plans.json', import.meta.url);
@@ -56,6 +56,7 @@ export interface FieldUpdates {
     name?: string;
     pref?: string;
     city?: string;
+    kind?: string;
     status?: string;
     date?: string;
     lat?: number | null;
@@ -266,6 +267,10 @@ function validateFields(updates: FieldUpdates): void {
         throw new Error('Invalid name: it must not be empty.');
     }
 
+    if (updates.kind !== undefined && !(KINDS as string[]).includes(updates.kind)) {
+        throw new Error(`Invalid kind: ${updates.kind}. Valid values: ${KINDS.join(', ')}`);
+    }
+
     if (updates.status !== undefined && !(STATUSES as string[]).includes(updates.status)) {
         throw new Error(`Invalid status: ${updates.status}. Valid values: ${STATUSES.join(', ')}`);
     }
@@ -303,6 +308,9 @@ export function applyUpdates(plan: PlanRecord, updates: FieldUpdates): void {
     }
     if (updates.city !== undefined) {
         plan.city = updates.city;
+    }
+    if (updates.kind !== undefined) {
+        plan.kind = updates.kind;
     }
     if (updates.status !== undefined) {
         plan.status = updates.status;
@@ -386,13 +394,13 @@ export function setUrlTitle(plan: PlanRecord, url: string, title: string): void 
     plan.urls[index].title = title;
 }
 
-// A new record, with its nine keys in the fixed order. One source is required:
+// A new record, with its ten keys in the fixed order. One source is required:
 // the master does not hold a plan with nothing behind it. `checked_on` is left
 // empty for checkInPlan to stamp.
 export function createPlan(fields: FieldUpdates, link: PlanUrl): PlanRecord {
-    const { name, pref, city, status } = fields;
-    if (!name || !pref || !city || !status) {
-        throw new Error('A new plan needs a name, a prefecture, a city and a status.');
+    const { name, pref, city, kind, status } = fields;
+    if (!name || !pref || !city || !kind || !status) {
+        throw new Error('A new plan needs a name, a prefecture, a city, a kind and a status.');
     }
     validateFields(fields);
 
@@ -400,6 +408,7 @@ export function createPlan(fields: FieldUpdates, link: PlanUrl): PlanRecord {
         name,
         pref,
         city,
+        kind,
         status,
         date: fields.date ?? '',
         lat: fields.lat ?? null,

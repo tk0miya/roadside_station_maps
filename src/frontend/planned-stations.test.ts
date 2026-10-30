@@ -9,6 +9,7 @@ function record(overrides: Partial<PlanRecord>): PlanRecord {
         name: '道の駅 A',
         pref: '福井県',
         city: 'あわら市',
+        kind: '新設',
         status: '計画中',
         date: '',
         lat: null,
@@ -53,6 +54,16 @@ describe('toPlannedStations', () => {
     it('defaults an unknown status to 計画中', () => {
         const [s] = toPlannedStations([record({ status: '???', lat: 36, lng: 136 })], cities);
         expect(s.status).toBe('計画中');
+    });
+
+    it('carries the kind over', () => {
+        const [s] = toPlannedStations([record({ kind: '移転', lat: 36, lng: 136 })], cities);
+        expect(s.kind).toBe('移転');
+    });
+
+    it('defaults an unknown kind to 新設', () => {
+        const [s] = toPlannedStations([record({ kind: '???', lat: 36, lng: 136 })], cities);
+        expect(s.kind).toBe('新設');
     });
 
     it('skips records without a name', () => {

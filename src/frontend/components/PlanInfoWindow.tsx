@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { GoogleInfoWindow, GoogleMap } from '../google-maps-types';
 import type { PlannedStation, PlanUrl } from '../types/plan';
-import { categoryOf } from '../types/plan';
+import { categoryOf, displayName } from '../types/plan';
 
 // `title` is non-blank in the master (checked by plan-data.test.ts), so it can
 // be used as the label without a fallback.
@@ -44,7 +44,7 @@ export function PlanInfoWindow({ map, selected }: PlanInfoWindowProps) {
 
         if (selected && selected.lat !== null && selected.lng !== null) {
             const area = `${selected.pref}${selected.city}`;
-            const title = selected.date ? `${selected.date}: ${selected.name}` : selected.name;
+            const title = selected.date ? `${selected.date}: ${displayName(selected)}` : displayName(selected);
             root.render(
                 <div className="plan-info">
                     <div className="plan-name">{title}</div>

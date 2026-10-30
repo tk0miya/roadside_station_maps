@@ -4,7 +4,7 @@
 //   npm run --silent plan -- show "道の駅 川崎町" 福岡県
 //   npm run plan -- update "道の駅 石川町" 福島県 --date=2026-09-18 --status=登録済み
 //   npm run plan -- url replace "道の駅 川崎町" 福岡県 --dead=<url> --url=<url> --title=<title>
-//   npm run plan -- add --name=... --pref=... --city=... --status=計画中 --url=<url> --title=<title>
+//   npm run plan -- add --name=... --pref=... --city=... --kind=新設 --status=計画中 --url=<url> --title=<title>
 //   npm run --silent plan -- discovery list
 //   npm run plan -- discovery done 北海道
 //
@@ -22,7 +22,7 @@
 
 import { fileURLToPath } from 'node:url';
 import type { PlanRecord, PlanUrl } from '../frontend/types/plan.js';
-import { STATUSES } from '../frontend/types/plan.js';
+import { KINDS, STATUSES } from '../frontend/types/plan.js';
 import * as DiscoveryMaster from '../lib/discovery-master.js';
 import type { FieldUpdates, ListOptions, PlanKey } from '../lib/plan-master.js';
 import * as PlanMaster from '../lib/plan-master.js';
@@ -68,21 +68,21 @@ interface DiscoveryAction {
 // Field flags shared by update and add. `pref` and `city` are writable because a
 // wrong location is something research turns up; both move the record's position,
 // which check-in handles.
-const FIELD_FLAGS = ['name', 'pref', 'city', 'status', 'date', 'lat', 'lng'] as const;
+const FIELD_FLAGS = ['name', 'pref', 'city', 'kind', 'status', 'date', 'lat', 'lng'] as const;
 
 const USAGE = `Read and update the roadside-station development-plan master (data/plans.json).
 
 Usage:
   npm run --silent plan -- list [--status=<a,b>] [--sort=checked_on] [--limit=<n>]
   npm run --silent plan -- show "<name>" <prefecture>
-  npm run plan -- update "<name>" <prefecture> [--name=] [--pref=] [--city=]
+  npm run plan -- update "<name>" <prefecture> [--name=] [--pref=] [--city=] [--kind=]
                                                [--status=] [--date=] [--lat=] [--lng=]
   npm run plan -- url add     "<name>" <prefecture> --url=<url> --title=<title>
   npm run plan -- url replace "<name>" <prefecture> --dead=<url> --url=<url> --title=<title>
   npm run plan -- url remove  "<name>" <prefecture> --dead=<url>
   npm run plan -- url title   "<name>" <prefecture> --url=<url> --title=<title>
-  npm run plan -- add --name=<name> --pref=<pref> --city=<city> --status=<status>
-                      [--date=] [--lat=] [--lng=] --url=<url> --title=<title>
+  npm run plan -- add --name=<name> --pref=<pref> --city=<city> --kind=<kind>
+                      --status=<status> [--date=] [--lat=] [--lng=] --url=<url> --title=<title>
   npm run --silent plan -- discovery list
   npm run plan -- discovery done <prefecture>
 
@@ -108,6 +108,7 @@ Commands:
 Every write stamps checked_on with today in Japan -- the day the plan was
 researched. There is no flag to skip it.
 
+Kind values: ${KINDS.join(', ')}
 Status values: ${STATUSES.join(', ')}
 Date: free text, as precise as is known -- 2026-04-01, 2026-04, 2026年度, 2026夏
 `;
@@ -380,9 +381,9 @@ const COMMANDS: Record<string, CommandSpec> = {
         },
     },
     add: {
-        usage: 'npm run plan -- add --name= --pref= --city= --status= --url= --title= [--date=] [--lat=] [--lng=]',
+        usage: 'npm run plan -- add --name= --pref= --city= --kind= --status= --url= --title= [--date=] [--lat=] [--lng=]',
         shape: 'none',
-        required: ['name', 'pref', 'city', 'status', 'url', 'title'],
+        required: ['name', 'pref', 'city', 'kind', 'status', 'url', 'title'],
         optional: ['date', 'lat', 'lng'],
         run: (parsed) => {
             const master = PlanMaster.load();

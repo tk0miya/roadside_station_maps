@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Category, PlannedStation } from '../types/plan';
-import { CATEGORIES, categoryOf } from '../types/plan';
+import { CATEGORIES, categoryOf, displayName } from '../types/plan';
 import { CATEGORY_ICON, iconOf, REBUILD_ICON } from './PlanMarkers';
 
 // The master file on GitHub, linked from the heading. Doubles as the editing
@@ -97,7 +97,7 @@ export function PlanSidebar({ stations, visibleCategories, selected, onToggle, o
                                         >
                                             <img className="plan-item-icon" src={iconOf(s)} alt="" />
                                             <span className="plan-item-label">
-                                                {s.date ? `${s.date}: ${s.name}` : s.name}
+                                                {s.date ? `${s.date}: ${displayName(s)}` : displayName(s)}
                                             </span>
                                         </button>
                                     </li>
