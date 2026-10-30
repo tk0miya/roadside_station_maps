@@ -19,6 +19,7 @@ function plan(urls: PlanRecord['urls']): PlanRecord {
         name: '道の駅あ',
         pref: '福井県',
         city: '◯◯町',
+        kind: '新設',
         status: '計画中',
         date: '',
         lat: null,
@@ -171,6 +172,7 @@ describe('checkArgs', () => {
                 '--name=あ',
                 '--pref=福井県',
                 '--city=◯◯町',
+                '--kind=新設',
                 '--status=計画中',
                 '--url=https://e.jp',
                 '--title=あ',
@@ -193,6 +195,20 @@ describe('checkArgs', () => {
     it('rejects a field flag on a reading command', () => {
         expect(() => check(['show', '道の駅あ', '福井県', '--status=開業'])).toThrow('Unknown option: --status');
         expect(() => check(['list', '--date=2026'])).toThrow('Unknown option: --date');
+    });
+
+    it('requires a kind for a new plan', () => {
+        expect(() =>
+            check([
+                'add',
+                '--name=あ',
+                '--pref=福井県',
+                '--city=◯◯町',
+                '--status=計画中',
+                '--url=https://e.jp',
+                '--title=あ',
+            ])
+        ).toThrow('Missing --kind');
     });
 
     it('rejects a missing required flag', () => {

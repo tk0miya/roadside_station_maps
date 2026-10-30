@@ -15,6 +15,7 @@ function station(overrides: Partial<PlannedStation>): PlannedStation {
         name: '道の駅 X',
         pref: '長野県',
         city: '上伊那郡箕輪町',
+        kind: '新設',
         status: '計画中',
         date: '',
         lat: null,

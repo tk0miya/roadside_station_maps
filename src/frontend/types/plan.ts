@@ -5,6 +5,12 @@ export type Status = '開業' | '登録済み' | '計画中' | '凍結' | '中�
 
 export const STATUSES: Status[] = ['開業', '登録済み', '計画中', '凍結', '中止'];
 
+// What the plan builds: a new station, or a relocation or rebuild of one that
+// already exists.
+export type Kind = '新設' | '移転' | '再整備';
+
+export const KINDS: Kind[] = ['新設', '移転', '再整備'];
+
 // Where a station's coordinate came from: the record's own lat/lng, the
 // municipality representative point it fell back to, or neither.
 export type CoordSource = 'exact' | 'city' | 'none';
@@ -18,6 +24,7 @@ export interface PlannedStation {
     name: string;
     pref: string;
     city: string;
+    kind: Kind;
     status: Status;
     date: string;
     lat: number | null;
@@ -27,12 +34,14 @@ export interface PlannedStation {
 }
 
 // One record of the master file (`data/plans.json`), as written on disk. Its
-// key order is fixed and validated by `src/frontend/plan-data.test.ts`. `status` is
-// a plain string here and is narrowed at load time (see planned-stations.ts).
+// key order is fixed and validated by `src/frontend/plan-data.test.ts`. `kind` and
+// `status` are plain strings here and are narrowed at load time (see
+// planned-stations.ts).
 export interface PlanRecord {
     name: string;
     pref: string;
     city: string;
+    kind: string;
     status: string;
     date: string;
     lat: number | null;
@@ -68,11 +77,7 @@ export function categoryOf(station: PlannedStation): Category {
     return station.status;
 }
 
-// The master has no column for the kind of plan: a relocation or a rebuild of
-// an existing station is told apart from a new one by the name's suffix alone.
-// `(リニューアル)` is a rebuild by another name.
-const REBUILD_SUFFIX = /\((移転|再整備|リニューアル)\)$/;
-
-export function isRebuild(station: PlannedStation): boolean {
-    return REBUILD_SUFFIX.test(station.name);
+// The name with the kind appended for a relocation or rebuild: 道の駅 よいち (移転).
+export function displayName(station: PlannedStation): string {
+    return station.kind === '新設' ? station.name : `${station.name} (${station.kind})`;
 }

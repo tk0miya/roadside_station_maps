@@ -18,14 +18,14 @@ import { describe, expect, it } from 'vitest';
 // build if one gets in another way.
 import { createPlanComparator, MAX_URLS } from '../lib/plan-master';
 import type { City, PlanRecord } from './types/plan';
-// The status vocabulary is defined once, where the map narrows it. Importing it
-// rather than restating it means adding a Status also allows it in the data --
-// otherwise the type would accept a value the master could not hold, and the
-// mismatch would surface as a CI failure with no obvious cause.
-import { STATUSES } from './types/plan';
+// The status and kind vocabularies are defined once, where the map narrows them.
+// Importing them rather than restating them means adding a Status also allows it
+// in the data -- otherwise the type would accept a value the master could not
+// hold, and the mismatch would surface as a CI failure with no obvious cause.
+import { KINDS, STATUSES } from './types/plan';
 
 // Not derivable from a type at runtime, so this one is spelled out.
-const KEYS = ['name', 'pref', 'city', 'status', 'date', 'lat', 'lng', 'urls', 'checked_on'];
+const KEYS = ['name', 'pref', 'city', 'kind', 'status', 'date', 'lat', 'lng', 'urls', 'checked_on'];
 const URL_KEYS = ['title', 'url'];
 
 function read<T>(path: string): T {
@@ -51,7 +51,7 @@ describe('data/plans.json', () => {
         expect(plans.length).toBeGreaterThan(0);
     });
 
-    it('has exactly the nine fields, in order, on every record', () => {
+    it('has exactly the ten fields, in order, on every record', () => {
         // The order matters beyond diff stability: `name` is not unique
         // (道の駅 川崎町 exists in both 福岡県 and 宮城県), so `pref` has to sit
         // right next to it for a record to be identifiable at a glance.
@@ -69,6 +69,21 @@ describe('data/plans.json', () => {
     it('has a known status on every record', () => {
         for (const record of plans) {
             expect(STATUSES, label(record)).toContain(record.status);
+        }
+    });
+
+    it('has a known kind on every record', () => {
+        for (const record of plans) {
+            expect(KINDS, label(record)).toContain(record.kind);
+        }
+    });
+
+    // The kind lives in `kind`, and the map appends it to the name wherever it
+    // shows one. A name that still carried a marker would be shown with a
+    // second one, so a marker typed into the name is refused here.
+    it('has no kind marker in any name', () => {
+        for (const record of plans) {
+            expect(record.name as string, label(record)).not.toMatch(/\((移転|再整備|リニューアル)\)$/);
         }
     });
 
@@ -91,7 +106,7 @@ describe('data/plans.json', () => {
 
     it('has string fields typed as strings', () => {
         for (const record of plans) {
-            for (const key of ['name', 'pref', 'city', 'status', 'date', 'checked_on']) {
+            for (const key of ['name', 'pref', 'city', 'kind', 'status', 'date', 'checked_on']) {
                 expect(typeof record[key], `${label(record)} / ${key}`).toBe('string');
             }
         }

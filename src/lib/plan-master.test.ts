@@ -42,6 +42,7 @@ function plan(overrides: Partial<PlanRecord> = {}): PlanRecord {
         name: '道の駅 旭川市',
         pref: '北海道',
         city: '旭川市',
+        kind: '新設',
         status: '計画中',
         date: '',
         lat: null,
@@ -330,6 +331,18 @@ describe('applyUpdates', () => {
         expect(() => applyUpdates(plan(), { status: '着工' })).toThrow('Invalid status: 着工');
     });
 
+    it('writes the kind', () => {
+        const entry = plan();
+
+        applyUpdates(entry, { kind: '移転' });
+
+        expect(entry.kind).toBe('移転');
+    });
+
+    it('rejects a kind outside the three values', () => {
+        expect(() => applyUpdates(plan(), { kind: 'リニューアル' })).toThrow('Invalid kind: リニューアル');
+    });
+
     it('rejects an empty name', () => {
         expect(() => applyUpdates(plan(), { name: '  ' })).toThrow('Invalid name');
     });
@@ -460,14 +473,15 @@ describe('setUrlTitle', () => {
 });
 
 describe('createPlan', () => {
-    const fields = { name: 'あ', pref: '北海道', city: '旭川市', status: '計画中' };
+    const fields = { name: 'あ', pref: '北海道', city: '旭川市', kind: '新設', status: '計画中' };
     const link = { title: '整備計画', url: 'https://example.jp/new' };
 
-    it('builds the nine keys in the fixed order', () => {
+    it('builds the ten keys in the fixed order', () => {
         expect(Object.keys(createPlan(fields, link))).toEqual([
             'name',
             'pref',
             'city',
+            'kind',
             'status',
             'date',
             'lat',
@@ -493,7 +507,7 @@ describe('createPlan', () => {
         expect([entry.date, entry.lat, entry.lng]).toEqual(['2028年度', 43.77, 142.36]);
     });
 
-    it.each(['name', 'pref', 'city', 'status'])('rejects a new plan with no %s', (missing) => {
+    it.each(['name', 'pref', 'city', 'kind', 'status'])('rejects a new plan with no %s', (missing) => {
         const partial = { ...fields, [missing]: '' };
 
         expect(() => createPlan(partial, link)).toThrow('A new plan needs');
@@ -501,6 +515,10 @@ describe('createPlan', () => {
 
     it('rejects a status outside the five values', () => {
         expect(() => createPlan({ ...fields, status: '着工' }, link)).toThrow('Invalid status');
+    });
+
+    it('rejects a kind outside the three values', () => {
+        expect(() => createPlan({ ...fields, kind: '建て替え' }, link)).toThrow('Invalid kind');
     });
 
     it('rejects a source the map could not render', () => {

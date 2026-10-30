@@ -30,23 +30,25 @@ Object.defineProperty(global, 'google', {
     writable: true,
 });
 
-function station(urls: PlanUrl[]): PlannedStation {
+function station(urls: PlanUrl[], overrides: Partial<PlannedStation> = {}): PlannedStation {
     return {
         name: '道の駅 X',
         pref: '長野県',
         city: '上伊那郡箕輪町',
+        kind: '新設',
         status: '計画中',
         date: '2026-04-01',
         lat: 35.9,
         lng: 137.9,
         urls,
         coordSource: 'exact',
+        ...overrides,
     };
 }
 
 // Renders the window and returns the element its content was rendered into.
-async function content(urls: PlanUrl[]): Promise<HTMLElement> {
-    render(<PlanInfoWindow selected={station(urls)} map={mockMap} />);
+async function content(urls: PlanUrl[], overrides: Partial<PlannedStation> = {}): Promise<HTMLElement> {
+    render(<PlanInfoWindow selected={station(urls, overrides)} map={mockMap} />);
     const element = mockInfoWindow.setOptions.mock.calls[0][0].content as HTMLElement;
     await new Promise((resolve) => setTimeout(resolve, 10));
     return element;
@@ -78,5 +80,17 @@ describe('PlanInfoWindow', () => {
         const element = await content([]);
 
         expect(element.querySelector('ul')).toBeNull();
+    });
+
+    it('appends the kind of a relocation to the name in the title', async () => {
+        const element = await content([], { kind: '移転' });
+
+        expect(element.querySelector('.plan-name')?.textContent).toBe('2026-04-01: 道の駅 X (移転)');
+    });
+
+    it('leaves the name of a new station as it is', async () => {
+        const element = await content([]);
+
+        expect(element.querySelector('.plan-name')?.textContent).toBe('2026-04-01: 道の駅 X');
     });
 });

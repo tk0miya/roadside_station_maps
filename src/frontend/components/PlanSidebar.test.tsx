@@ -14,6 +14,7 @@ const stations: PlannedStation[] = [
         name: '道の駅 X',
         pref: '長野県',
         city: '上伊那郡箕輪町',
+        kind: '新設',
         status: '計画中',
         date: '2026-04-01',
         lat: 35.9,
@@ -48,10 +49,10 @@ describe('PlanSidebar icons', () => {
         expect(swatchCounts).toEqual([1, 1, 2, 2, 1, 1]);
     });
 
-    it('draws a planned relocation row with the rebuild icon', () => {
+    it('labels and draws a planned relocation row by its kind', () => {
         render(
             <PlanSidebar
-                stations={[{ ...stations[0], name: '道の駅 X (移転)' }]}
+                stations={[{ ...stations[0], kind: '移転' }]}
                 visibleCategories={allVisible}
                 selected={null}
                 onToggle={() => {}}
