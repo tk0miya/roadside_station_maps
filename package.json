@@ -43,7 +43,7 @@
         "hono": "^4.13.13",
         "jaconv": "^1.1.2",
         "jose": "^6.2.13",
-        "query-string": "^9.5.1",
+        "query-string": "^10.0.0",
         "react": "^19.3.1",
         "react-dom": "^19.3.1"
     },
