@@ -20,7 +20,7 @@ updates:
       # Hold Node.js releases until LTS promotion (October each year).
       # Remove an entry when it enters LTS; add the next April release as it approaches.
       - dependency-name: "@types/node"
-        versions: ["25.x", "26.x", "27.x", "28.x"]
+        versions: ["27.x", "28.x"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
