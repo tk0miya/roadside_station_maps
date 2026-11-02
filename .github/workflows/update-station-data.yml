@@ -3,7 +3,7 @@ name: Update Station Data
 on:
   schedule:
     # Run every Monday at 00:00 UTC (09:00 JST)
-    - cron: '0 0 * * 1'
+    - cron: "0 0 * * 1"
   workflow_dispatch:
     # Allow manual trigger
 
@@ -15,39 +15,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Generate GitHub App token
-      id: app-token
-      uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
-      with:
-        client-id: ${{ vars.STATION_UPDATE_CLIENT_ID }}
-        private-key: ${{ secrets.STATION_UPDATE_PRIVATE_KEY }}
-        permission-contents: write
-        permission-pull-requests: write
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.STATION_UPDATE_CLIENT_ID }}
+          private-key: ${{ secrets.STATION_UPDATE_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
 
-    - name: Checkout repository
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      with:
-        persist-credentials: false
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-    - name: Setup Node.js
-      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-      with:
-        node-version: '26'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "26"
+          cache: "npm"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Generate station data
-      run: npm run generate:stations
+      - name: Generate station data
+        run: npm run generate:stations
 
-    - name: Create pull request
-      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
-      with:
-        add-paths: data/
-        commit-message: "Update station data"
-        branch: bot/update-station-data
-        title: "Update station data"
-        labels: auto-merge
-        token: ${{ steps.app-token.outputs.token }}
-
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          add-paths: data/
+          commit-message: "Update station data"
+          branch: bot/update-station-data
+          title: "Update station data"
+          labels: auto-merge
+          token: ${{ steps.app-token.outputs.token }}
