@@ -94,7 +94,7 @@ describe('ShareButton', () => {
             const pushCall = (mockMap.controls[1].push as Mock).mock.calls[0];
             const buttonElement = pushCall[0] as HTMLElement;
             expect(buttonElement.className).toBe('share');
-            expect(buttonElement.innerText).toBe('シェア');
+            expect(buttonElement.textContent).toBe('シェア');
         } finally {
             fetchSpy.mockRestore();
         }
@@ -120,7 +120,7 @@ describe('ShareButton', () => {
             await waitFor(() => {
                 const [messageDiv] = mockMap.controls[2].getArray() as HTMLElement[];
                 expect(messageDiv?.className).toBe('share-message');
-                expect(messageDiv?.innerText).toBe('クリップボードにコピーしました。');
+                expect(messageDiv?.textContent).toBe('クリップボードにコピーしました。');
             });
         } finally {
             fetchSpy.mockRestore();
@@ -145,7 +145,7 @@ describe('ShareButton', () => {
 
             await waitFor(() => {
                 const [messageDiv] = mockMap.controls[2].getArray() as HTMLElement[];
-                expect(messageDiv?.innerText).toBe('クリップボードにコピーできませんでした。');
+                expect(messageDiv?.textContent).toBe('クリップボードにコピーできませんでした。');
             });
         } finally {
             fetchSpy.mockRestore();

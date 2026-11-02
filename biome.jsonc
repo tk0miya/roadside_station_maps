@@ -1,5 +1,5 @@
 {
-    "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+    "$schema": "https://biomejs.dev/schemas/2.6.3/schema.json",
     "vcs": {
         "enabled": true,
         "clientKind": "git",
@@ -70,6 +70,15 @@
             "trailingCommas": "es5"
         }
     },
+    "overrides": [
+        {
+            // Keep YAML at the conventional 2-space indent instead of the 4-space default above.
+            "includes": ["**/*.yml", "**/*.yaml"],
+            "formatter": {
+                "indentWidth": 2
+            }
+        }
+    ],
     "files": {
         "includes": ["**", "!**/node_modules", "!**/dist", "!**/html/js/**/*", "!**/bin", "!.claude"]
     }

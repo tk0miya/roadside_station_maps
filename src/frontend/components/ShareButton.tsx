@@ -78,7 +78,7 @@ export function ShareButton(props: ShareButtonProps) {
         // Create share button
         const div = document.createElement('div');
         div.className = 'share';
-        div.innerText = 'シェア';
+        div.textContent = 'シェア';
 
         // The share id is pre-fetched, so `writeText` is reached without an
         // await in between: Safari rejects a clipboard write that lands after
@@ -119,7 +119,7 @@ export function ShareButton(props: ShareButtonProps) {
             const topControls = props.map.controls[google.maps.ControlPosition.TOP_CENTER];
             const messageDiv = document.createElement('div');
             messageDiv.className = 'share-message';
-            messageDiv.innerText = notice.text;
+            messageDiv.textContent = notice.text;
 
             topControls.push(messageDiv);
 

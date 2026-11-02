@@ -14,7 +14,7 @@ export function PlanMapLink({ map }: PlanMapLinkProps) {
         link.href = 'plan.html';
         link.target = '_blank';
         link.rel = 'noopener';
-        link.innerText = '計画マップ';
+        link.textContent = '計画マップ';
 
         // Add to map controls, below the station counter in the same corner.
         const controls = map.controls[google.maps.ControlPosition.RIGHT_TOP];

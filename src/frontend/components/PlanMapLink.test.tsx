@@ -28,7 +28,7 @@ describe('PlanMapLink', () => {
         expect(linkElement.href).toContain('plan.html');
         expect(linkElement.target).toBe('_blank');
         expect(linkElement.rel).toBe('noopener');
-        expect(linkElement.innerText).toBe('計画マップ');
+        expect(linkElement.textContent).toBe('計画マップ');
     });
 
     it('removes the control on unmount', () => {
