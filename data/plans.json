@@ -2405,6 +2405,31 @@
         "checked_on": "2026-08-12"
     },
     {
+        "name": "道の駅 やちよ",
+        "pref": "千葉県",
+        "city": "八千代市",
+        "kind": "再整備",
+        "status": "計画中",
+        "date": "2026年度",
+        "lat": 35.7584154,
+        "lng": 140.1067486,
+        "urls": [
+            {
+                "title": "「防災道の駅やちよ」の実施設計が完了しました さらなる賑わいの創出を目指したリニューアル整備を行います",
+                "url": "https://www.city.yachiyo.lg.jp/uploaded/attachment/38842.pdf"
+            },
+            {
+                "title": "防災道の駅やちよ整備事業（道の駅やちよ・八千代ふるさとステーションリニューアル整備）実施設計概要",
+                "url": "https://www.city.yachiyo.lg.jp/uploaded/attachment/38859.pdf"
+            },
+            {
+                "title": "令和６年度第１回八千代市農業イノベーション計画協議会次第",
+                "url": "https://www.city.yachiyo.lg.jp/uploaded/attachment/32829.pdf"
+            }
+        ],
+        "checked_on": "2026-11-04"
+    },
+    {
         "name": "道の駅 富津市",
         "pref": "千葉県",
         "city": "富津市",
@@ -2771,6 +2796,31 @@
         "checked_on": "2026-10-21"
     },
     {
+        "name": "道の駅 メルヘンおやべ",
+        "pref": "富山県",
+        "city": "小矢部市",
+        "kind": "再整備",
+        "status": "計画中",
+        "date": "",
+        "lat": 36.6894706,
+        "lng": 136.8766877,
+        "urls": [
+            {
+                "title": "小矢部市道の駅大規模改造に係る第2回サウンディング型市場調査の実施について",
+                "url": "https://www.city.oyabe.toyama.jp/shiseijyouhou/1001692/1006984/1007478.html"
+            },
+            {
+                "title": "道の駅大規模改造案、売り場ひとまとめに 小矢部市議会、事業者が評価",
+                "url": "https://webun.jp/articles/-/988856"
+            },
+            {
+                "title": "道の駅メルヘンおやべ大規模改造、調査踏まえ２案示す 小矢部市",
+                "url": "https://webun.jp/articles/-/938976"
+            }
+        ],
+        "checked_on": "2026-11-04"
+    },
+    {
         "name": "道の駅 能美市",
         "pref": "石川県",
         "city": "能美市",
@@ -2794,6 +2844,31 @@
             }
         ],
         "checked_on": "2026-10-05"
+    },
+    {
+        "name": "道の駅 とぎ海街道",
+        "pref": "石川県",
+        "city": "羽咋郡志賀町",
+        "kind": "再整備",
+        "status": "計画中",
+        "date": "2029年度",
+        "lat": 37.140177,
+        "lng": 136.724883,
+        "urls": [
+            {
+                "title": "志賀町「道の駅とぎ海街道（仮称）」管理運営等計画策定業務委託に係る公募型プロポーザルについて",
+                "url": "https://www.town.shika.lg.jp/page/10448.html"
+            },
+            {
+                "title": "志賀町道の駅とぎ海街道周辺整備事業に係る公募型プロポーザルについて",
+                "url": "https://www.town.shika.lg.jp/page/9790.html"
+            },
+            {
+                "title": "多目的広場、復興へ一歩　志賀で完成記念イベント",
+                "url": "https://www.hokkoku.co.jp/articles/-/2153409"
+            }
+        ],
+        "checked_on": "2026-11-04"
     },
     {
         "name": "道の駅 蓮如の里あわら",
