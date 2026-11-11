@@ -2888,7 +2888,7 @@
         "pref": "福井県",
         "city": "今立郡池田町",
         "kind": "新設",
-        "status": "中止",
+        "status": "計画中",
         "date": "",
         "lat": 35.8634999,
         "lng": 136.3622069,
@@ -2896,9 +2896,13 @@
             {
                 "title": "https://www.town.ikeda.fukui.jp/jigyousya/business/1639/p002735_d/fil/teiansho.pdf",
                 "url": "https://www.town.ikeda.fukui.jp/jigyousya/business/1639/p002735_d/fil/teiansho.pdf"
+            },
+            {
+                "title": "福井県道路整備プログラム（2026~2035）",
+                "url": "https://www.pref.fukui.lg.jp/doc/douken/fukuikendouroseibipuroguramu2_d/fil/puroguram2026-7.pdf"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-11-12"
     },
     {
         "name": "道の駅 美浜はまびより",
@@ -2962,6 +2966,23 @@
             }
         ],
         "checked_on": "2026-09-28"
+    },
+    {
+        "name": "道の駅 上野原市",
+        "pref": "山梨県",
+        "city": "上野原市",
+        "kind": "新設",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "上野原市広域防災・交流拠点整備における官民連携手法導入検討調査 報告書",
+                "url": "https://www.mlit.go.jp/common/001266140.pdf"
+            }
+        ],
+        "checked_on": "2026-11-11"
     },
     {
         "name": "道の駅 にしじま和紙の里 かみすきパーク",
@@ -3160,6 +3181,23 @@
         "checked_on": "2026-10-12"
     },
     {
+        "name": "道の駅 白馬",
+        "pref": "長野県",
+        "city": "北安曇郡白馬村",
+        "kind": "移転",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "道の駅を核とした観光まちづくり交流拠点 官民連携事業調査（実施主体：長野県白馬村）",
+                "url": "https://www.mlit.go.jp/common/001236333.pdf"
+            }
+        ],
+        "checked_on": "2026-11-11"
+    },
+    {
         "name": "道の駅 オアシスおぶせ",
         "pref": "長野県",
         "city": "上高井郡小布施町",
@@ -3264,6 +3302,27 @@
             }
         ],
         "checked_on": "2026-10-12"
+    },
+    {
+        "name": "道の駅 本巣市",
+        "pref": "岐阜県",
+        "city": "本巣市",
+        "kind": "新設",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "市議会一般質問 本巣市「道の駅が核」 もとまるパーク周辺活性化で構想",
+                "url": "https://www.gifu-np.co.jp/articles/-/725493"
+            },
+            {
+                "title": "もとまるパーク東エリア賑わい創出拠点整備に関する民間活力導入可能性調査",
+                "url": "https://www8.cao.go.jp/pfi/shien/r7/pdf/02_r7_motoshu.pdf"
+            }
+        ],
+        "checked_on": "2026-11-11"
     },
     {
         "name": "道の駅 養老の郷",
@@ -3411,6 +3470,40 @@
             }
         ],
         "checked_on": "2026-01-01"
+    },
+    {
+        "name": "道の駅 御殿場市",
+        "pref": "静岡県",
+        "city": "御殿場市",
+        "kind": "新設",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "御殿場市、イベント・食・自然を楽しむ「富士山の恵み産業パーク」",
+                "url": "https://www.watch.impress.co.jp/docs/news/2011590.html"
+            }
+        ],
+        "checked_on": "2026-11-12"
+    },
+    {
+        "name": "道の駅 下田市",
+        "pref": "静岡県",
+        "city": "下田市",
+        "kind": "新設",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "伊豆縦貫自動車道(仮称)下田北インターチェンジの周辺まちづくりについて",
+                "url": "https://www.city.shimoda.shizuoka.jp/file/1_%E3%80%90%E9%8F%A1%E6%96%87%E3%80%91%E4%BC%8A%E8%B1%86%E7%B8%A6%E8%B2%AB%E8%87%AA%E5%8B%95%E8%BB%8A%E9%81%93(%E4%BB%AE%E7%A7%B0)%E4%B8%8B%E7%94%B0%E5%8C%97ic%E3%81%AE%E5%91%A8%E8%BE%BA%E3%81%BE%E3%81%A1%E3%81%A5%E3%81%8F%E3%82%8A%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6.pdf"
+            }
+        ],
+        "checked_on": "2026-11-11"
     },
     {
         "name": "道の駅 ふじさんすその",
