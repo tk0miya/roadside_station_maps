@@ -3653,6 +3653,27 @@
         "checked_on": "2026-10-12"
     },
     {
+        "name": "道の駅 農匠の郷やくの",
+        "pref": "京都府",
+        "city": "福知山市",
+        "kind": "再整備",
+        "status": "計画中",
+        "date": "",
+        "lat": 35.3383704,
+        "lng": 134.929796,
+        "urls": [
+            {
+                "title": "「ファームガーデンやくの」リニューアル事業計画案",
+                "url": "https://www.city.fukuchiyama.lg.jp/uploaded/attachment/55308.pdf"
+            },
+            {
+                "title": "京都府北部で「休館」している「道の駅」再整備へ　優先交渉権者は？上限6億4千万円かけどう変わる？",
+                "url": "https://www.kyoto-np.co.jp/articles/-/1660330"
+            }
+        ],
+        "checked_on": "2026-11-18"
+    },
+    {
         "name": "道の駅 木津川市",
         "pref": "京都府",
         "city": "木津川市",
@@ -3804,26 +3825,9 @@
         "checked_on": "2026-10-19"
     },
     {
-        "name": "道の駅 小野市",
-        "pref": "兵庫県",
-        "city": "小野市",
-        "kind": "新設",
-        "status": "計画中",
-        "date": "",
-        "lat": 34.8686111,
-        "lng": 134.9541667,
-        "urls": [
-            {
-                "title": "令和5年度予算",
-                "url": "https://www.city.ono.hyogo.jp/soshikikarasagasu/somubu_zaiseika/gyomuannai/2/2/11375.html"
-            }
-        ],
-        "checked_on": "2026-10-19"
-    },
-    {
         "name": "道の駅 よかわ",
         "pref": "兵庫県",
-        "city": "三田市",
+        "city": "三木市",
         "kind": "新設",
         "status": "開業",
         "date": "2025-04-22",
@@ -3843,7 +3847,24 @@
                 "url": "https://www.kobe-np.co.jp/news/miki/202501/0018594863.shtml"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-11-18"
+    },
+    {
+        "name": "道の駅 小野市",
+        "pref": "兵庫県",
+        "city": "小野市",
+        "kind": "新設",
+        "status": "計画中",
+        "date": "",
+        "lat": 34.8686111,
+        "lng": 134.9541667,
+        "urls": [
+            {
+                "title": "令和5年度予算",
+                "url": "https://www.city.ono.hyogo.jp/soshikikarasagasu/somubu_zaiseika/gyomuannai/2/2/11375.html"
+            }
+        ],
+        "checked_on": "2026-10-19"
     },
     {
         "name": "道の駅 加西",
@@ -3952,6 +3973,27 @@
             }
         ],
         "checked_on": "2026-01-01"
+    },
+    {
+        "name": "道の駅 生駒市",
+        "pref": "奈良県",
+        "city": "生駒市",
+        "kind": "新設",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "道の駅整備の可能性を検討するための基礎調査が完了",
+                "url": "https://www.city.ikoma.lg.jp/0000039299.html"
+            },
+            {
+                "title": "道の駅の整備に向けた調査検討業務 概要版",
+                "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000039/39299/gaiyou2.pdf"
+            }
+        ],
+        "checked_on": "2026-11-18"
     },
     {
         "name": "道の駅 きなりの郷 下北山",
