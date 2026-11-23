@@ -42,7 +42,7 @@ jobs:
         run: npm run generate:stations
 
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v8.1.2
+        uses: peter-evans/create-pull-request@v8.1.3
         with:
           add-paths: data/
           commit-message: "Update station data"
