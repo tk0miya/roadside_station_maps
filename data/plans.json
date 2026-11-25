@@ -3653,6 +3653,27 @@
         "checked_on": "2026-10-12"
     },
     {
+        "name": "道の駅 農匠の郷やくの",
+        "pref": "京都府",
+        "city": "福知山市",
+        "kind": "再整備",
+        "status": "計画中",
+        "date": "",
+        "lat": 35.3383704,
+        "lng": 134.929796,
+        "urls": [
+            {
+                "title": "「ファームガーデンやくの」リニューアル事業計画案",
+                "url": "https://www.city.fukuchiyama.lg.jp/uploaded/attachment/55308.pdf"
+            },
+            {
+                "title": "やくの高原活性化検討委員会報告書",
+                "url": "https://www.city.fukuchiyama.lg.jp/uploaded/attachment/47130.pdf"
+            }
+        ],
+        "checked_on": "2026-11-25"
+    },
+    {
         "name": "道の駅 木津川市",
         "pref": "京都府",
         "city": "木津川市",
@@ -3952,6 +3973,31 @@
             }
         ],
         "checked_on": "2026-01-01"
+    },
+    {
+        "name": "道の駅 生駒市",
+        "pref": "奈良県",
+        "city": "生駒市",
+        "kind": "新設",
+        "status": "計画中",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "道の駅整備の可能性を検討するための基礎調査が完了",
+                "url": "https://www.city.ikoma.lg.jp/0000039299.html"
+            },
+            {
+                "title": "道の駅の整備に向けた調査検討業務 概要版",
+                "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000039/39299/gaiyou2.pdf"
+            },
+            {
+                "title": "候補地は３ヵ所以上選定 道の駅の整備に向けた調査検討",
+                "url": "https://shinpou-nara.com/92063/"
+            }
+        ],
+        "checked_on": "2026-11-25"
     },
     {
         "name": "道の駅 きなりの郷 下北山",
