@@ -3602,6 +3602,27 @@
         "checked_on": "2026-01-01"
     },
     {
+        "name": "道の駅 おわせ",
+        "pref": "三重県",
+        "city": "尾鷲市",
+        "kind": "新設",
+        "status": "中止",
+        "date": "",
+        "lat": null,
+        "lng": null,
+        "urls": [
+            {
+                "title": "重点「道の駅」候補 道の駅「（仮称）おわせ」",
+                "url": "https://www.cbr.mlit.go.jp/michinoeki/pdf/owase.pdf"
+            },
+            {
+                "title": "国道42号尾鷲南パーキング概要（紀勢国道事務所 2023-10-30）",
+                "url": "https://www.cbr.mlit.go.jp/kisei/news/assets/pdf/press/231030_2.pdf"
+            }
+        ],
+        "checked_on": "2026-11-26"
+    },
+    {
         "name": "道の駅 明和町",
         "pref": "三重県",
         "city": "多気郡明和町",
@@ -3833,26 +3854,9 @@
         "checked_on": "2026-10-19"
     },
     {
-        "name": "道の駅 小野市",
-        "pref": "兵庫県",
-        "city": "小野市",
-        "kind": "新設",
-        "status": "計画中",
-        "date": "",
-        "lat": 34.8686111,
-        "lng": 134.9541667,
-        "urls": [
-            {
-                "title": "令和5年度予算",
-                "url": "https://www.city.ono.hyogo.jp/soshikikarasagasu/somubu_zaiseika/gyomuannai/2/2/11375.html"
-            }
-        ],
-        "checked_on": "2026-10-19"
-    },
-    {
         "name": "道の駅 よかわ",
         "pref": "兵庫県",
-        "city": "三田市",
+        "city": "三木市",
         "kind": "新設",
         "status": "開業",
         "date": "2025-04-22",
@@ -3872,7 +3876,24 @@
                 "url": "https://www.kobe-np.co.jp/news/miki/202501/0018594863.shtml"
             }
         ],
-        "checked_on": "2026-01-01"
+        "checked_on": "2026-11-26"
+    },
+    {
+        "name": "道の駅 小野市",
+        "pref": "兵庫県",
+        "city": "小野市",
+        "kind": "新設",
+        "status": "計画中",
+        "date": "",
+        "lat": 34.8686111,
+        "lng": 134.9541667,
+        "urls": [
+            {
+                "title": "令和5年度予算",
+                "url": "https://www.city.ono.hyogo.jp/soshikikarasagasu/somubu_zaiseika/gyomuannai/2/2/11375.html"
+            }
+        ],
+        "checked_on": "2026-10-19"
     },
     {
         "name": "道の駅 加西",
